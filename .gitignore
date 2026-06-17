@@ -1,0 +1,10 @@
+!/.idea/runConfigurations
+!/.idea/runConfigurations/*
+.DS_Store
+.cache/
+.idea/
+.tmp/
+/.idea/bashsupport-pro.xml
+/.idea/codeStyles/codeStyleConfig.xml
+temp/
+tmp/
