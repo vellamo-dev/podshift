@@ -1,10 +1,17 @@
-!/.idea/runConfigurations
-!/.idea/runConfigurations/*
+# macOS filesystem metadata
 .DS_Store
-.cache/
+.AppleDouble
+.LSOverride
+
+# JetBrains / IntelliJ IDEA
 .idea/
+
+# Build and test artifacts
+src/test/share/
+*.rpm
+
+# Caches and temporary files
+.cache/
 .tmp/
-/.idea/bashsupport-pro.xml
-/.idea/codeStyles/codeStyleConfig.xml
 temp/
 tmp/
