@@ -29,4 +29,6 @@ podshift-help() {
 }
 
 # Executes only when a real argument (doc_id) is provided
-[[ -n "${1}" ]] && podshift-help "${1}"
+if [[ "${BASH_SOURCE[0]}" == "${0}" || "${BASH_ARGV[0]:-}" != "${BASH_SOURCE[0]}" ]]; then
+    [[ -n "${1}" ]] && podshift-help "${1}"
+fi
