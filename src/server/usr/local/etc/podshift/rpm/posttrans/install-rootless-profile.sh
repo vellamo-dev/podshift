@@ -16,25 +16,21 @@ if [[ -z "${DIR_A8B677A69011:-}" ]]; then
 fi
 
 install-rootless-profile() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="PRF"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-PRF"
+    local file_bashrc file_profile tpl_profile tpl_bashrc bashrc_skeleton
+    bashrc_skeleton="/etc/skel/.bashrc"
+    file_bashrc="/home/podshift/.bashrc"
+    file_profile="/home/podshift/.bash_profile"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_A8B677A69011}/../../fn/utils/print-step.sh"
-    local file_bashrc file_profile tpl_profile tpl_bashrc bashrc_skeleton
+    print-step-header "${step_tag}" "Creating bash profile for podshift..."
     # Load main config for PODSHIFT_RUNTIME_CONF_TEMPLATES
     # shellcheck source=../../fn/load-podshift-conf-main.sh
     source "${DIR_A8B677A69011}/../../fn/load-podshift-conf-main.sh" --now
 
-    bashrc_skeleton="/etc/skel/.bashrc"
-    file_bashrc="/home/podshift/.bashrc"
-    file_profile="/home/podshift/.bash_profile"
     tpl_bashrc="${PODSHIFT_RUNTIME_CONF_TEMPLATES}/tpl.bashrc"
     tpl_profile="${PODSHIFT_RUNTIME_CONF_TEMPLATES}/tpl.bash_profile"
-
-    source "${DIR_A8B677A69011}/../../fn/rootless/set-owner-rootless.sh"
-
-    print-step-header "Creating bash profile for podshift..."
 
     # .bashrc: create if missing, then ensure the rootless config is sourced.
     if [ ! -f "${file_bashrc}" ]; then
@@ -52,6 +48,8 @@ install-rootless-profile() {
         [ -s "${file_bashrc}" ] && [ -n "$(tail -c1 "${file_bashrc}")" ] && echo >>"${file_bashrc}"
         cat "${tpl_bashrc}" >>"${file_bashrc}"
     fi
+    # shellcheck source=../../fn/rootless/set-owner-rootless.sh
+    source "${DIR_A8B677A69011}/../../fn/rootless/set-owner-rootless.sh"
     set-owner-rootless "${file_bashrc}"
 
     # .bash_profile: create if missing, otherwise ensure ~/.bashrc is sourced.

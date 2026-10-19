@@ -19,16 +19,13 @@ if [[ -z "${DIR_CB30D0CF53AD:-}" ]]; then
 fi
 
 harden-ssh() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="HSS"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-HSS"
+    local conf_file backup_file
+    conf_file="/etc/ssh/sshd_config"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_CB30D0CF53AD}/../../fn/utils/print-step.sh"
-    local conf_file backup_file
-
-    conf_file="/etc/ssh/sshd_config"
-
-    print-step-header "Hardening SSH: changing port 22 to 1022..."
+    print-step-header "${step_tag}" "Hardening SSH: changing port 22 to 1022..."
 
     # Precondition: config exists.
     if [ ! -f "${conf_file}" ]; then

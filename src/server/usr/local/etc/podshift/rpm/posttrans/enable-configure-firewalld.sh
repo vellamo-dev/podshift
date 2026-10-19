@@ -26,13 +26,11 @@ if [[ -z "${DIR_212D1F830C25:-}" ]]; then
 fi
 
 enable-configure-firewalld() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="FWD"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-FWD"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_212D1F830C25}/../../fn/utils/print-step.sh"
-
-    print-step-header "Enabling and configuring firewall..."
+    print-step-header "${step_tag}" "Enabling and configuring firewall..."
 
     if systemctl is-enabled --quiet firewalld 2>/dev/null; then
         echo -e "\tAlready enabled"

@@ -27,17 +27,14 @@ if [[ -z "${DIR_BA906559DA86:-}" ]]; then
 fi
 
 enable-rootless-linger() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="LNG"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-LNG"
+    local dir_linger file_linger linger_status
+    file_linger="/var/lib/systemd/linger/podshift"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_BA906559DA86}/../../fn/utils/print-step.sh"
-    local dir_linger file_linger linger_status
-
-    file_linger="/var/lib/systemd/linger/podshift"
+    print-step-header "${step_tag}" "Enabling user lingering for podshift..."
     dir_linger="$(dirname "${file_linger}")"
-
-    print-step-header "Enabling user lingering for podshift..."
 
     if ! id podshift >/dev/null 2>&1; then
         echo -e "\tUser 'podshift' does not exist. Skipping."

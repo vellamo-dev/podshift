@@ -16,21 +16,16 @@ if [[ -z "${DIR_DD272F40557F:-}" ]]; then
 fi
 
 deploy-rootless-bins() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="BIN"
-    # shellcheck source=../../fn/utils/print-step.sh
-    source "${DIR_DD272F40557F}/../../fn/utils/print-step.sh"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-BIN"
     local name script source_dir dest_dir symlink_bin bins_count
-    # shellcheck source=../../fn/rootless/set-owner-rootless.sh
-    source "${DIR_DD272F40557F}/../../fn/rootless/set-owner-rootless.sh"
-
     bins_count=0
     dest_dir="/home/podshift/.local/bin"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_DD272F40557F}/../../fn/utils/print-step.sh"
+    print-step-header "${step_tag}" "Enabling shorthand commands for podshift user..."
     # shellcheck source=../../bin-rootless
     source_dir="$(realpath "${DIR_DD272F40557F}/../../bin-rootless")"
-
-    print-step-header "Enabling shorthand commands for podshift user..."
 
     # Create the destination directory if missing.
     if [[ ! -d "${dest_dir}" ]]; then
@@ -39,6 +34,8 @@ deploy-rootless-bins() {
             print-step-warn "failed to create ${dest_dir}."
             return 0
         fi
+        # shellcheck source=../../fn/rootless/set-owner-rootless.sh
+        source "${DIR_DD272F40557F}/../../fn/rootless/set-owner-rootless.sh"
         set-owner-rootless "${dest_dir}"
     fi
 

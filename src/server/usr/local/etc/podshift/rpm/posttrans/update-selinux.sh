@@ -16,17 +16,14 @@ if [[ -z "${DIR_4F418A769F3C:-}" ]]; then
 fi
 
 update-selinux() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="SEL"
-    # shellcheck source=../../fn/utils/print-step.sh
-    source "${DIR_4F418A769F3C}/../../fn/utils/print-step.sh"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-SEL"
     local import_file port_list
-
     # shellcheck source=../../../../../../etc/selinux/local/port-config.semanage
     import_file="/etc/selinux/local/port-config.semanage"
-
-    print-step-header "Updating SELinux configuration..."
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_4F418A769F3C}/../../fn/utils/print-step.sh"
+    print-step-header "${step_tag}" "Updating SELinux configuration..."
 
     # Port labelling only matters when SELinux is enabled (real Fedora target);
     # skip in containers/CI where no policy store is accessible.

@@ -30,13 +30,11 @@ fi
 # Enables and starts podman.socket for the podshift user via the
 # 300@.host user manager.
 enable-start-rootless-podman() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="POD"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-POD"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_AF4859915F16}/../../fn/utils/print-step.sh"
-
-    print-step-header "Enabling and starting rootless podman..."
+    print-step-header "${step_tag}" "Enabling and starting rootless podman..."
 
     if ! id podshift >/dev/null 2>&1; then
         echo -e "\tUser 'podshift' does not exist. Skipping."

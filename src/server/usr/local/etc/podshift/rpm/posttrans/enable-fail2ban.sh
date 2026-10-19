@@ -20,13 +20,11 @@ if [[ -z "${DIR_186F265F7E42:-}" ]]; then
 fi
 
 enable-fail2ban() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="F2B"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-F2B"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_186F265F7E42}/../../fn/utils/print-step.sh"
-
-    print-step-header "Enabling and starting fail2ban..."
+    print-step-header "${step_tag}" "Enabling and starting fail2ban..."
 
     if systemctl is-enabled --quiet fail2ban 2>/dev/null; then
         echo -e "\tAlready enabled"

@@ -2,29 +2,45 @@
 # @file: print-step.sh
 # @dir: /usr/local/etc/podshift/fn/utils
 # @group: utils
-# @description: Emits section headers tagged with the step id, plus indented [OK]/[WARN] status.
+# @description: Emits section headers tagged with the step id, plus indented [OK]/[WARN]/[SKIP] status.
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
 
-# Emits a section header for the current step.
+# @description: Emits a section header tagged with the step id.
+# @param: $1 - step tag (e.g. "PS-PT-DRC")
+# @param: $2 - header message
+# @stdout: prints the tagged header line
 print-step-header() {
-    echo -e "\n[${step_prefix}-${step_id}] ${1}"
+    local tag message
+    tag="${1}"
+    message="${2}"
+    echo -e "\n[${tag}] ${message}"
 }
 
-# Emits a warning for the current step (indented, yellow, to stderr).
+# @description: Emits an indented warning for the current step.
+# @param: $1 - warning message
+# @stderr: prints the yellow [WARN] line
 print-step-warn() {
-    echo -e "\t\033[1;33m[WARN] ${1}\033[0m" >&2
+    local message
+    message="${1}"
+    echo -e "\t\033[1;33m[WARN] ${message}\033[0m" >&2
 }
 
-# Emits a skip status for the current step (indented).
-# $1 = optional reason (defaults to "Skipped").
+# @description: Emits an indented skip status for the current step.
+# @param: $1 - optional reason (defaults to "Skipped")
+# @stdout: prints the [SKIP] line
 print-step-skip() {
-    echo -e "\t[SKIP] ${1:-Skipped}"
+    local reason
+    reason="${1:-Skipped}"
+    echo -e "\t[SKIP] ${reason}"
 }
 
-# Emits the success status for the current step (indented).
-# $1 = optional message (defaults to "Done").
+# @description: Emits an indented success status for the current step.
+# @param: $1 - optional message (defaults to "Done")
+# @stdout: prints the [OK] line
 print-step-ok() {
-    echo -e "\t[OK] ${1:-Done}"
+    local message
+    message="${1:-Done}"
+    echo -e "\t[OK] ${message}"
 }

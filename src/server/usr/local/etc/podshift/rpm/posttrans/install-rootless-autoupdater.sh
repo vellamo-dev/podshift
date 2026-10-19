@@ -16,27 +16,25 @@ if [[ -z "${DIR_E8A110D64653:-}" ]]; then
 fi
 
 install-rootless-autoupdater() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="AUT"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-AUT"
+    local timer_conf timer_file path_conf_dir
+    timer_conf='podman-auto-update.timer.d/override.conf'
+    timer_file="/home/podshift/.config/systemd/user/${timer_conf}"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_E8A110D64653}/../../fn/utils/print-step.sh"
-    local timer_conf timer_file path_conf_dir
+    print-step-header "${step_tag}" "Installing PodShift auto-update timer..."
     # Load main config for PODSHIFT_RUNTIME_CONF_TEMPLATES
     # shellcheck source=../../conf/main.conf
     # shellcheck source=../../fn/load-podshift-conf-main.sh
     source "${DIR_E8A110D64653}/../../fn/load-podshift-conf-main.sh" --now
 
     path_conf_dir="${PODSHIFT_RUNTIME_CONF_TEMPLATES}"
-    timer_conf='podman-auto-update.timer.d/override.conf'
-    timer_file="/home/podshift/.config/systemd/user/${timer_conf}"
 
     if [ -f "${timer_file}" ]; then
         echo -e "\tAlready installed"
         return 0
     fi
-
-    print-step-header "Installing PodShift auto-update timer..."
 
     # Precondition: the template must actually exist (also catches an empty
     # PODSHIFT_RUNTIME_CONF_TEMPLATES if main.conf failed to load).
@@ -45,13 +43,13 @@ install-rootless-autoupdater() {
         return 0
     fi
 
-    source "${DIR_E8A110D64653}/../../fn/rootless/set-owner-rootless.sh"
-
     if ! install -m 0644 "${path_conf_dir}/${timer_conf}" "${timer_file}"; then
         print-step-warn "failed to install the auto-update timer override."
         return 0
     fi
 
+    # shellcheck source=../../fn/rootless/set-owner-rootless.sh
+    source "${DIR_E8A110D64653}/../../fn/rootless/set-owner-rootless.sh"
     set-owner-rootless "${timer_file}" \
         || print-step-warn "failed to set ownership of the auto-update timer override."
 

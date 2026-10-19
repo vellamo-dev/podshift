@@ -17,21 +17,19 @@ if [[ -z "${DIR_6A062C16DF7A:-}" ]]; then
 fi
 
 make-podshift-user-podman-compatible() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="PMC"
-    # shellcheck source=../../fn/utils/print-step.sh
-    source "${DIR_6A062C16DF7A}/../../fn/utils/print-step.sh"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-PMC"
     local dir_local bin_file
     dir_local="/home/podshift/.local"
-
-    print-step-header "Making podshift user compatible with rootless podman..."
-
-    source "${DIR_6A062C16DF7A}/../../fn/rootless/set-owner-rootless.sh"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_6A062C16DF7A}/../../fn/utils/print-step.sh"
+    print-step-header "${step_tag}" "Making podshift user compatible with rootless podman..."
 
     if [[ ! -d "${dir_local}" ]]; then
         echo -e "\tCreating directory '${dir_local}'..."
         mkdir -p "${dir_local}"
+        # shellcheck source=../../fn/rootless/set-owner-rootless.sh
+        source "${DIR_6A062C16DF7A}/../../fn/rootless/set-owner-rootless.sh"
         set-owner-rootless "${dir_local}"
     fi
 

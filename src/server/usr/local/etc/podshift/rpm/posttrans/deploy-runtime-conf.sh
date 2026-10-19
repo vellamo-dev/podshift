@@ -23,7 +23,7 @@ source "${DIR_A42A118E8B3B}/../../fn/load-podshift-conf-main.sh" --now
 
 # Installs one template to its target, skipping if it already exists.
 deploy-runtime-conf-file() {
-    local src_file dst_file filename
+    local dst_file filename
     dst_file="${1}"
     filename="$(basename "${dst_file}")"
     # shellcheck source=../../../../../../var/lib/podshift/tpl
@@ -36,12 +36,11 @@ deploy-runtime-conf-file() {
 
 # Deploys the flat runtime templates to their targets.
 deploy-runtime-conf() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="DRC"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-DRC"
     # shellcheck source=../../fn/utils/print-step.sh
     source "${DIR_A42A118E8B3B}/../../fn/utils/print-step.sh"
-    print-step-header "Deploying runtime configurations..."
+    print-step-header "${step_tag}" "Deploying runtime configurations..."
     # Copies template files into the target location
     deploy-runtime-conf-file "${PODSHIFT_RUNTIME_CONF}"
     deploy-runtime-conf-file "/etc/fail2ban/jail.d/00-global.local"

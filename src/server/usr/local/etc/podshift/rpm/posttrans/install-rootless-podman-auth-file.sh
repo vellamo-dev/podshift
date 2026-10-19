@@ -20,22 +20,17 @@ if [[ -z "${DIR_86D4F73B62E0:-}" ]]; then
 fi
 
 install-rootless-podman-auth-file() {
-    # Reserved step identity (matches @prefix and @id in the header).
-    local -r step_prefix="PS-PT"
-    local -r step_id="PAF"
-    # shellcheck source=../../fn/utils/print-step.sh
-    source "${DIR_86D4F73B62E0}/../../fn/utils/print-step.sh"
+    # Reserved step tag (matches @prefix-@id in the header).
+    local -r step_tag="PS-PT-PAF"
     local dir_config auth_file auth_file_dir override_file dir_podman_aus
-    # shellcheck source=../../fn/rootless/set-owner-rootless.sh
-    source "${DIR_86D4F73B62E0}/../../fn/rootless/set-owner-rootless.sh"
-
     dir_config="/home/podshift/.config"
     auth_file="${dir_config}/containers/auth.json"
-    auth_file_dir="$(dirname "${auth_file}")"
     dir_podman_aus="${dir_config}/systemd/user/podman-auto-update.service.d"
     override_file="${dir_podman_aus}/override.conf"
-
-    print-step-header "Creating prerequisites for podman authorization..."
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_86D4F73B62E0}/../../fn/utils/print-step.sh"
+    print-step-header "${step_tag}" "Creating prerequisites for podman authorization..."
+    auth_file_dir="$(dirname "${auth_file}")"
 
     if [ ! -f "${auth_file}" ]; then
         echo -e "\tCreating authorization file for rootless podman..."
@@ -51,6 +46,8 @@ install-rootless-podman-auth-file() {
         fi
     fi
 
+    # shellcheck source=../../fn/rootless/set-owner-rootless.sh
+    source "${DIR_86D4F73B62E0}/../../fn/rootless/set-owner-rootless.sh"
     set-owner-rootless "${dir_config}"
 
     print-step-ok
