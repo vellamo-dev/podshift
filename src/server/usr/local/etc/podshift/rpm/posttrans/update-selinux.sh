@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Imports custom SELinux port definitions.
 
 if [[ -z "${DIR_4F418A769F3C:-}" ]]; then
@@ -15,6 +16,8 @@ if [[ -z "${DIR_4F418A769F3C:-}" ]]; then
     readonly DIR_4F418A769F3C
 fi
 
+# @description: Imports the SELinux port definitions.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 update-selinux() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-SEL"

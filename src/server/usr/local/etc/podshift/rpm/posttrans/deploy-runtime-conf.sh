@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Deploys the runtime configuration templates to the target system.
 # Each template is copied only when its target does not exist, so user
 # edits are never overwritten.
@@ -21,7 +22,8 @@ fi
 # shellcheck source=../../fn/load-podshift-conf-main.sh
 source "${DIR_A42A118E8B3B}/../../fn/load-podshift-conf-main.sh" --now
 
-# Installs one template to its target, skipping if it already exists.
+# @description: Installs one template to its target, skipping if it already exists.
+# @param: $1 - target path
 deploy-runtime-conf-file() {
     local dst_file filename
     dst_file="${1}"
@@ -34,7 +36,8 @@ deploy-runtime-conf-file() {
     fi
 }
 
-# Deploys the flat runtime templates to their targets.
+# @description: Deploys the runtime configuration templates.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 deploy-runtime-conf() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-DRC"

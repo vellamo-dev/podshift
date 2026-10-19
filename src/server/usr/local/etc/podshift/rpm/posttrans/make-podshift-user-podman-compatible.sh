@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Configures the dedicated podshift system user so that it
 # can run rootless Podman containers reliably.
 
@@ -16,6 +17,8 @@ if [[ -z "${DIR_6A062C16DF7A:-}" ]]; then
     readonly DIR_6A062C16DF7A
 fi
 
+# @description: Makes the podshift user rootless-Podman compatible.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 make-podshift-user-podman-compatible() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-PMC"

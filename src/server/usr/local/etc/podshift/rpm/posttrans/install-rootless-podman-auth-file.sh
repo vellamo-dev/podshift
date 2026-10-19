@@ -8,8 +8,9 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Creating prerequisites for configuring podman authorization.
-
+#
 # Establishes the necessary authentication infrastructure for the podshift
 # user so that registry logins and automated container updates can
 # function correctly in a rootless Podman environment.
@@ -19,6 +20,8 @@ if [[ -z "${DIR_86D4F73B62E0:-}" ]]; then
     readonly DIR_86D4F73B62E0
 fi
 
+# @description: Creates the Podman auth file and auto-update override.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 install-rootless-podman-auth-file() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-PAF"

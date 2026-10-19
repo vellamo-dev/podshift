@@ -9,7 +9,7 @@
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
 # Enables firewall for a system.
-
+#
 # Enables and configures firewalld as part of the PodShift installation.
 # It activates the firewall and applies custom firewall rules tailored
 # for the PodShift environment.
@@ -25,6 +25,8 @@ if [[ -z "${DIR_212D1F830C25:-}" ]]; then
     readonly DIR_212D1F830C25
 fi
 
+# @description: Enables and configures the firewall.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 enable-configure-firewalld() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-FWD"

@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Configures the shell initialisation files for the dedicated podshift user.
 
 if [[ -z "${DIR_A8B677A69011:-}" ]]; then
@@ -15,6 +16,8 @@ if [[ -z "${DIR_A8B677A69011:-}" ]]; then
     readonly DIR_A8B677A69011
 fi
 
+# @description: Creates the shell profiles for the podshift user.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 install-rootless-profile() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-PRF"

@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Updates SSHD configuration to change the port to 1022 and restarts the service.
 #
 # Changing from 22 is a common security-hardening step that reduces exposure
@@ -18,6 +19,8 @@ if [[ -z "${DIR_CB30D0CF53AD:-}" ]]; then
     readonly DIR_CB30D0CF53AD
 fi
 
+# @description: Changes the SSH port to 1022 and restarts sshd.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 harden-ssh() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-HSS"

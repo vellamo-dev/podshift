@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Adds and enables the podman auto-update timer for rootless if not already present
 
 if [[ -z "${DIR_E8A110D64653:-}" ]]; then
@@ -15,6 +16,8 @@ if [[ -z "${DIR_E8A110D64653:-}" ]]; then
     readonly DIR_E8A110D64653
 fi
 
+# @description: Installs and enables the Podman auto-update timer.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 install-rootless-autoupdater() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-AUT"

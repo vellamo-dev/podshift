@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Enables and starts the rootless podman.
 #
 # Rootless podman is the crucial part of PodShift.
@@ -27,8 +28,8 @@ if [[ -z "${DIR_AF4859915F16:-}" ]]; then
     readonly DIR_AF4859915F16
 fi
 
-# Enables and starts podman.socket for the podshift user via the
-# 300@.host user manager.
+# @description: Enables and starts the rootless Podman socket.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 enable-start-rootless-podman() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-POD"

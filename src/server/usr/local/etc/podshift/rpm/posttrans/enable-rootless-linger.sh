@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Enables user lingering for the dedicated podshift user.
 #
 # User lingering allows the user's systemd instance (user@.service) to
@@ -26,6 +27,8 @@ if [[ -z "${DIR_BA906559DA86:-}" ]]; then
     readonly DIR_BA906559DA86
 fi
 
+# @description: Enables user lingering for the podshift user.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 enable-rootless-linger() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-LNG"

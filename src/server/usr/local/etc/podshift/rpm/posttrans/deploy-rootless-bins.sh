@@ -8,6 +8,7 @@
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
+#
 # Enables shorthand commands for podshift user.
 
 if [[ -z "${DIR_DD272F40557F:-}" ]]; then
@@ -15,6 +16,8 @@ if [[ -z "${DIR_DD272F40557F:-}" ]]; then
     readonly DIR_DD272F40557F
 fi
 
+# @description: Creates the shorthand commands for the podshift user.
+# @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 deploy-rootless-bins() {
     # Reserved step tag (matches @prefix-@id in the header).
     local -r step_tag="PS-PT-BIN"
