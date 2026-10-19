@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
-# get-fedora-version.sh
-# /usr/local/etc/podshift/fn/utils
+# @file: get-fedora-version.sh
+# @dir: /usr/local/etc/podshift/fn/utils
+# @group: utils
+# @description: Prints the Fedora version id.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 
-# Prints the Fedora version id (e.g. "44") to stdout.
-# Returns non-zero if /etc/os-release is unavailable or VERSION_ID is missing.
+
+# @description: Prints the Fedora version id (e.g. "44") to stdout.
+# @stdout: prints the version id
+# @exitcode: 0 on success, 1 if /etc/os-release is unavailable or VERSION_ID is missing.
 get-fedora-version() {
     local version_id
     [[ -r /etc/os-release ]] || return 1
