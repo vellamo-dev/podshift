@@ -3,8 +3,10 @@
 # /usr/local/etc/podshift/rpm/posttrans
 # Configures the shell initialisation files for the dedicated podshift user.
 
-DIR_A8B677A69011="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-readonly DIR_A8B677A69011
+if [[ -z "${DIR_A8B677A69011:-}" ]]; then
+    DIR_A8B677A69011="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    readonly DIR_A8B677A69011
+fi
 
 install-rootless-profile() {
     local file_bashrc file_profile tpl_profile tpl_bashrc bashrc_skeleton

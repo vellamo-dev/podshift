@@ -3,8 +3,10 @@
 # /usr/local/etc/podshift/rpm/posttrans
 # Adds and enables the podman auto-update timer for rootless if not already present
 
-DIR_E8A110D64653="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-readonly DIR_E8A110D64653
+if [[ -z "${DIR_E8A110D64653:-}" ]]; then
+    DIR_E8A110D64653="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    readonly DIR_E8A110D64653
+fi
 
 install-rootless-autoupdater() {
     local timer_conf timer_file path_conf_dir
