@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# install-rootless-podman-auth-file.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: install-rootless-podman-auth-file.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: PAF
+# @description: Creates the Podman auth file and auto-update override
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Creating prerequisites for configuring podman authorization.
 
 # Establishes the necessary authentication infrastructure for the podshift
@@ -13,9 +20,12 @@ if [[ -z "${DIR_86D4F73B62E0:-}" ]]; then
 fi
 
 install-rootless-podman-auth-file() {
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="PAF"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_86D4F73B62E0}/../../fn/utils/print-step.sh"
     local dir_config auth_file auth_file_dir override_file dir_podman_aus
-    # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_86D4F73B62E0}/../../fn/utils/print-warning.sh"
     # shellcheck source=../../fn/rootless/set-owner-rootless.sh
     source "${DIR_86D4F73B62E0}/../../fn/rootless/set-owner-rootless.sh"
 
@@ -25,25 +35,25 @@ install-rootless-podman-auth-file() {
     dir_podman_aus="${dir_config}/systemd/user/podman-auto-update.service.d"
     override_file="${dir_podman_aus}/override.conf"
 
-    echo -e "\nCreating prerequisites for podman authorization..."
+    print-step-header "Creating prerequisites for podman authorization..."
 
     if [ ! -f "${auth_file}" ]; then
         echo -e "\tCreating authorization file for rootless podman..."
         if ! mkdir -p "${auth_file_dir}" || ! echo '{}' >"${auth_file}" || ! chmod 600 "${auth_file}"; then
-            print-warning "failed to create the podman authorization file."
+            print-step-warn "failed to create the podman authorization file."
         fi
     fi
 
     if [ ! -f "${override_file}" ]; then
         echo -e "\tCreating configuration override file for rootless podman..."
         if ! mkdir -p "${dir_podman_aus}" || ! printf '%s\n' '[Service]' "Environment=REGISTRY_AUTH_FILE=${auth_file}" >"${override_file}"; then
-            print-warning "failed to create the podman auto-update override."
+            print-step-warn "failed to create the podman auto-update override."
         fi
     fi
 
     set-owner-rootless "${dir_config}"
 
-    echo -e "\tDone"
+    print-step-ok
 }
 
 # Executes only when called or sourced with --now

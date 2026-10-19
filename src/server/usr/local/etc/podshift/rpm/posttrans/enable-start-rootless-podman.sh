@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# enable-start-rootless-podman.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: enable-start-rootless-podman.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: POD
+# @description: Enables and starts the rootless Podman socket
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Enables and starts the rootless podman.
 #
 # Rootless podman is the crucial part of PodShift.
@@ -23,10 +30,13 @@ fi
 # Enables and starts podman.socket for the podshift user via the
 # 300@.host user manager.
 enable-start-rootless-podman() {
-    # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_AF4859915F16}/../../fn/utils/print-warning.sh"
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="POD"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_AF4859915F16}/../../fn/utils/print-step.sh"
 
-    echo -e "\nEnabling and starting rootless podman..."
+    print-step-header "Enabling and starting rootless podman..."
 
     if ! id podshift >/dev/null 2>&1; then
         echo -e "\tUser 'podshift' does not exist. Skipping."
@@ -35,14 +45,14 @@ enable-start-rootless-podman() {
 
     echo -e "\tReloading user manager..."
     systemctl --machine="300@.host" --user daemon-reload >/dev/null 2>&1 \
-        || print-warning "failed to reload the 300@.host user manager."
+        || print-step-warn "failed to reload the 300@.host user manager."
 
     if systemctl --machine="300@.host" --user is-enabled --quiet podman.socket 2>/dev/null; then
         echo -e "\tAlready enabled"
     else
         echo -e "\tEnabling rootless podman..."
         systemctl --machine="300@.host" --user enable podman.socket >/dev/null 2>&1 \
-            || print-warning "failed to enable podman.socket."
+            || print-step-warn "failed to enable podman.socket."
     fi
 
     if systemctl --machine="300@.host" --user is-active --quiet podman.socket 2>/dev/null; then
@@ -50,10 +60,10 @@ enable-start-rootless-podman() {
     else
         echo -e "\tStarting rootless podman..."
         systemctl --machine="300@.host" --user start podman.socket >/dev/null 2>&1 \
-            || print-warning "failed to start podman.socket."
+            || print-step-warn "failed to start podman.socket."
     fi
 
-    echo -e "\tDone"
+    print-step-ok
 }
 
 # Executes only when called or sourced with --now

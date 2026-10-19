@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# enable-rootless-linger.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: enable-rootless-linger.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: LNG
+# @description: Enables user lingering for the podshift user
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Enables user lingering for the dedicated podshift user.
 #
 # User lingering allows the user's systemd instance (user@.service) to
@@ -20,14 +27,17 @@ if [[ -z "${DIR_BA906559DA86:-}" ]]; then
 fi
 
 enable-rootless-linger() {
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="LNG"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_BA906559DA86}/../../fn/utils/print-step.sh"
     local dir_linger file_linger linger_status
-    # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_BA906559DA86}/../../fn/utils/print-warning.sh"
 
     file_linger="/var/lib/systemd/linger/podshift"
     dir_linger="$(dirname "${file_linger}")"
 
-    echo -e "\nEnabling user lingering for podshift..."
+    print-step-header "Enabling user lingering for podshift..."
 
     if ! id podshift >/dev/null 2>&1; then
         echo -e "\tUser 'podshift' does not exist. Skipping."
@@ -45,10 +55,10 @@ enable-rootless-linger() {
         if loginctl enable-linger podshift 2>/dev/null; then
             echo -e "\tLinger enabled via loginctl"
         else
-            print-warning "loginctl enable-linger failed (non-fatal in some environments)."
+            print-step-warn "loginctl enable-linger failed (non-fatal in some environments)."
         fi
     else
-        print-warning "loginctl not found, using manual linger file creation."
+        print-step-warn "loginctl not found, using manual linger file creation."
     fi
 
     # Manual fallback: create the linger flag file if it does not exist.
@@ -72,20 +82,20 @@ enable-rootless-linger() {
     else
         echo -e "\tEnabling user@300.service..."
         systemctl enable user@300.service 2>/dev/null \
-            || print-warning "failed to enable user@300.service."
+            || print-step-warn "failed to enable user@300.service."
     fi
     if systemctl is-active --quiet user@300.service 2>/dev/null; then
         echo -e "\tuser@300.service already started"
     else
         echo -e "\tStarting user@300.service..."
         systemctl start user@300.service 2>/dev/null \
-            || print-warning "failed to start user@300.service."
+            || print-step-warn "failed to start user@300.service."
     fi
 
     # Reload the user manager.
     echo -e "\tReloading user manager..."
     systemctl --machine="300@.host" --user daemon-reload 2>/dev/null \
-        || print-warning "could not reload the 300@.host user manager."
+        || print-step-warn "could not reload the 300@.host user manager."
 
     # Enable and start systemd-tmpfiles-setup.service (user level).
     if systemctl --machine="300@.host" --user is-enabled --quiet systemd-tmpfiles-setup.service 2>/dev/null; then
@@ -93,17 +103,17 @@ enable-rootless-linger() {
     else
         echo -e "\tEnabling systemd-tmpfiles-setup.service..."
         systemctl --machine="300@.host" --user enable systemd-tmpfiles-setup.service 2>/dev/null \
-            || print-warning "failed to enable systemd-tmpfiles-setup.service."
+            || print-step-warn "failed to enable systemd-tmpfiles-setup.service."
     fi
     if systemctl --machine="300@.host" --user is-active --quiet systemd-tmpfiles-setup.service 2>/dev/null; then
         echo -e "\tsystemd-tmpfiles-setup.service already started"
     else
         echo -e "\tStarting systemd-tmpfiles-setup.service..."
         systemctl --machine="300@.host" --user start systemd-tmpfiles-setup.service 2>/dev/null \
-            || print-warning "failed to start systemd-tmpfiles-setup.service."
+            || print-step-warn "failed to start systemd-tmpfiles-setup.service."
     fi
 
-    echo -e "\tDone"
+    print-step-ok
 }
 
 # Executes only when called or sourced with --now

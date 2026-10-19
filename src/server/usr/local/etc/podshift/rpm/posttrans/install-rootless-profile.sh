@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# install-rootless-profile.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: install-rootless-profile.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: PRF
+# @description: Creates the shell profiles for the podshift user
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Configures the shell initialisation files for the dedicated podshift user.
 
 if [[ -z "${DIR_A8B677A69011:-}" ]]; then
@@ -9,6 +16,11 @@ if [[ -z "${DIR_A8B677A69011:-}" ]]; then
 fi
 
 install-rootless-profile() {
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="PRF"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_A8B677A69011}/../../fn/utils/print-step.sh"
     local file_bashrc file_profile tpl_profile tpl_bashrc bashrc_skeleton
     # Load main config for PODSHIFT_RUNTIME_CONF_TEMPLATES
     # shellcheck source=../../fn/load-podshift-conf-main.sh
@@ -22,7 +34,7 @@ install-rootless-profile() {
 
     source "${DIR_A8B677A69011}/../../fn/rootless/set-owner-rootless.sh"
 
-    echo -e "\nCreating bash profile for podshift..."
+    print-step-header "Creating bash profile for podshift..."
 
     # .bashrc: create if missing, then ensure the rootless config is sourced.
     if [ ! -f "${file_bashrc}" ]; then
@@ -53,7 +65,7 @@ install-rootless-profile() {
     fi
     set-owner-rootless "${file_profile}"
 
-    echo -e "\tDone"
+    print-step-ok
 }
 
 # Executes only when called or sourced with --now

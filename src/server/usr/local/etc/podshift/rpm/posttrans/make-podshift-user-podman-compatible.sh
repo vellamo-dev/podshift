@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# make-podshift-user-podman-compatible.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: make-podshift-user-podman-compatible.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: PMC
+# @description: Makes the podshift user rootless-Podman compatible
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Configures the dedicated podshift system user so that it
 # can run rootless Podman containers reliably.
 
@@ -10,13 +17,16 @@ if [[ -z "${DIR_6A062C16DF7A:-}" ]]; then
 fi
 
 make-podshift-user-podman-compatible() {
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="PMC"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_6A062C16DF7A}/../../fn/utils/print-step.sh"
     local dir_local bin_file
     dir_local="/home/podshift/.local"
 
-    echo -e "\nMaking podshift user compatible with rootless podman..."
+    print-step-header "Making podshift user compatible with rootless podman..."
 
-    # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_6A062C16DF7A}/../../fn/utils/print-warning.sh"
     source "${DIR_6A062C16DF7A}/../../fn/rootless/set-owner-rootless.sh"
 
     if [[ ! -d "${dir_local}" ]]; then
@@ -29,12 +39,12 @@ make-podshift-user-podman-compatible() {
     if ! grep -q '^podshift:100000:65536$' /etc/subuid 2>/dev/null; then
         echo -e "\tAdding subuids..."
         usermod --add-subuids 100000-165535 podshift \
-            || print-warning "failed to add subuids for podshift."
+            || print-step-warn "failed to add subuids for podshift."
     fi
     if ! grep -q '^podshift:100000:65536$' /etc/subgid 2>/dev/null; then
         echo -e "\tAdding subgids..."
         usermod --add-subgids 100000-165535 podshift \
-            || print-warning "failed to add subgids for podshift."
+            || print-step-warn "failed to add subgids for podshift."
     fi
 
     # Ensure newuidmap/newgidmap are setuid (required for rootless user namespaces).
@@ -42,16 +52,16 @@ make-podshift-user-podman-compatible() {
         if [ -f "/usr/bin/${bin_file}" ] && [ ! -u "/usr/bin/${bin_file}" ]; then
             echo -e "\tSetting setuid bit on ${bin_file}..."
             chmod u+s "/usr/bin/${bin_file}" \
-                || print-warning "failed to set setuid bit on ${bin_file}."
+                || print-step-warn "failed to set setuid bit on ${bin_file}."
         fi
     done
 
     # Migrate any existing storage for the podshift user.
     echo -e "\tMigrating podman storage..."
     su - podshift -c "podman system migrate" \
-        || print-warning "podman system migrate failed for podshift."
+        || print-step-warn "podman system migrate failed for podshift."
 
-    echo -e "\tDone"
+    print-step-ok
 }
 
 # Executes only when called or sourced with --now

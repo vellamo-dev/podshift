@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# harden-ssh.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: harden-ssh.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: HSS
+# @description: Changes the SSH port to 1022 and restarts sshd
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Updates SSHD configuration to change the port to 1022 and restarts the service.
 #
 # Changing from 22 is a common security-hardening step that reduces exposure
@@ -12,17 +19,20 @@ if [[ -z "${DIR_CB30D0CF53AD:-}" ]]; then
 fi
 
 harden-ssh() {
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="HSS"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_CB30D0CF53AD}/../../fn/utils/print-step.sh"
     local conf_file backup_file
-    # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_CB30D0CF53AD}/../../fn/utils/print-warning.sh"
 
     conf_file="/etc/ssh/sshd_config"
 
-    echo -e "\nHardening SSH: changing port 22 to 1022..."
+    print-step-header "Hardening SSH: changing port 22 to 1022..."
 
     # Precondition: config exists.
     if [ ! -f "${conf_file}" ]; then
-        print-warning "sshd_config not found, skipping SSH hardening."
+        print-step-warn "sshd_config not found, skipping SSH hardening."
         return 0
     fi
 
@@ -36,7 +46,7 @@ harden-ssh() {
     # not 22, the user has already chosen a port; leave it unchanged.
     if grep -qE '^[[:space:]]*Port[[:space:]]+[0-9]+' "${conf_file}" \
         && ! grep -qE '^[[:space:]]*Port[[:space:]]+22([[:space:]]|#|$)' "${conf_file}"; then
-        print-warning "a custom SSH port is already configured; leaving it unchanged."
+        print-step-warn "a custom SSH port is already configured; leaving it unchanged."
         return 0
     fi
 
@@ -44,7 +54,7 @@ harden-ssh() {
     echo -e "\tBacking up sshd_config"
     backup_file="${conf_file}.bak.$(date +%F_%H%M%S).$$"
     if ! cp "${conf_file}" "${backup_file}"; then
-        print-warning "failed to back up sshd_config, skipping SSH hardening."
+        print-step-warn "failed to back up sshd_config, skipping SSH hardening."
         return 0
     fi
 
@@ -61,7 +71,7 @@ harden-ssh() {
     if ! sshd -t 2>/dev/null; then
         cp "${backup_file}" "${conf_file}"
         restorecon "${conf_file}" 2>/dev/null || true
-        print-warning "sshd configuration invalid after port change, rolled back."
+        print-step-warn "sshd configuration invalid after port change, rolled back."
         return 0
     fi
 
@@ -71,11 +81,11 @@ harden-ssh() {
         cp "${backup_file}" "${conf_file}"
         restorecon "${conf_file}" 2>/dev/null || true
         systemctl restart sshd >/dev/null 2>&1 || true
-        print-warning "failed to restart sshd, rolled back to the previous configuration."
+        print-step-warn "failed to restart sshd, rolled back to the previous configuration."
         return 0
     fi
 
-    echo -e "\tDone"
+    print-step-ok
     return 0
 }
 

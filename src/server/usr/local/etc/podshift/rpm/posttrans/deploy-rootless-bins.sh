@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# deploy-rootless-bins.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: deploy-rootless-bins.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: BIN
+# @description: Creates the shorthand commands for the podshift user
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Enables shorthand commands for podshift user.
 
 if [[ -z "${DIR_DD272F40557F:-}" ]]; then
@@ -9,9 +16,12 @@ if [[ -z "${DIR_DD272F40557F:-}" ]]; then
 fi
 
 deploy-rootless-bins() {
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="BIN"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_DD272F40557F}/../../fn/utils/print-step.sh"
     local name script source_dir dest_dir symlink_bin bins_count
-    # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_DD272F40557F}/../../fn/utils/print-warning.sh"
     # shellcheck source=../../fn/rootless/set-owner-rootless.sh
     source "${DIR_DD272F40557F}/../../fn/rootless/set-owner-rootless.sh"
 
@@ -20,13 +30,13 @@ deploy-rootless-bins() {
     # shellcheck source=../../bin-rootless
     source_dir="$(realpath "${DIR_DD272F40557F}/../../bin-rootless")"
 
-    echo -e "\nEnabling shorthand commands for podshift user..."
+    print-step-header "Enabling shorthand commands for podshift user..."
 
     # Create the destination directory if missing.
     if [[ ! -d "${dest_dir}" ]]; then
         echo -e "\tCreating dir '${dest_dir}'..."
         if ! mkdir -p "${dest_dir}"; then
-            print-warning "failed to create ${dest_dir}."
+            print-step-warn "failed to create ${dest_dir}."
             return 0
         fi
         set-owner-rootless "${dest_dir}"
@@ -38,15 +48,15 @@ deploy-rootless-bins() {
         name="$(basename "${script}" .sh)"
         symlink_bin="${dest_dir}/${name}"
         if ! ln -sf "${script}" "${symlink_bin}"; then
-            print-warning "failed to create the ${name} shorthand."
+            print-step-warn "failed to create the ${name} shorthand."
             continue
         fi
         chown -h podshift:podshift "${symlink_bin}" 2>/dev/null \
-            || print-warning "failed to set ownership of the ${name} shorthand."
+            || print-step-warn "failed to set ownership of the ${name} shorthand."
         ((bins_count++))
     done
 
-    echo -e "\tDone. Created ${bins_count} shorthands."
+    print-step-ok "Created ${bins_count} shorthands."
 }
 
 # Executes only when called or sourced with --now

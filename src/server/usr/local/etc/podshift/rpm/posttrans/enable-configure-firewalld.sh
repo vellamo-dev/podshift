@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# enable-configure-firewalld.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: enable-configure-firewalld.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: FWD
+# @description: Enables and configures the firewall
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Enables firewall for a system.
 
 # Enables and configures firewalld as part of the PodShift installation.
@@ -19,30 +26,33 @@ if [[ -z "${DIR_212D1F830C25:-}" ]]; then
 fi
 
 enable-configure-firewalld() {
-    # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_212D1F830C25}/../../fn/utils/print-warning.sh"
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="FWD"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_212D1F830C25}/../../fn/utils/print-step.sh"
 
-    echo -e "\nEnabling and configuring firewall..."
+    print-step-header "Enabling and configuring firewall..."
 
     if systemctl is-enabled --quiet firewalld 2>/dev/null; then
         echo -e "\tAlready enabled"
     else
         echo -e "\tEnabling..."
         systemctl enable firewalld 2>/dev/null \
-            || print-warning "failed to enable firewalld."
+            || print-step-warn "failed to enable firewalld."
     fi
     if systemctl is-active --quiet firewalld 2>/dev/null; then
         echo -e "\tAlready started"
     else
         echo -e "\tStarting..."
         systemctl start firewalld 2>/dev/null \
-            || print-warning "failed to start firewalld."
+            || print-step-warn "failed to start firewalld."
     fi
 
     # Import firewall presets.
     echo -e "\tImporting rules..."
     systemctl preset firewalld.service cockpit.socket pmcd.service pmlogger.service user@300.service 2>/dev/null \
-        || print-warning "failed to apply firewall presets."
+        || print-step-warn "failed to apply firewall presets."
 
     # Configure firewall rules.
     echo -e "\tConfiguring rules..."
@@ -50,12 +60,12 @@ enable-configure-firewalld() {
     firewall-cmd --permanent --remove-service=ssh 2>/dev/null || true
     # Add the podshift service.
     firewall-cmd --permanent --zone=public --add-service=podshift 2>/dev/null \
-        || print-warning "failed to add the podshift firewall service."
+        || print-step-warn "failed to add the podshift firewall service."
     # Reload the firewall.
     firewall-cmd --reload 2>/dev/null \
-        || print-warning "failed to reload the firewall."
+        || print-step-warn "failed to reload the firewall."
 
-    echo -e "\tDone"
+    print-step-ok
 }
 
 # Executes only when called or sourced with --now

@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# deploy-runtime-conf.sh
-# /usr/local/etc/podshift/rpm/posttrans
+# @file: deploy-runtime-conf.sh
+# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @group: posttrans
+# @prefix: PS-PT
+# @id: DRC
+# @description: Deploys the runtime configuration templates
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 # Deploys the runtime configuration templates to the target system.
 # Each template is copied only when its target does not exist, so user
 # edits are never overwritten.
@@ -13,8 +20,6 @@ fi
 # shellcheck source=../../conf/main.conf
 # shellcheck source=../../fn/load-podshift-conf-main.sh
 source "${DIR_A42A118E8B3B}/../../fn/load-podshift-conf-main.sh" --now
-# shellcheck source=../../fn/utils/print-warning.sh
-source "${DIR_A42A118E8B3B}/../../fn/utils/print-warning.sh"
 
 # Installs one template to its target, skipping if it already exists.
 deploy-runtime-conf-file() {
@@ -25,20 +30,25 @@ deploy-runtime-conf-file() {
     src_file="${PODSHIFT_RUNTIME_CONF_TEMPLATES}/${filename}"
     if [[ -f "${src_file}" && ! -f "${dst_file}" ]]; then
         echo -e "\t- ${filename}"
-        install -D -m 0644 "${src_file}" "${dst_file}" || print-warning "failed to install ${filename}"
+        install -D -m 0644 "${src_file}" "${dst_file}" || print-step-warn "failed to install ${filename}"
     fi
 }
 
 # Deploys the flat runtime templates to their targets.
 deploy-runtime-conf() {
-    echo -e "\nDeploying runtime configurations..."
+    # Reserved step identity (matches @prefix and @id in the header).
+    local -r step_prefix="PS-PT"
+    local -r step_id="DRC"
+    # shellcheck source=../../fn/utils/print-step.sh
+    source "${DIR_A42A118E8B3B}/../../fn/utils/print-step.sh"
+    print-step-header "Deploying runtime configurations..."
     # Copies template files into the target location
     deploy-runtime-conf-file "${PODSHIFT_RUNTIME_CONF}"
     deploy-runtime-conf-file "/etc/fail2ban/jail.d/00-global.local"
     deploy-runtime-conf-file "/etc/fail2ban/jail.d/sshd.local"
     deploy-runtime-conf-file "/etc/ssh/sshd_config.d/20-podshift-access.conf"
     deploy-runtime-conf-file "/etc/ssh/sshd_config.d/50-podshift-auth.conf"
-    echo -e "\tDone"
+    print-step-ok
 }
 
 # Executes only when called or sourced with --now
