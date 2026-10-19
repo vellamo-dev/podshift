@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+    <short>PodShift Services</short>
+    <description>Firewall rules for PodShift services</description>
+    <port protocol="tcp" port="80"/>   <!-- HTTP -->
+    <port protocol="tcp" port="81"/>   <!-- Proxy -->
+    <port protocol="tcp" port="443"/>  <!-- HTTPS -->
+    <port protocol="tcp" port="1022"/> <!-- SSH -->
+    <port protocol="tcp" port="9090"/> <!-- Cockpit -->
+</service>
