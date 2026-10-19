@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
-# print-warning.sh
-# /usr/local/etc/podshift/fn/utils
+# @file: print-warning.sh
+# @dir: /usr/local/etc/podshift/fn/utils
+# @group: utils
+# @description: Prints a warning message to stderr in bold yellow.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 
-# Prints a warning message to stderr in bold yellow.
+
+# @description: Prints a warning message to stderr in bold yellow.
+# @param: $1 - warning message
+# @stderr: prints the yellow warning line.
 print-warning() {
     local message
     message="${1}"

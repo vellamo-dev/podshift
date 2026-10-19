@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# is-darwin.sh
-# /usr/local/etc/podshift/fn/utils
+# @file: is-darwin.sh
+# @dir: /usr/local/etc/podshift/fn/utils
+# @group: utils
+# @description: Detects whether the running system is macOS (Darwin).
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 
-# Returns 0 (true) if the running system is macOS (Darwin), non-zero otherwise.
+
+# @description: Returns 0 if the running system is macOS (Darwin).
+# @exitcode: 0 if Darwin, 1 otherwise.
 is-darwin() {
     local kernel_name
     kernel_name="$(uname -s)"

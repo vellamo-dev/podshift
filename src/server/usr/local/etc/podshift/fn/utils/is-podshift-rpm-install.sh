@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# is-podshift-rpm-install.sh
-# /usr/local/etc/podshift/fn/utils
+# @file: is-podshift-rpm-install.sh
+# @dir: /usr/local/etc/podshift/fn/utils
+# @group: utils
+# @description: Detects whether PodShift is installed via RPM on Fedora.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 
 if [[ -z "${DIR_A95FE67DC14D:-}" ]]; then
     DIR_A95FE67DC14D="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -10,7 +15,8 @@ fi
 # shellcheck source=./is-fedora.sh
 source "${DIR_A95FE67DC14D}/is-fedora.sh"
 
-# Returns 0 (true) if PodShift is installed via RPM on Fedora, non-zero otherwise.
+# @description: Returns 0 if PodShift is installed via RPM on Fedora.
+# @exitcode: 0 if installed via RPM on Fedora, 1 otherwise.
 is-podshift-rpm-install() {
     is-fedora || return 1
     command -v rpm >/dev/null 2>&1 || return 1

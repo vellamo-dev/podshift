@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# is-fedora.sh
-# /usr/local/etc/podshift/fn/utils
+# @file: is-fedora.sh
+# @dir: /usr/local/etc/podshift/fn/utils
+# @group: utils
+# @description: Detects whether the running system is Fedora.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 
-# Returns 0 (true) if the running system is Fedora, non-zero otherwise.
+
+# @description: Returns 0 if the running system is Fedora.
+# @exitcode: 0 if Fedora, 1 otherwise.
 is-fedora() {
     local os_id
     [[ -r /etc/os-release ]] || return 1

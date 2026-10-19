@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
-# is-local-dev-run.sh
-# /usr/local/etc/podshift/fn/utils
+# @file: is-local-dev-run.sh
+# @dir: /usr/local/etc/podshift/fn/utils
+# @group: utils
+# @description: Detects whether running from a local dev checkout rather than the installed app.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 
 if [[ -z "${DIR_329985B1E57A:-}" ]]; then
     DIR_329985B1E57A="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
     readonly DIR_329985B1E57A
 fi
 
-# Returns 0 (true) if running from a local dev checkout rather than the installed app.
+# @description: Returns 0 if running from a local dev checkout rather than the installed app.
+# @exitcode: 0 if local dev, 1 otherwise.
 is-local-dev-run() {
     [[ "${DIR_329985B1E57A}" != /usr/local/* ]]
 }

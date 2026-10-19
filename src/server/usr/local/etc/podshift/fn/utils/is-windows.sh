@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# is-windows.sh
-# /usr/local/etc/podshift/fn/utils
+# @file: is-windows.sh
+# @dir: /usr/local/etc/podshift/fn/utils
+# @group: utils
+# @description: Detects whether the running system is Windows.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
 
-# Returns 0 (true) if the running system is Windows (native, Git Bash, MSYS, or Cygwin), non-zero otherwise.
+
+# @description: Returns 0 if the running system is Windows (native, Git Bash, MSYS, or Cygwin).
+# @exitcode: 0 if Windows, 1 otherwise.
 is-windows() {
     local kernel_name
     kernel_name="$(uname -s 2>/dev/null)"
