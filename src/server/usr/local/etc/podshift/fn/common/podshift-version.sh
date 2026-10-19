@@ -12,8 +12,10 @@ source "${DIR_E55364727DBB}/../utils/get-fedora-version.sh"
 # shellcheck source=../utils/is-podshift-rpm-install.sh
 source "${DIR_E55364727DBB}/../utils/is-podshift-rpm-install.sh"
 
+# @description: Prints the PodShift, Podman, and host version details.
+# @exitcode: 0 always.
 podshift-version() {
-    local installed=0 podshift_version distro_id distro_version distro_type distro_variant kernel_release kernel_arch
+    local installed=0 podshift_version podman_version distro_id distro_version distro_type distro_variant kernel_release kernel_arch
     local distro_line
     if is-podshift-rpm-install; then
         installed=1
@@ -34,6 +36,10 @@ podshift-version() {
         echo -e "${distro_line} (${distro_type}, ${kernel_release}-${kernel_arch})"
     else
         echo -e "$(uname -s) (${kernel_release}-${kernel_arch})"
+    fi
+    if command -v podman >/dev/null 2>&1; then
+        podman_version="$(podman --version 2>/dev/null | awk '{print $NF}')"
+        [[ -n "${podman_version}" ]] && echo -e "Podman v${podman_version}"
     fi
     if [[ "${installed}" -eq 0 ]]; then
         echo -e "\033[1;33mWarning: this is development code, not a working application.\033[0m" >&2
