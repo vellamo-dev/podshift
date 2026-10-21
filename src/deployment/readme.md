@@ -1,10 +1,10 @@
-# RPM Stager — Deployment
+# RPM Stager: Deployment
 
 Build-time tooling that stages the `src/server/` tree into the RPM buildroot.
 
 It clones the directory layout and copies each file with the correct permissions (shell scripts `0755`, all other payload `0644`), driven by a single allowlist, then generates the file and directory lists consumed by the RPM spec and by SELinux `restorecon`.
 
-Runs only when building the package — it is not part of the installed application.
+Runs only when building the package; it is not part of the installed application.
 
 All scripts run under `set -euo pipefail`, so any failure aborts the build instead of producing an incomplete RPM.
 
@@ -64,5 +64,5 @@ Each step emits a stable, machine-parseable tag, matching the install scripts' `
 
 ## Notes
 
-- **`allowed-extensions.conf` is a manual whitelist.** Adding a new file type to `src/server` requires adding its extension (or basename) here — otherwise `deploy-files.sh` silently skips it and the RPM ships without it.
+- **`allowed-extensions.conf` is a manual whitelist.** Adding a new file type to `src/server` requires adding its extension (or basename) here; otherwise `deploy-files.sh` silently skips it and the RPM ships without it.
 - **`conf/restorecon-dirs` is generated.** The source file is an empty placeholder; `generate-rpm-dirs-list.sh` overwrites it with the real directory list at build time.
