@@ -19,11 +19,13 @@ print-step-header() {
 }
 
 # @description: Emits an indented warning for the current step.
-# @param: $1 - warning message
+# @param: $1 - warning message (a trailing period is stripped)
 # @stderr: prints the yellow [WARN] line
 print-step-warn() {
     local message
     message="${1}"
+    # Keep status lines punctuation-free: strip one trailing period.
+    message="${message%.}"
     echo -e "\t\033[1;33m[WARN] ${message}\033[0m" >&2
 }
 
