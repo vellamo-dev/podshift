@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # set-owner-rootless.sh
-# /usr/local/etc/podshift/fn/rootless
+# /opt/podshift/fn/rootless
 # Changes the ownership of the specified file or directory to the rootless user.
 # Directories are processed recursively. Files are changed directly (without -R).
 

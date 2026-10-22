@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: make-rootless-remote-key.sh
-# @dir: /usr/local/etc/podshift/fn/rootless
+# @dir: /opt/podshift/fn/rootless
 # @group: rootless
 # @prefix: PS-PT
 # @id: KEY
