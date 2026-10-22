@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: enable-rootless-linger.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: LNG
@@ -96,22 +96,6 @@ enable-rootless-linger() {
     echo -e "\tReloading user manager..."
     systemctl --machine="300@.host" --user daemon-reload 2>/dev/null \
         || print-step-warn "could not reload the 300@.host user manager."
-
-    # Enable and start systemd-tmpfiles-setup.service (user level).
-    if systemctl --machine="300@.host" --user is-enabled --quiet systemd-tmpfiles-setup.service 2>/dev/null; then
-        echo -e "\tsystemd-tmpfiles-setup.service already enabled"
-    else
-        echo -e "\tEnabling systemd-tmpfiles-setup.service..."
-        systemctl --machine="300@.host" --user enable systemd-tmpfiles-setup.service 2>/dev/null \
-            || print-step-warn "failed to enable systemd-tmpfiles-setup.service."
-    fi
-    if systemctl --machine="300@.host" --user is-active --quiet systemd-tmpfiles-setup.service 2>/dev/null; then
-        echo -e "\tsystemd-tmpfiles-setup.service already started"
-    else
-        echo -e "\tStarting systemd-tmpfiles-setup.service..."
-        systemctl --machine="300@.host" --user start systemd-tmpfiles-setup.service 2>/dev/null \
-            || print-step-warn "failed to start systemd-tmpfiles-setup.service."
-    fi
 
     print-step-ok
 }

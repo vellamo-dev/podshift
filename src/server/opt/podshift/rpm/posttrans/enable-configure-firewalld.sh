@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: enable-configure-firewalld.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: FWD
@@ -57,9 +57,9 @@ enable-configure-firewalld() {
     # Configure firewall rules.
     echo -e "\tConfiguring rules..."
     # Remove the default ssh service (benign if already absent).
-    firewall-cmd --permanent --remove-service=ssh 2>/dev/null || true
+    firewall-offline-cmd --remove-service=ssh 2>/dev/null || true
     # Add the podshift service.
-    firewall-cmd --permanent --zone=public --add-service=podshift 2>/dev/null \
+    firewall-offline-cmd --zone=public --add-service=podshift 2>/dev/null \
         || print-step-warn "failed to add the podshift firewall service."
     # Reload the firewall.
     firewall-cmd --reload 2>/dev/null \

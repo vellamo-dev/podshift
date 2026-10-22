@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: deploy-runtime-conf.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: DRC
@@ -28,7 +28,7 @@ deploy-runtime-conf-file() {
     local dst_file filename
     dst_file="${1}"
     filename="$(basename "${dst_file}")"
-    # shellcheck source=../../../../../../var/lib/podshift/tpl
+    # shellcheck source=../../assets/tpl
     src_file="${PODSHIFT_RUNTIME_CONF_TEMPLATES}/${filename}"
     if [[ -f "${src_file}" && ! -f "${dst_file}" ]]; then
         echo -e "\t- ${filename}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: install-rootless-podman-auth-file.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: PAF

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: harden-ssh.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: HSS

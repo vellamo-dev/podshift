@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: make-podshift-user-podman-compatible.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: PMC
@@ -56,11 +56,6 @@ make-podshift-user-podman-compatible() {
                 || print-step-warn "failed to set setuid bit on ${bin_file}."
         fi
     done
-
-    # Migrate any existing storage for the podshift user.
-    echo -e "\tMigrating podman storage..."
-    su - podshift -c "podman system migrate" \
-        || print-step-warn "podman system migrate failed for podshift."
 
     print-step-ok
 }

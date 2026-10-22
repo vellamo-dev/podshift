@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: install-rootless-profile.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: PRF

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: update-selinux.sh
-# @dir: /usr/local/etc/podshift/rpm/posttrans
+# @dir: /opt/podshift/rpm/posttrans
 # @group: posttrans
 # @prefix: PS-PT
 # @id: SEL
@@ -37,11 +37,11 @@ update-selinux() {
 
     semanage import -f "${import_file}" 2>/dev/null
 
-    # Verify the end state: ports 1022 and 81 must be labelled ssh_port_t.
+    # Verify the end state: 1022 = ssh_port_t, 81 = http_port_t.
     port_list="$(semanage port -l)"
     if ! grep -qE 'ssh_port_t.*\b1022\b' <<<"${port_list}" \
-        || ! grep -qE 'ssh_port_t.*\b81\b' <<<"${port_list}"; then
-        print-step-warn "SELinux port labeling is incomplete (1022/81 are not ssh_port_t)."
+        || ! grep -qE 'http_port_t.*\b81\b' <<<"${port_list}"; then
+        print-step-warn "SELinux port labeling is incomplete (1022 is not ssh_port_t or 81 is not http_port_t)."
         return 0
     fi
 
