@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: enable-nw-manager.sh
-# @dir: /usr/local/etc/podshift/rpm/post
+# @dir: /opt/podshift/rpm/post
 # @group: post
 # @prefix: PS-PO
 # @id: ENM

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: trigger-rootless-dirs-update.sh
-# @dir: /usr/local/etc/podshift/rpm/post
+# @dir: /opt/podshift/rpm/post
 # @group: post
 # @prefix: PS-PO
 # @id: DRS
