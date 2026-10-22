@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: update-target-system.sh
-# @dir: /usr/local/etc/podshift/rpm/utils
+# @dir: /opt/podshift/rpm/utils
 # @group: utils
 # @description: Applies the kernel parameters and systemd unit files installed by the PodShift package.
 # @license: AGPL-3.0-or-later

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: wait-for-tools.sh
-# @dir: /usr/local/etc/podshift/rpm/utils
+# @dir: /opt/podshift/rpm/utils
 # @group: utils
 # @description: Waits for the tools required by the post-transaction steps to become available.
 # @license: AGPL-3.0-or-later
