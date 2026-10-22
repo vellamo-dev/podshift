@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: update-podshift-conf.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Updates or adds a key-value pair in the runtime configuration.
 # @license: AGPL-3.0-or-later
@@ -65,7 +65,7 @@ update-podshift-conf() {
 
     # Ensure the config exists and is readable; re-seed from the template otherwise.
     if [ ! -r "${conf_file}" ]; then
-        # shellcheck source=../../../../../../var/lib/podshift/tpl/runtime.conf
+        # shellcheck source=../../assets/tpl/runtime.conf
         sudo install -D -m 0644 "${PODSHIFT_RUNTIME_CONF_TEMPLATES}/runtime.conf" "${conf_file}" \
             || { print-conf-error "Failed to create ${conf_file} from template."; return 1; }
     fi

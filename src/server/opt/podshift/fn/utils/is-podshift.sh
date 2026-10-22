@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: is-podshift.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Detects whether the current user is the dedicated podshift user.
 # @license: AGPL-3.0-or-later

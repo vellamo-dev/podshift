@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: print-warning.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Prints a warning message to stderr in bold yellow.
 # @license: AGPL-3.0-or-later

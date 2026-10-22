@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: is-podshift-rpm-install.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Detects whether PodShift is installed via RPM on Fedora.
 # @license: AGPL-3.0-or-later

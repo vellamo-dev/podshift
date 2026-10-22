@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: get-fedora-version.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Prints the Fedora version id.
 # @license: AGPL-3.0-or-later

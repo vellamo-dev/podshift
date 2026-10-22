@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: require-podshift.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Stops if the current user is not the dedicated podshift user.
 # @license: AGPL-3.0-or-later

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: is-local-dev-run.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Detects whether running from a local dev checkout rather than the installed app.
 # @license: AGPL-3.0-or-later

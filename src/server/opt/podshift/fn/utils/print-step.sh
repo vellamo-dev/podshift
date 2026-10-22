@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: print-step.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Emits section headers tagged with the step id, plus indented [OK]/[WARN]/[SKIP] status.
 # @license: AGPL-3.0-or-later

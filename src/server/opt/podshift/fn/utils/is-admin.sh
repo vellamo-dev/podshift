@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: is-admin.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Detects whether the current user has administrator privileges.
 # @license: AGPL-3.0-or-later

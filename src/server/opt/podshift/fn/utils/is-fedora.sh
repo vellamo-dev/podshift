@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: is-fedora.sh
-# @dir: /usr/local/etc/podshift/fn/utils
+# @dir: /opt/podshift/fn/utils
 # @group: utils
 # @description: Detects whether the running system is Fedora.
 # @license: AGPL-3.0-or-later
