@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # podshift-version.sh
-# /usr/local/etc/podshift/fn/common
+# /opt/podshift/fn/common
 
 if [[ -z "${DIR_E55364727DBB:-}" ]]; then
     DIR_E55364727DBB="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

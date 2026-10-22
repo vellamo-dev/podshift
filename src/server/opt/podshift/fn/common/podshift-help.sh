@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: podshift-help.sh
-# @dir: /usr/local/etc/podshift/fn/common
+# @dir: /opt/podshift/fn/common
 # @group: common
 # @description: Renders PodShift help documents.
 # @license: AGPL-3.0-or-later
