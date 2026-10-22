@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: load-podshift-conf-nw.sh
-# @dir: /usr/local/etc/podshift/fn
+# @dir: /opt/podshift/fn
 # @group: network
 # @description: Derives and exports the host's network IP addresses.
 # @license: AGPL-3.0-or-later
@@ -103,7 +103,7 @@ podshift-conf-nw() {
     local initializer device_name system_nw_conf system_ips conf_ips ip_count conf_ip sys_ip i
     local -a system_ips_array conf_ips_array matched_ips_array remaining_ips_array
     # Read configuration from a conf file
-    source /usr/local/etc/podshift/fn/load-podshift-conf-runtime.sh --now
+    source /opt/podshift/fn/load-podshift-conf-runtime.sh --now
     initializer="${PODSHIFT_NW_INITIALIZER}"
     [ -z "$initializer" ] && initializer="cloud-init"
     device_name="${PODSHIFT_NW_DEVICE}"

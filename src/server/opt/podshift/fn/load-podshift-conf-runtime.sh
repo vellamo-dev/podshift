@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: load-podshift-conf-runtime.sh
-# @dir: /usr/local/etc/podshift/fn
+# @dir: /opt/podshift/fn
 # @group: runtime
 # @description: Loads (sources and exports) the PodShift runtime configuration.
 # @license: AGPL-3.0-or-later
@@ -26,7 +26,7 @@ load-podshift-conf-runtime() {
     path_r_cnf_file="${PODSHIFT_RUNTIME_CONF}"
     if [ -f "${path_r_cnf_file}" ]; then
         set -a
-        # shellcheck source=../../../../../var/lib/podshift/tpl/runtime.conf
+        # shellcheck source=../assets/tpl/runtime.conf
         source "${path_r_cnf_file}"
         set +a
     fi
