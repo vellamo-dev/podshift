@@ -40,6 +40,9 @@ prepare-files-for-rpm-package() {
     # Clone other files
     deploy-files "${build_root}" "${source_dir}"
 
+    # Create extensionless command links
+    deploy-sh-symlinks "${build_root}" "${source_dir}"
+
     # Generate files' list for RPM packager
     generate-files-list-for-rpm "${build_root}" "${rpm_exec_dir}/files.list"
 

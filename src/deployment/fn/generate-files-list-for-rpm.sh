@@ -21,7 +21,7 @@ generate-files-list-for-rpm() {
     path_files_list="$2"
     print-step-header "${step_tag}" "Generating files list..."
     : >"${path_files_list}"
-    find "${path_build}" -type f -printf '/%P\n' | sort >>"${path_files_list}"
+    find "${path_build}" \( -type f -o -type l \) -printf '/%P\n' | sort >>"${path_files_list}"
     cat "${path_files_list}"
     print-step-ok
 }
