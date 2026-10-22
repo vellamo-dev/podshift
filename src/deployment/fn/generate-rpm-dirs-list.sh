@@ -17,7 +17,7 @@ generate-rpm-dirs-list() {
     local -r step_tag="PS-DP-DRL"
     local root_path file_dirs_list path_file_dirs_list
     root_path=$(realpath "$1")
-    file_dirs_list=/usr/local/etc/podshift/conf/restorecon-dirs
+    file_dirs_list=/opt/podshift/conf/restorecon-dirs
     path_file_dirs_list="${root_path}/${file_dirs_list}"
     print-step-header "${step_tag}" "Generating directories list..."
     : >"${path_file_dirs_list}"
