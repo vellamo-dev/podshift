@@ -10,6 +10,7 @@ The PodShift shell scripts follow a small set of consistent conventions. The cod
   - step scripts additionally carry `@prefix` and `@id`
 - Every function has a bashdoc block: `@description` always, plus `@param` / `@exitcode` / `@stdout` / `@stderr` only when they add information.
 - `@tag:` values use a single space after the colon (no column alignment), and no em-dashes are used.
+- A `readme.md` documents a directory only when the files' purpose or nature cannot be expressed in the files themselves, or to cover a directory's content and purpose.
 
 ## Functions
 
