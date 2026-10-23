@@ -19,12 +19,12 @@ source "${DIR_D72988F37ECD}/is-podshift.sh"
 # @exitcode: 0 if podshift user, 1 otherwise.
 require-podshift() {
     if ! is-podshift; then
-        echo "Unauthorised. Must be the podshift user." >&2
+        echo "Unauthorised. Must be the podshift user (root: sudo -u podshift -i)." >&2
         return 1
     fi
 }
 
 # Executes only when called or sourced with --now
-if [[ "${BASH_SOURCE[0]}" == "${0}" || "${BASH_ARGV[0]:-}" != "${BASH_SOURCE[0]}" ]]; then
-    [[ "${1}" == "--now" ]] && require-podshift
-fi
+case "${1:-}" in
+    --now) require-podshift ;;
+esac

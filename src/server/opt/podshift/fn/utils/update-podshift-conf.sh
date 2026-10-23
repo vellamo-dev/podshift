@@ -90,6 +90,6 @@ update-podshift-conf() {
 }
 
 # Executes only when called or sourced with --set
-if [[ "${BASH_SOURCE[0]}" == "${0}" || "${BASH_ARGV[0]:-}" != "${BASH_SOURCE[0]}" ]]; then
-    [[ "$1" == "--set" ]] && update-podshift-conf "$2" "$3"
-fi
+case "${1:-}" in
+    --set) update-podshift-conf "$2" "$3" ;;
+esac

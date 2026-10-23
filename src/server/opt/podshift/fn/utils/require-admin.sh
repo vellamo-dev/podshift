@@ -25,6 +25,6 @@ require-admin() {
 }
 
 # Executes only when called or sourced with --now
-if [[ "${BASH_SOURCE[0]}" == "${0}" || "${BASH_ARGV[0]:-}" != "${BASH_SOURCE[0]}" ]]; then
-    [[ "${1}" == "--now" ]] && require-admin
-fi
+case "${1:-}" in
+    --now) require-admin ;;
+esac
