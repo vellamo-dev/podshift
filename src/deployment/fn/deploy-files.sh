@@ -22,6 +22,11 @@ deploy-files() {
     local -r step_tag="PS-DP-FLS"
     local path_files path_build script_dir conf_file line f base ext
     local -A allowed_ext allowed_exact
+    # Source-only documentation: kept in the repo, never shipped in the RPM.
+    local -a skip_paths=(
+        "usr/bin/readme.md"
+        "usr/sbin/readme.md"
+    )
 
     script_dir="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
     conf_file="${script_dir}/../allowed-extensions.conf"
@@ -59,6 +64,9 @@ deploy-files() {
         case "${base}" in
             .*) continue ;;   # skip hidden files (e.g. .DS_Store)
         esac
+        for skip in "${skip_paths[@]}"; do
+            [[ "${f#./}" == "${skip}" ]] && continue 2
+        done
         if [[ "${base}" == *.* ]]; then
             ext=".${base##*.}"
             [[ -n "${allowed_ext[${ext}]:-}" ]] || continue
