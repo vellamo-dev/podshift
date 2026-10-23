@@ -6,8 +6,9 @@
 # JetBrains / IntelliJ IDEA
 .idea/
 
-# Build and test artifacts
-src/test/share/
+# Build and test artifacts (only readme.md is tracked)
+artifacts/*
+!artifacts/readme.md
 *.rpm
 
 # Caches and temporary files

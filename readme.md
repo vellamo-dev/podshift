@@ -4,6 +4,8 @@ PodShift is a lightweight container orchestration toolset for small servers. It 
 
 Use any cloud you like, or none at all. PodShift simply never locks you in.
 
+There is no magic here. PodShift is so simple you could have built it yourself long ago. It just does it for you, the right way, in minutes.
+
 ## Big Problems PodShift Solves
 
 - Development, testing, and production never quite match. PodShift uses the same simple configuration files everywhere, so what you test is what runs.
