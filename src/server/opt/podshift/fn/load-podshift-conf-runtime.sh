@@ -23,6 +23,15 @@ load-podshift-conf-runtime() {
         echo "Error: PODSHIFT_RUNTIME_CONF is not defined." >&2
         return 1
     fi
+    # Custom (CD manager) TSV_* variables first.
+    if [ -n "${PODSHIFT_TSV_CONF:-}" ] && [ -f "${PODSHIFT_TSV_CONF}" ]; then
+        set -a
+        # shellcheck source=../../home/podshift/.config/podshift/tsv.conf
+        source "${PODSHIFT_TSV_CONF}"
+        set +a
+    fi
+
+    # System runtime variables last (they win).
     path_r_cnf_file="${PODSHIFT_RUNTIME_CONF}"
     if [ -f "${path_r_cnf_file}" ]; then
         set -a
@@ -33,6 +42,6 @@ load-podshift-conf-runtime() {
 }
 
 # Executes only when called or sourced with --now
-if [[ "${BASH_SOURCE[0]}" == "${0}" || "${BASH_ARGV[0]:-}" != "${BASH_SOURCE[0]}" ]]; then
-    [[ "${1}" == "--now" ]] && load-podshift-conf-runtime
-fi
+case "${1:-}" in
+    --now) load-podshift-conf-runtime ;;
+esac

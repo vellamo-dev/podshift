@@ -24,6 +24,6 @@ load-podshift-conf-main() {
 }
 
 # Executes only when called or sourced with --now
-if [[ "${BASH_SOURCE[0]}" == "${0}" || "${BASH_ARGV[0]:-}" != "${BASH_SOURCE[0]}" ]]; then
-    [[ "${1}" == "--now" ]] && load-podshift-conf-main
-fi
+case "${1:-}" in
+    --now) load-podshift-conf-main ;;
+esac
