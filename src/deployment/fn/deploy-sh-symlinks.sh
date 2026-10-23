@@ -24,11 +24,11 @@ deploy-sh-symlinks() {
     print-step-header "${step_tag}" "Deploying command links..."
     mkdir -p "${path_build}/usr/bin" "${path_build}/usr/sbin"
 
-    # Dispatcher and first-class commands become /usr/bin/<name>.
-    for script in "${path_src}/opt/podshift/bin/"*.sh; do
+    # Dispatcher becomes /usr/bin/podshift.
+    for script in "${path_src}/opt/podshift/cli/"*.sh; do
         [[ -e "${script}" ]] || continue
         name="$(basename "${script}" .sh)"
-        ln -sfn "/opt/podshift/bin/${name}.sh" "${path_build}/usr/bin/${name}"
+        ln -sfn "/opt/podshift/cli/${name}.sh" "${path_build}/usr/bin/${name}"
         count=$((count + 1))
     done
 
