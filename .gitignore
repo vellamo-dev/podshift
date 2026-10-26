@@ -1,0 +1,21 @@
+# macOS filesystem metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# JetBrains / IntelliJ IDEA
+.idea/
+
+# Build and test artifacts (only readme.md is tracked)
+artifacts/*
+!artifacts/readme.md
+*.rpm
+
+# Caches and temporary files
+.cache/
+.tmp/
+temp/
+tmp/
+
+# Internal working notes (not published)
+docs/internal-*.md
