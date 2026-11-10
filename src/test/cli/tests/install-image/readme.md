@@ -1,0 +1,6 @@
+# install-image
+
+Builds the server-like Fedora image for the installer VM, or reuses it when it is new enough.
+
+- **Mac:** builds a stopped Lima base VM, `TST_RPM_INSTALLER_BASE`, from the fixed Lima config `src/test/cli/os-specific/mac/lima/rpm-installer.yaml`, or reuses it if it is new enough (`TST_RPM_INSTALLER_MAX_AGE_HOURS`, one week by default) and the config has not changed since. Lima boots the Fedora Cloud image for aarch64 (it downloads and caches it itself), and the config's first-boot script gives it the same packages and settings as the Fedora VM disk, plus the test VM SSH key for root. Then `/etc/machine-id` is emptied, so every clone makes its own, and the base is stopped. install-vm-start clones the test VM from it. Don't start the base by hand: it would save a machine-id again. If you did, run `./test --fresh install-image`. The config is also checked with `limactl validate`.
+- **Fedora:** downloads the Fedora Server image (checked against Fedora's SHA256 checksum), then builds the VM disk with `virt-customize`: the same packages and settings as the Mac VM, plus the test VM SSH key (`~/.ssh/podshift-test-vm.pub`) for root. Both files are kept in `TST_VM_IMAGE_DIR` (default `~/.cache/podshift-test`).

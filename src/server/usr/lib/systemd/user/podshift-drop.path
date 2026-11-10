@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch the PodShift drop directory for new files
+
+[Path]
+PathChanged=/home/podshift/drop
+# See: [podshift-drop-debounce.service](<./podshift-drop-debounce.service>)
+Unit=podshift-drop-debounce.service
+
+[Install]
+WantedBy=default.target

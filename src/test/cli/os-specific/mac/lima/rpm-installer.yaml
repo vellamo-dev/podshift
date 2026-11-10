@@ -1,0 +1,51 @@
+# @file: rpm-installer.yaml
+# @source-dir: src/test/cli/os-specific/mac/lima
+# @group: test
+# @description: Lima config of the RPM installer VM on a Mac. Lima boots the Fedora Cloud image (aarch64, it downloads and caches it itself) with the vz driver and the vzNAT network, which gives the VM its own IP address, reachable from the Mac. Lima needs cloud-init, which the Fedora Server image does not run. The first-boot script gives the VM the same packages and settings as the Fedora test VM, plus the test VM SSH key for root. create-vm sets the CPUs, memory, MAC address and SSH key when it starts the VM.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
+
+vmType: vz
+images:
+- location: "https://dl.fedoraproject.org/pub/fedora/linux/releases/45/Cloud/aarch64/images/Fedora-Cloud-Base-Generic-45-1.4.aarch64.qcow2"
+  arch: aarch64
+networks:
+- vzNAT: true
+mounts: []
+# Cockpit on the host: https://localhost:9090
+portForwards:
+- guestPort: 9090
+  hostPort: 9090
+containerd:
+  system: false
+  user: false
+param:
+  SshPubKey: ""
+provision:
+- mode: system
+  script: |
+    #!/usr/bin/env bash
+    set -eux -o pipefail
+    test -n "${PARAM_SshPubKey}"
+    dnf -y update
+    dnf -y install systemd systemd-udev dbus dbus-broker NetworkManager firewalld openssh-server cockpit cockpit-ws cockpit-system selinux-policy-targeted policycoreutils tuned chrony rsyslog dnf-plugins-core net-tools iproute iputils hostname curl wget vim sudo procps-ng
+    # Installing the qemu-user-static packages restarts systemd-binfmt once per package, which hits systemd's start limit. Start it once cleanly.
+    systemctl reset-failed systemd-binfmt.service
+    systemctl start systemd-binfmt.service
+    systemctl enable --now sshd firewalld cockpit.socket chronyd NetworkManager tuned rsyslog
+    systemctl set-default multi-user.target
+    hostnamectl set-hostname fedora-server
+    firewall-cmd --set-default-zone=public
+    firewall-cmd --permanent --add-service=ssh
+    firewall-cmd --permanent --add-service=cockpit
+    firewall-cmd --reload
+    sed -i 's/^pool .*/pool 2.fedora.pool.ntp.org iburst/' /etc/chrony.conf
+    systemctl restart chronyd
+    tuned-adm profile virtual-guest
+    sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+    mkdir -p /root/.ssh
+    chmod 700 /root/.ssh
+    printf '%s\n' "${PARAM_SshPubKey}" >/root/.ssh/authorized_keys
+    chmod 600 /root/.ssh/authorized_keys
+    restorecon -R /root/.ssh

@@ -1,0 +1,20 @@
+{
+  "action": "ping",
+  "name": "Ping",
+  "description": "Confirms that the handler can run a module in the podshift session.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "pong": { "type": "boolean" },
+      "uid": { "type": "integer", "enum": [300] }
+    },
+    "required": ["pong", "uid"],
+    "additionalProperties": false
+  }
+}

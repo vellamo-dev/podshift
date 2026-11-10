@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch the PodShift validation queue for waiting quadlets
+
+[Path]
+DirectoryNotEmpty=/home/podshift/.quadlets/validation-queue
+# See: [podshift-qdl-validate.service](<./podshift-qdl-validate.service>)
+Unit=podshift-qdl-validate.service
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,8 @@
+[Unit]
+Description=Reset the drop debounce timer on every drop event
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+# See: [drop-debounce.sh](<../../../../opt/podshift/fn/service/drop-debounce.sh>)
+ExecStart=/opt/podshift/fn/service/drop-debounce.sh

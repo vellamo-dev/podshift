@@ -1,0 +1,10 @@
+[Unit]
+Description=Validate quadlets waiting in the PodShift validation queue
+ConditionPathExists=/home/podshift/.quadlets/validation-queue
+After=podshift-drop-process.service
+
+[Service]
+Type=oneshot
+# See: [qdl-validate.sh](<../../../../opt/podshift/fn/service/qdl-validate.sh>)
+ExecStart=/opt/podshift/fn/service/qdl-validate.sh
+TimeoutStartSec=120s

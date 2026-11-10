@@ -1,0 +1,11 @@
+[Unit]
+Description=Install quadlets waiting in the PodShift source directory
+ConditionPathExists=/home/podshift/.quadlets/source
+After=podshift-qdl-validate.service
+
+[Service]
+Type=oneshot
+# See: [qdl-install.sh](<../../../../opt/podshift/fn/service/qdl-install.sh>)
+ExecStart=/opt/podshift/fn/service/qdl-install.sh
+# Starting a container can pull its image, which takes longer than the default.
+TimeoutStartSec=30min

@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch the PodShift source directory for quadlets waiting to be installed
+
+[Path]
+DirectoryNotEmpty=/home/podshift/.quadlets/source
+# See: [podshift-qdl-install.service](<./podshift-qdl-install.service>)
+Unit=podshift-qdl-install.service
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,4 @@
+[sshd]
+enabled = true
+port = 22,1022
+ignoreip = 127.0.0.1/8

@@ -1,0 +1,12 @@
+# 90-podshift.preset
+# PodShift user unit enablement preset.
+# Units listed here are enabled by default at install or upgrade.
+# Site admins can override these in /etc/systemd/user-preset/.
+
+enable podman.socket
+enable podman-auto-update.timer
+enable systemd-tmpfiles-setup.service
+enable podshift-drop.path
+enable podshift-drop-safety.timer
+enable podshift-qdl-validate.path
+enable podshift-qdl-install.path

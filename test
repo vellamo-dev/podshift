@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# @file: test
+# @source-dir: .
+# @group: test
+# @category: entry
+# @description: Runs the test suite from the project root, for example, ./test host-check. Passes everything on to src/test/run.sh.
+# @warning: Run it as ./test or bash test. A bare "test" runs the shell's own test command instead.
+# @license: AGPL-3.0-or-later
+# @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
+# @author: Vellamo.fyi
+
+if [[ -z "${DIR_208837B87F5C:-}" ]]; then
+    DIR_208837B87F5C="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    readonly DIR_208837B87F5C
+fi
+
+# Started with "bash test" on a copy that lost its executable bit: fix it once.
+if [[ ! -x "${DIR_208837B87F5C}/test" ]]; then
+    chmod +x "${DIR_208837B87F5C}/test" && echo "Made ./test executable. Next time run: ./test <test>"
+fi
+
+exec bash "${DIR_208837B87F5C}/src/test/run.sh" "$@"

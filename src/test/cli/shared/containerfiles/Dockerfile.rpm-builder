@@ -1,0 +1,24 @@
+# @file: Dockerfile.rpm-builder
+# @source-dir: src/test/cli/shared/containerfiles
+# @description: RPM builder image. The Fedora version comes from TST_FEDORA_VERSION as a build argument.
+ARG FEDORA_VERSION=45
+FROM fedora:${FEDORA_VERSION}
+
+RUN dnf install -y \
+    bsdtar \
+    fedora-packager \
+    libarchive \
+    mock \
+    rpm-build \
+    rpmdevtools \
+    tree \
+    && dnf clean all \
+    && useradd -m -G mock builder
+
+RUN mkdir /builder /share
+
+VOLUME /share
+
+WORKDIR /builder
+
+CMD ["sleep", "infinity"]

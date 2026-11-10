@@ -1,0 +1,5 @@
+# All files are text and use LF line endings (Linux-only project, no CRLF).
+* text eol=lf
+
+# Binary files (build artifacts should never be committed as text).
+*.rpm binary

@@ -1,0 +1,12 @@
+[Unit]
+Description=Periodically sweep the PodShift drop directory
+
+[Timer]
+OnCalendar=*-*-* *:0/5:00
+OnStartupSec=30s
+Persistent=true
+# See: [podshift-drop-process.service](<./podshift-drop-process.service>)
+Unit=podshift-drop-process.service
+
+[Install]
+WantedBy=default.target

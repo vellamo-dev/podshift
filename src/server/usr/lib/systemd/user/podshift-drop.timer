@@ -1,0 +1,12 @@
+[Unit]
+Description=Fire the drop processor after a quiet period
+StartLimitIntervalSec=0
+
+[Timer]
+OnActiveSec=5s
+AccuracySec=1s
+# See: [podshift-drop-process.service](<./podshift-drop-process.service>)
+Unit=podshift-drop-process.service
+
+[Install]
+WantedBy=default.target

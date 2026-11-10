@@ -1,0 +1,19 @@
+Usage:
+    ./test [--plain] [--fresh] <test>...
+    ./test --help [--md | <test>]
+
+Options:
+    --plain         Plain output, without colors or spinner.
+    --fresh         Rebuild the RPM builder image and the installer VM image instead of reusing them.
+    --help          This help.
+    --help --md     The testing guide, src/test/readme.md.
+    --help <test>   One test: its tags, steps and readme.
+
+{{TESTS}}
+
+Exit codes:
+    0  passed
+    1  error in the test or its environment
+    2  PodShift problem
+    3  cannot run here
+    130  stopped with Ctrl+C

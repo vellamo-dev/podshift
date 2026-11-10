@@ -1,0 +1,4 @@
+[DEFAULT]
+bantime = 3600
+maxretry = 6
+findtime = 600

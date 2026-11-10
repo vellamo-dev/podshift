@@ -1,0 +1,10 @@
+[Unit]
+Description=Process files dropped into the PodShift drop directory
+ConditionPathExists=/home/podshift/drop
+# See: [podshift-qdl-validate.service](<./podshift-qdl-validate.service>)
+Wants=podshift-qdl-validate.service
+
+[Service]
+Type=oneshot
+# See: [drop-process.sh](<../../../../opt/podshift/fn/service/drop-process.sh>)
+ExecStart=/opt/podshift/fn/service/drop-process.sh

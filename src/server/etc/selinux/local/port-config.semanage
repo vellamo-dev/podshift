@@ -1,0 +1,2 @@
+port -a -t ssh_port_t -p tcp 1022
+port -a -t http_port_t -p tcp 81

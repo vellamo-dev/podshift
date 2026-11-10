@@ -1,0 +1,15 @@
+podshift: manages the PodShift server.
+
+Usage:
+    podshift [--plain] <command> [arguments]
+    podshift --help [<command>]
+    podshift --version
+
+Options:
+    --help, -h      Show this help, or the help for one command.
+    --version, -v   Show the PodShift, Podman and host versions.
+    --plain         Plain output, without colors or spinner.
+
+{{commands}}
+
+See 'podshift --help <command>' for details.

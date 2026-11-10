@@ -1,0 +1,34 @@
+{
+  "action": "capabilities",
+  "name": "Capabilities",
+  "description": "Lists every recognised action with its metadata and contracts.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "actions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "status": { "type": "string", "enum": ["active", "deprecated", "retired"] },
+            "input": { "type": "object" },
+            "output": { "type": "object" }
+          },
+          "required": ["action", "name", "description", "status", "input", "output"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["actions"],
+    "additionalProperties": false
+  }
+}
