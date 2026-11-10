@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.9.1
+Version: 0.9.2
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -10,7 +10,7 @@ BuildArch: noarch
 BuildRequires: systemd-rpm-macros
 %global branch stable
 Source0: https://github.com/vellamo-dev/podshift/archive/refs/heads/%{branch}.tar.gz
-Source1: postun.sh
+Source1: https://raw.githubusercontent.com/vellamo-dev/podshift/%{branch}/src/server/opt/podshift/rpm/postun.sh
 
 %global debug_package %{nil}
 
