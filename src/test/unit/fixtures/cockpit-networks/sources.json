@@ -1,0 +1,5 @@
+{
+  "tsv-nw1": {"source": "quadlet", "unit": "tsv-nw1-network.service", "unit_state": "active", "file": "~/.config/containers/systemd/shop.qdl-bundle/tsv-nw1.network", "app": "shop"},
+  "example-unit": {"source": "unit", "unit": "example-unit-network.service", "unit_state": "inactive", "file": "~/.config/systemd/user/example-unit-network.service"},
+  "podman": {"source": "unit", "unit": "ignored.service"}
+}

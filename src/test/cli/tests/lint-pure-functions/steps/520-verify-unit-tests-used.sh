@@ -21,7 +21,7 @@ verify-unit-tests-used() {
         [[ -f "${file}" ]] || continue
         name="$(basename -- "${file}" .bats)"
         count=$((count + 1))
-        if ! grep -rl --include="${name}.sh" '^# @unit-test: yes' "${TST_PODSHIFT_DIR}" | grep -q .; then
+        if ! grep -rl --include="${name}.sh" '^# @unit-test: yes' "${TST_PODSHIFT_DIR}" src/test/cli/shared/fn | grep -q .; then
             echo "DETAIL: ${name}.bats: no ${name}.sh tagged @unit-test: yes"
             bad=$((bad + 1))
         fi

@@ -1,0 +1,10 @@
+[copr:copr.fedorainfracloud.org:vellamo:cockpit-podshift]
+name=Copr repo for cockpit-podshift owned by vellamo
+baseurl=https://download.copr.fedorainfracloud.org/results/vellamo/cockpit-podshift/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/vellamo/cockpit-podshift/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1

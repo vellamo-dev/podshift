@@ -50,6 +50,134 @@ cockpit-dispatch-action() {
         --arg realm root \
         '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
     collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/overview-status" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action overview-status \
+        --arg function cockpit-module-overview-status \
+        --arg directory "${directory}" \
+        --arg realm root \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/overview-usage" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action overview-usage \
+        --arg function cockpit-module-overview-usage \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/overview-info" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action overview-info \
+        --arg function cockpit-module-overview-info \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/overview-config" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action overview-config \
+        --arg function cockpit-module-overview-config \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/health-check" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action health-check \
+        --arg function cockpit-module-health-check \
+        --arg directory "${directory}" \
+        --arg realm root \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/networks-list" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action networks-list \
+        --arg function cockpit-module-networks-list \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/images-list" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action images-list \
+        --arg function cockpit-module-images-list \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/volumes-list" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action volumes-list \
+        --arg function cockpit-module-volumes-list \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/containers-list" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action containers-list \
+        --arg function cockpit-module-containers-list \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/inspect" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action inspect \
+        --arg function cockpit-module-inspect \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/secrets-list" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action secrets-list \
+        --arg function cockpit-module-secrets-list \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/services-list" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action services-list \
+        --arg function cockpit-module-services-list \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/service-view" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action service-view \
+        --arg function cockpit-module-service-view \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/service-logs" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action service-logs \
+        --arg function cockpit-module-service-logs \
+        --arg directory "${directory}" \
+        --arg realm root \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/quadlets-list" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action quadlets-list \
+        --arg function cockpit-module-quadlets-list \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/quadlet-view" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action quadlet-view \
+        --arg function cockpit-module-quadlet-view \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
     if [[ "${mode}" == "list" ]]; then
         printf '%s' "${collected}" | jq -c -s '.'
         return

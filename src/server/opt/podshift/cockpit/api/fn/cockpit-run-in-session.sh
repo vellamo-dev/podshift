@@ -24,16 +24,19 @@ fi
 #   Requires effective UID 300, resolves the action through the dispatch map and sources the
 #   module. No envelope is written and nothing is logged.
 # @arg: $1 - action name.
+# @arg: $2 - action arguments as one JSON object; {} when empty. The module function gets it as its first argument.
 # @stdout: the module data on success.
 # @stderr: a fixed note when the process is not uid 300.
 # @exitcode: 0 when the module ran, 1 when the uid, the action or the module is refused.
 cockpit-session-run() {
-    local action resolved fn_name module_dir realm rest
+    local action args resolved fn_name module_dir realm rest
     if [[ "${EUID}" -ne 300 ]]; then
         printf 'podshift-api: session entry requires uid 300\n' >&2
         return 1
     fi
     action="${1:-}"
+    args="${2:-}"
+    [[ -n "${args}" ]] || args='{}'
     # shellcheck source=./cockpit-dispatch-action.sh
     declare -F cockpit-dispatch-action >/dev/null || source "${DIR_7CB42E0E6E57}/cockpit-dispatch-action.sh"
     resolved="$(cockpit-dispatch-action lookup "${action}" 2>/dev/null)" || return 1
@@ -54,7 +57,7 @@ cockpit-session-run() {
     # shellcheck source=/dev/null
     source "${module_dir}/module.sh"
     declare -F "${fn_name}" >/dev/null || return 1
-    "${fn_name}"
+    "${fn_name}" "${args}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

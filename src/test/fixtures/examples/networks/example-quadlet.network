@@ -1,0 +1,9 @@
+# Example Quadlet network for the Cockpit UI (dev/test data only).
+[Unit]
+Description=PodShift example Quadlet network
+
+[Network]
+NetworkName=example-quadlet
+Subnet=10.201.0.0/24
+Gateway=10.201.0.1
+Label=podshift.example=1

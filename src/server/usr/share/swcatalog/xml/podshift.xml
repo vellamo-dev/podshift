@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PodShift UI entry for the Cockpit Applications page (AppStream catalogue data).
+  The podshift RPM installs this file, so PodShift UI is listed with an Install button.
+  Install pulls cockpit-podshift from the vellamo/cockpit-podshift COPR repository,
+  which the podshift RPM also enables. Keep the text in sync with
+  fyi.vellamo.cockpit_podshift.metainfo.xml in cockpit-podshift.
+-->
+<components version="0.8" origin="podshift">
+  <component type="addon">
+    <id>fyi.vellamo.cockpit_podshift</id>
+    <pkgname>cockpit-podshift</pkgname>
+    <metadata_license>CC0-1.0</metadata_license>
+    <name>PodShift UI</name>
+    <summary>Cockpit UI for PodShift</summary>
+    <description>
+      <p>View a PodShift server in Cockpit: containers, volumes, networks, images, secrets, services and Quadlets.</p>
+      <p>Installed from the vellamo/cockpit-podshift COPR repository, which PodShift enables. To install from a terminal: sudo dnf install -y cockpit-podshift</p>
+    </description>
+    <project_license>AGPL-3.0-or-later AND LGPL-2.1-or-later</project_license>
+    <url type="homepage">https://github.com/vellamo-dev/cockpit-podshift</url>
+    <url type="bugtracker">https://github.com/vellamo-dev/cockpit-podshift/issues</url>
+    <extends>org.cockpit_project.cockpit</extends>
+    <launchable type="cockpit-manifest">podshift</launchable>
+  </component>
+</components>

@@ -1,0 +1,31 @@
+{
+  "action": "overview-info",
+  "name": "Overview info",
+  "description": "Lists the OS, Podman, PodShift and Fail2Ban versions.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "rows": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "label": { "type": "string" },
+            "value": {}
+          },
+          "required": ["id", "label", "value"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["rows"],
+    "additionalProperties": false
+  }
+}

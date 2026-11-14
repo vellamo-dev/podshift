@@ -14,10 +14,8 @@ For a desktop install, create `/etc/podshift-desktop` before you install the pac
 
 #### From COPR
 
-<!-- TODO Update when the PodShift COPR repository is published. -->
-
 ```
-sudo dnf copr enable -y vellamo-dev/podshift && sudo dnf install -y podshift
+sudo dnf copr enable -y vellamo/podshift && sudo dnf install -y podshift
 ```
 
 #### From your own build
@@ -32,10 +30,8 @@ sudo dnf install -y ./artifacts/rpm/podshift-*.noarch.rpm
 
 #### From COPR
 
-<!-- TODO Update when the PodShift COPR repository is published. -->
-
 ```
-sudo touch /etc/podshift-desktop && sudo dnf copr enable -y vellamo-dev/podshift && sudo dnf install -y podshift
+sudo touch /etc/podshift-desktop && sudo dnf copr enable -y vellamo/podshift && sudo dnf install -y podshift
 ```
 
 #### From your own build
@@ -44,6 +40,18 @@ Build the package first (see [Testing](../src/test/readme.md#build-the-package))
 
 ```
 sudo touch /etc/podshift-desktop && sudo dnf install -y ./artifacts/rpm/podshift-*.noarch.rpm
+```
+
+### PodShift UI (optional)
+
+PodShift UI is an optional Cockpit page that shows the server's containers, volumes, networks, images, secrets, services, Quadlets and health, for administrators and the podshift user. See the [PodShift UI docs](https://github.com/vellamo-dev/cockpit-podshift/blob/main/docs/readme.md).
+
+PodShift adds PodShift UI to the Applications page in Cockpit. Open Applications and press Install next to PodShift UI. The package comes from the `vellamo/cockpit-podshift` COPR repository, which PodShift enables, so no other step is needed.
+
+From a terminal:
+
+```
+sudo dnf install -y cockpit-podshift
 ```
 
 ### Check the install
@@ -123,7 +131,7 @@ The built-in help lists every command: `podshift --help` and `podshift --help <c
 
 Run as the podshift user (after `sudo -u podshift -i`):
 
-- `containers`, `images`, `pods`, `networks`, `volumes` - the rootless resources
+- `containers`, `images`, `pods`, `networks`, `volumes`, `quadlets` - the rootless resources
 - `services`, `failed-services`, `reset-failed`, `daemon-reload` - user systemd service state
 - `update` - update containers that have auto-update on
 - `status-podman` - the rootless Podman API socket

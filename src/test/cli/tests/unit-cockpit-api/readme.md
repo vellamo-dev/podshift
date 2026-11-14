@@ -1,6 +1,6 @@
 # unit-cockpit-api
 
-Checks the Cockpit JSON handler, the ping and capabilities modules, and capability contracts on this computer. It needs `jq`.
+Checks the Cockpit JSON handler, the ping, capabilities, overview, list, inspect, service and Quadlet view modules, and capability contracts on this computer. It needs `jq`.
 
 The successful ping path uses a mock of `systemd-run`. Like the real command, the mock refuses a named FIFO or a regular file as stdout or stderr, so the handler must pass session output and errors through anonymous pipes. It does not enter a real `podshift@.host` session and it does not show that Fedora or Cockpit were tested. A non-root process is refused before stdin is read.
 

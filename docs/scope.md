@@ -21,7 +21,8 @@ PodShift is an installer and manager for a single rootless Podman server. It set
 
 - **A multi-node or cluster orchestrator**: no Kubernetes/Nomad/Swarm-style scheduling; each server is independent.
 - **Cross-platform or cross-distro**: Fedora Linux only, 64-bit.
-- **A GUI or web interface**: a cockpit plugin is a separate future concern, not core scope.
+- **A GUI or web interface**: PodShift is fully managed from the terminal. The Cockpit UI is the separate, optional add-on [cockpit-podshift](https://github.com/vellamo-dev/cockpit-podshift), not core scope.
+- **An installer for the UI**: PodShift never installs PodShift UI (`cockpit-podshift`). It only lists the UI on Cockpit's Applications page, and the admin decides whether to install it there.
 - **A general system configuration tool**: it is Podman-specific.
 - **A re-implementation of Podman, systemd, or firewalld**: it wraps them, never replaces them.
 - **A CI system**: PodShift runs and updates containers; it ships no build, test, or push tooling. The server is still a normal Podman host, so you can build and push on it yourself; that's your setup, not PodShift's.

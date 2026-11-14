@@ -1,0 +1,7 @@
+[
+  {"Name": "pgdata", "Driver": "local", "Mountpoint": "/home/podshift/.local/share/containers/storage/volumes/pgdata/_data", "CreatedAt": "2026-10-28T11:15:00.123456789+02:00", "Labels": {"podshift.app": "shop"}, "Scope": "local", "Options": {}, "Anonymous": false},
+  {"Name": "web-data", "Driver": "local", "Mountpoint": "/home/podshift/.local/share/containers/storage/volumes/web-data/_data", "CreatedAt": "2026-11-02T14:40:00Z", "Labels": {}, "Scope": "local", "Options": {}},
+  {"Name": "backups", "Driver": "local", "Mountpoint": "/home/podshift/.local/share/containers/storage/volumes/backups/_data", "CreatedAt": "2026-09-30T18:05:00Z", "Labels": {"purpose": "nightly"}, "Scope": "local", "Options": {}},
+  {"Name": "cache", "Driver": "local", "Mountpoint": "/home/podshift/.local/share/containers/storage/volumes/cache/_data", "CreatedAt": "2026-11-08T07:20:00Z", "Labels": null, "Scope": "local", "Options": {"type": "tmpfs", "device": "tmpfs", "o": "size=256m"}},
+  {"Name": "3f9a1c7e5b2d4086a1e9c3b7d5f2048e6a9c1b3d5f7e9a2c4b6d8f0e1a3c5b7d", "Driver": "local", "Mountpoint": "/home/podshift/.local/share/containers/storage/volumes/3f9a1c7e5b2d4086a1e9c3b7d5f2048e6a9c1b3d5f7e9a2c4b6d8f0e1a3c5b7d/_data", "CreatedAt": "2026-11-10T21:03:00Z", "Labels": {}, "Scope": "local", "Options": {}}
+]

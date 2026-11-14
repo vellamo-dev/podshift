@@ -1,0 +1,31 @@
+{
+  "action": "overview-usage",
+  "name": "Overview usage",
+  "description": "Lists usage counts for services, networks, containers, volumes, images, Quadlets and secrets.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "rows": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "label": { "type": "string" },
+            "value": {}
+          },
+          "required": ["id", "label", "value"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["rows"],
+    "additionalProperties": false
+  }
+}

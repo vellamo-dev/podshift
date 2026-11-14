@@ -1,0 +1,12 @@
+# Example Quadlet container that keeps its image in use (dev/test data only).
+[Unit]
+Description=PodShift example container
+
+[Container]
+ContainerName=example-container
+Image=docker.io/library/alpine:latest
+Exec=sleep infinity
+Label=podshift.example=1
+
+[Install]
+WantedBy=default.target

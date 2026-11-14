@@ -1,0 +1,14 @@
+# Example Quadlet container that mounts a named volume (dev/test data only).
+# The step creates example-container-vol with the podshift.example=1 label before this starts.
+[Unit]
+Description=PodShift example container with a volume
+
+[Container]
+ContainerName=example-volume-container
+Image=docker.io/library/alpine:latest
+Volume=example-container-vol:/data
+Exec=sh -c "echo PodShift example > /data/example.txt && exec sleep infinity"
+Label=podshift.example=1
+
+[Install]
+WantedBy=default.target

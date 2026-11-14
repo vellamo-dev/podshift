@@ -1,0 +1,44 @@
+{
+  "action": "services-list",
+  "name": "Services list",
+  "description": "Lists the podshift user's loaded systemd user services with their state, unit file, Quadlet source, main PID and memory.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "pattern": "\\.service\\z" },
+            "title": { "type": "string" },
+            "subtitle": { "type": "string" },
+            "source": { "type": "string", "enum": ["quadlet", "unit"] },
+            "activeState": { "type": "string" },
+            "subState": { "type": "string" },
+            "since": { "type": "string" },
+            "unitFileState": { "type": "string" },
+            "preset": { "type": "string" },
+            "path": { "type": "string" },
+            "quadletFile": { "type": "string" },
+            "quadletKind": { "type": "string", "enum": ["container", "pod", "kube", "network", "volume", "image", "build"] },
+            "mainPid": { "type": "integer" },
+            "memory": { "type": "integer" },
+            "result": { "type": "string" },
+            "triggeredBy": { "type": "string" }
+          },
+          "required": ["id", "title", "subtitle", "source", "activeState", "subState", "since", "unitFileState", "path"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["items"],
+    "additionalProperties": false
+  }
+}

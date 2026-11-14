@@ -8,7 +8,7 @@
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
 
-# @description: Checks that every PodShift file with an @unit-test tag says yes and has a matching <function>.bats file.
+# @description: Checks that every file with an @unit-test tag says yes and has a matching <function>.bats file.
 # @arg: $1 - the run folder.
 # @stdout: NOTE with the count, and a DETAIL line for each file with a wrong tag or no bats file.
 # @exitcode: 0 if all are fine, 2 otherwise (PodShift problem).
@@ -29,7 +29,7 @@ verify-unit-tests-exist() {
             echo "DETAIL: ${name}: no ${TST_UNIT_DIR}/${name}.bats"
             bad=$((bad + 1))
         fi
-    done <<< "$(grep -rl --include='*.sh' '^# @unit-test:' "${TST_PODSHIFT_DIR}" | sort)"
+    done <<< "$(grep -rl --include='*.sh' '^# @unit-test:' "${TST_PODSHIFT_DIR}" src/test/cli/shared/fn | sort)"
     write-log "${run_dir}" lint-pure-functions "Tagged files: ${count} checked, ${bad} with problems"
     echo "NOTE: ${count} tagged, ${bad} not OK"
     (( bad == 0 )) || return 2

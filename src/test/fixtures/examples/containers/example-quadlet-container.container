@@ -1,0 +1,13 @@
+# Example Quadlet container with auto-update (dev/test data only).
+[Unit]
+Description=PodShift example Quadlet container with auto-update
+
+[Container]
+ContainerName=example-quadlet-container
+Image=docker.io/library/alpine:latest
+Exec=sleep infinity
+AutoUpdate=registry
+Label=podshift.example=1
+
+[Install]
+WantedBy=default.target

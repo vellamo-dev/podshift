@@ -1,0 +1,4 @@
+{
+  "db.service": {"file": "~/.config/containers/systemd/shop.qdl-bundle/db.container", "app": "shop"},
+  "unused.service": {"file": "~/.config/containers/systemd/unused.container"}
+}

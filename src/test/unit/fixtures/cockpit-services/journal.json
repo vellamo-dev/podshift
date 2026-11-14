@@ -1,0 +1,7 @@
+-- No entries --
+{"__REALTIME_TIMESTAMP":"1794474131000000","PRIORITY":"6","SYSLOG_IDENTIFIER":"systemd","_PID":"1012","_HOSTNAME":"podshift","MESSAGE":"Starting example-app.service - PodShift example Kubernetes YAML..."}
+{"__REALTIME_TIMESTAMP":"1794474133500000","PRIORITY":"3","SYSLOG_IDENTIFIER":"example-app","_PID":"3877","_HOSTNAME":"podshift","MESSAGE":"Error: initializing source docker://registry.example.invalid/example-app:latest: no such host"}
+{"__REALTIME_TIMESTAMP":"1794474134000000","PRIORITY":"4","SYSLOG_IDENTIFIER":"systemd","_PID":"1012","_HOSTNAME":"podshift","MESSAGE":"example-app.service: Failed with result 'exit-code'."}
+{"__REALTIME_TIMESTAMP":"1794474134100000","_COMM":"conmon","_HOSTNAME":"podshift","MESSAGE":[104,101,108,108,111]}
+{"__REALTIME_TIMESTAMP":"1794474134200000","PRIORITY":"9","_HOSTNAME":"podshift","SYSLOG_PID":"77","MESSAGE":null}
+not json

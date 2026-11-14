@@ -19,26 +19,32 @@ fi
 
 # @description: Runs the dispatch entry for one action in its declared realm and prints its JSON value.
 # @details:
-#   Output is captured as it arrives, up to 65536 bytes after a podshift session marker, with a 10
-#   second wall-clock bound that includes the session tunnel and descendant processes. A missing
+#   Output is captured as it arrives, up to 131072 bytes after a podshift session marker, with a 10
+#   second wall-clock bound (120 seconds for health-check) that includes the session tunnel and descendant processes. A missing
 #   session marker with a failed tunnel is REALM_UNAVAILABLE, and the systemd-run diagnostics are
 #   then printed to stderr. Timeout, size, nonzero status and output that is not one JSON value are
 #   internal failures. Module bytes are not printed on failure.
 # @arg: $1 - action name.
+# @arg: $2 - action arguments as one JSON object, already checked against the input contract; {} when empty. The module function gets it as its first argument.
 # @stdout: the module JSON value on success.
 # @stderr: a fixed diagnostic, with no module body.
 # @exitcode: 0 on success, 10 when the podshift session could not be entered, 11 on an internal failure, 12 when output exceeded the bound, 13 when the time bound was exceeded.
 cockpit-run-module() {
-    local action work rc
+    local action args work rc
     action="${1:-}"
+    args="${2:-}"
+    [[ -n "${args}" ]] || args='{}'
     work="$(mktemp -d 2>/dev/null)" || {
         printf 'podshift-api: could not create a work directory\n' >&2
         return 11
     }
     (
         set +e
-        max_bytes=65536
+        max_bytes=131072
         timeout_s=10
+        if [[ "${action}" == "health-check" ]]; then
+            timeout_s=120
+        fi
         # shellcheck source=./cockpit-dispatch-action.sh
         declare -F cockpit-dispatch-action >/dev/null || source "${DIR_22B830488942}/cockpit-dispatch-action.sh"
         # shellcheck source=./cockpit-enter-session.sh
@@ -75,22 +81,22 @@ cockpit-run-module() {
         : >"${work}/leader"
         if command -v setsid >/dev/null 2>&1; then
             if [[ "${realm}" == "podshift" ]]; then
-                setsid --wait bash -c 'printf "%s\n" "$$" > "$4"; source "$1"; cockpit-enter-session "$2" "$3"' _ \
-                    "${DIR_22B830488942}/cockpit-enter-session.sh" "${action}" "${work}/unit" "${work}/leader" \
+                setsid --wait bash -c 'printf "%s\n" "$$" > "$4"; source "$1"; cockpit-enter-session "$2" "$3" "$5"' _ \
+                    "${DIR_22B830488942}/cockpit-enter-session.sh" "${action}" "${work}/unit" "${work}/leader" "${args}" \
                     >"${work}/fifo" 2>"${work}/err" &
             else
-                setsid --wait bash -c 'printf "%s\n" "$$" > "$3"; source "$1"; "$2"' _ \
-                    "${module_dir}/module.sh" "${fn_name}" "${work}/leader" \
+                setsid --wait bash -c 'printf "%s\n" "$$" > "$3"; source "$1"; "$2" "$4"' _ \
+                    "${module_dir}/module.sh" "${fn_name}" "${work}/leader" "${args}" \
                     >"${work}/fifo" 2>"${work}/err" &
             fi
         else
             if [[ "${realm}" == "podshift" ]]; then
-                bash -c 'printf "%s\n" "$$" > "$4"; source "$1"; cockpit-enter-session "$2" "$3"' _ \
-                    "${DIR_22B830488942}/cockpit-enter-session.sh" "${action}" "${work}/unit" "${work}/leader" \
+                bash -c 'printf "%s\n" "$$" > "$4"; source "$1"; cockpit-enter-session "$2" "$3" "$5"' _ \
+                    "${DIR_22B830488942}/cockpit-enter-session.sh" "${action}" "${work}/unit" "${work}/leader" "${args}" \
                     >"${work}/fifo" 2>"${work}/err" &
             else
-                bash -c 'printf "%s\n" "$$" > "$3"; source "$1"; "$2"' _ \
-                    "${module_dir}/module.sh" "${fn_name}" "${work}/leader" \
+                bash -c 'printf "%s\n" "$$" > "$3"; source "$1"; "$2" "$4"' _ \
+                    "${module_dir}/module.sh" "${fn_name}" "${work}/leader" "${args}" \
                     >"${work}/fifo" 2>"${work}/err" &
             fi
         fi

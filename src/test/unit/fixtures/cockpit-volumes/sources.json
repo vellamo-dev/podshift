@@ -1,0 +1,4 @@
+{
+  "pgdata": {"source": "quadlet", "unit": "pgdata-volume.service", "unit_state": "active", "file": "~/.config/containers/systemd/shop.qdl-bundle/pgdata.volume", "app": "shop"},
+  "missing": {"source": "quadlet", "unit": "missing-volume.service", "unit_state": "inactive", "file": "~/.config/containers/systemd/missing.volume"}
+}

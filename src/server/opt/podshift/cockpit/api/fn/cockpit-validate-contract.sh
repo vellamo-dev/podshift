@@ -12,9 +12,11 @@
 
 # @description: Checks one JSON value against one contract.
 # @details:
-#   The supported keywords are type, properties, required, additionalProperties false, items, enum
-#   and const. Any other keyword, or a supported keyword used in an unsupported shape, rejects the
-#   contract. Nested properties and items are checked at every level. Defaults are not filled in.
+#   The supported keywords are type, properties, required, additionalProperties false, items, enum,
+#   const, minLength, maxLength and pattern. minLength and maxLength are non-negative integers and
+#   pattern is a jq regular expression that must compile; all three apply to string values only.
+#   Any other keyword, or a supported keyword used in an unsupported shape, rejects the contract.
+#   Nested properties and items are checked at every level. Defaults are not filled in.
 # @arg: $1 - contract JSON.
 # @arg: $2 - value JSON.
 # @exitcode: 0 when the value matches, 1 when it does not, 2 when the contract is not in the supported subset or is not JSON.
@@ -26,15 +28,20 @@ cockpit-validate-contract() {
         def is_type_name:
             . == "object" or . == "array" or . == "string" or . == "integer"
             or . == "number" or . == "boolean" or . == "null";
+        def is_count:
+            type == "number" and isfinite and . == floor and . >= 0;
         def schema_ok:
             type == "object"
-            and ((keys - ["type","properties","required","additionalProperties","items","enum","const"]) | length == 0)
+            and ((keys - ["type","properties","required","additionalProperties","items","enum","const","minLength","maxLength","pattern"]) | length == 0)
             and (if has("type") then ((.type | type) == "string" and (.type | is_type_name)) else true end)
             and (if has("properties") then ((.properties | type) == "object" and all(.properties[]; schema_ok)) else true end)
             and (if has("required") then ((.required | type) == "array" and all(.required[]; type == "string")) else true end)
             and (if has("additionalProperties") then .additionalProperties == false else true end)
             and (if has("items") then ((.items | type) == "object" and (.items | schema_ok)) else true end)
-            and (if has("enum") then ((.enum | type) == "array") else true end);
+            and (if has("enum") then ((.enum | type) == "array") else true end)
+            and (if has("minLength") then (.minLength | is_count) else true end)
+            and (if has("maxLength") then (.maxLength | is_count) else true end)
+            and (if has("pattern") then ((.pattern | type) == "string" and (.pattern as $p | try (("" | test($p)) or true) catch false)) else true end);
         def is_integer:
             type == "number" and isfinite and . == floor;
         def value_ok($s):
@@ -51,6 +58,9 @@ cockpit-validate-contract() {
               else true end)
             and (if $s | has("const") then $v == $s.const else true end)
             and (if $s | has("enum") then any($s.enum[]; . == $v) else true end)
+            and (if ($s | has("minLength")) and ($v | type) == "string" then ($v | length) >= $s.minLength else true end)
+            and (if ($s | has("maxLength")) and ($v | type) == "string" then ($v | length) <= $s.maxLength else true end)
+            and (if ($s | has("pattern")) and ($v | type) == "string" then ($v | test($s.pattern)) else true end)
             and (if (($s | has("properties")) or ($s | has("required")) or ($s | has("additionalProperties"))) then
                   ($v | type) == "object"
                   and (if $s | has("required") then reduce $s.required[] as $k (true; . and ($v | has($k))) else true end)

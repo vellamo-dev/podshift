@@ -1,0 +1,14 @@
+[
+    {
+        "Name": "pgdata",
+        "Driver": "local",
+        "Mountpoint": "/home/podshift/.local/share/containers/storage/volumes/pgdata/_data",
+        "CreatedAt": "2026-11-08T11:11:58.1+02:00",
+        "Labels": {},
+        "Scope": "local",
+        "Options": {},
+        "MountCount": 0,
+        "NeedsCopyUp": true,
+        "LockNumber": 3
+    }
+]

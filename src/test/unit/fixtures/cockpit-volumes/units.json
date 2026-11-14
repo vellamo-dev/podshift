@@ -1,0 +1,4 @@
+{
+  "db.service": {"unit_state": "active", "file": "~/.config/containers/systemd/shop.qdl-bundle/db.container", "app": "shop"},
+  "web.service": {"unit_state": "active", "file": "~/.config/containers/systemd/web.container"}
+}

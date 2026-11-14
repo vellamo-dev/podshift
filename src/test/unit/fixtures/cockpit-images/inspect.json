@@ -1,0 +1,57 @@
+[
+  {
+    "Id": "abbc135a7d39c0e8a2fd3b9b5d0a3c1c8f0e8d2b4a6c9e1f3a5b7d9c1e3f5a7b",
+    "Digest": "sha256:91b1c248e3a5f7d9b1c3e5a7f9b1d3c5e7a9b1c3d5e7f9a1b3c5d7e9f1a3b5c7",
+    "RepoTags": ["docker.io/library/alpine:latest"],
+    "RepoDigests": ["docker.io/library/alpine@sha256:91b1c248e3a5f7d9b1c3e5a7f9b1d3c5e7a9b1c3d5e7f9a1b3c5d7e9f1a3b5c7"],
+    "Created": "2026-11-05T10:12:00.123456789Z",
+    "Config": {"Cmd": ["/bin/sh"], "Env": ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"]},
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Size": 8950000,
+    "VirtualSize": 8950000,
+    "Labels": null
+  },
+  {
+    "Id": "c4d8a21e6f70b2a4c6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2",
+    "Digest": "sha256:4e17b6c90da8e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4c6d8e0f2",
+    "RepoTags": ["docker.io/library/postgres:16", "docker.io/library/postgres:latest"],
+    "Created": "2026-11-01T12:00:00+02:00",
+    "Config": {"Entrypoint": ["docker-entrypoint.sh"], "Cmd": ["postgres"], "Labels": {"org.opencontainers.image.title": "PostgreSQL"}},
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Size": 432123456,
+    "Labels": {"org.opencontainers.image.title": "PostgreSQL"}
+  },
+  {
+    "Id": "9f1c3e28b4d1a3c5e7f9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3",
+    "Digest": "sha256:c8e4d91a07b2d4f6a8c0e2b4d6f8a0c2e4b6d8f0a2c4e6b8d0f2a4c6e8b0d2f4",
+    "RepoTags": ["docker.io/library/nginx:1.27"],
+    "Created": "2026-10-20T08:30:00Z",
+    "Config": {"Entrypoint": ["/docker-entrypoint.sh"], "Cmd": ["nginx", "-g", "daemon off;"], "Labels": {"maintainer": "NGINX Docker Maintainers"}},
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Size": 61900000,
+    "Labels": {"maintainer": "NGINX Docker Maintainers"}
+  },
+  {
+    "Id": "e1c50b84a672c4e6a8c0e2a4c6e8a0c2e4a6c8e0a2c4e6a8c0e2a4c6e8a0c2e4",
+    "Digest": "sha256:0d3b7e19f4a2c6e8a0c2e4a6c8e0a2c4e6a8c0e2a4c6e8a0c2e4a6c8e0a2c4e6",
+    "RepoTags": ["docker.io/library/busybox:latest"],
+    "Created": "2026-09-14T00:00:00Z",
+    "Config": {"Cmd": ["sh"]},
+    "Architecture": "arm64",
+    "Os": "linux",
+    "Size": 4430000
+  },
+  {
+    "Id": "0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123",
+    "Digest": "sha256:aaaaaaaaaaaabbbbbbbbbbbbccccccccccccddddddddddddeeeeeeeeeeeeffff",
+    "RepoTags": [],
+    "Created": "2026-11-10T09:00:00Z",
+    "Config": {},
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Size": 512
+  }
+]

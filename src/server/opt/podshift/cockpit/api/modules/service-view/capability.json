@@ -1,0 +1,28 @@
+{
+  "action": "service-view",
+  "name": "Service view",
+  "description": "Shows the unit file (systemctl --user cat) or the status (systemctl --user status) of one loaded systemd user service of the podshift user.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "unit": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\A[A-Za-z0-9:_@]([A-Za-z0-9:_.@-]|\\\\x[0-9a-f]{2})*\\.service\\z" },
+      "mode": { "type": "string", "enum": ["unit", "status"] }
+    },
+    "required": ["unit", "mode"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "unit": { "type": "string" },
+      "mode": { "type": "string", "enum": ["unit", "status"] },
+      "found": { "type": "boolean" },
+      "text": { "type": "string" },
+      "tooLarge": { "type": "boolean", "const": true },
+      "size": { "type": "integer" }
+    },
+    "required": ["unit", "mode", "found"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,7 @@
+# Example Quadlet volume for the Cockpit UI (dev/test data only).
+[Unit]
+Description=PodShift example Quadlet volume
+
+[Volume]
+VolumeName=example-quadlet-vol
+Label=podshift.example=1

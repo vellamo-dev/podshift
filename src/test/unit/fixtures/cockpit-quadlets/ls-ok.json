@@ -1,0 +1,66 @@
+[
+  {
+    "Name": "web.container",
+    "UnitName": "web.service",
+    "Path": "/home/podshift/.config/containers/systemd/web.container",
+    "Status": "active/running",
+    "App": "",
+    "Pod": ""
+  },
+  {
+    "Name": "shop-api.container",
+    "UnitName": "shop-api.service",
+    "Path": "/home/podshift/.config/containers/systemd/shop/shop-api.container",
+    "Status": "active/running",
+    "App": "shop",
+    "Pod": "shop.pod"
+  },
+  {
+    "Name": "shop.pod",
+    "UnitName": "shop-pod.service",
+    "Path": "/home/podshift/.config/containers/systemd/shop/shop.pod",
+    "Status": "active/running",
+    "App": "shop",
+    "Pod": ""
+  },
+  {
+    "Name": "shop-db.volume",
+    "UnitName": "shop-db-volume.service",
+    "Path": "/home/podshift/.config/containers/systemd/shop/shop-db.volume",
+    "Status": "inactive/dead",
+    "App": "shop",
+    "Pod": ""
+  },
+  {
+    "Name": "shop.network",
+    "UnitName": "shop-network.service",
+    "Path": "/home/podshift/.config/containers/systemd/shop/shop.network",
+    "Status": "inactive/dead",
+    "App": "shop",
+    "Pod": ""
+  },
+  {
+    "Name": "zz-quadlet-test.container",
+    "UnitName": "zz-quadlet-test.service",
+    "Path": "/home/podshift/.config/containers/systemd/zz-quadlet-test.container",
+    "Status": "inactive/dead",
+    "App": "",
+    "Pod": ""
+  },
+  {
+    "Name": "backup.kube",
+    "UnitName": "backup.service",
+    "Path": "/home/podshift/.config/containers/systemd/backup.kube",
+    "Status": "failed/failed",
+    "App": "",
+    "Pod": ""
+  },
+  {
+    "Name": "cache.image",
+    "UnitName": "cache-image.service",
+    "Path": "/home/podshift/.config/containers/systemd/cache.image",
+    "Status": "Not loaded",
+    "App": "",
+    "Pod": ""
+  }
+]

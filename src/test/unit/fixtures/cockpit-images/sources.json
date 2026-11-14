@@ -1,0 +1,4 @@
+{
+  "busybox:latest": {"source": "quadlet", "unit": "busybox-image.service", "unit_state": "active", "file": "~/.config/containers/systemd/shop.qdl-bundle/busybox.image", "app": "shop"},
+  "quay.io/other/image:1": {"source": "quadlet", "unit": "other-image.service", "unit_state": "inactive", "file": "~/.config/containers/systemd/other.image"}
+}

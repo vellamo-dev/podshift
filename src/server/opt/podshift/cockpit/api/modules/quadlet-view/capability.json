@@ -1,0 +1,31 @@
+{
+  "action": "quadlet-view",
+  "name": "Quadlet view",
+  "description": "Shows the Quadlet file that one loaded systemd user service of the podshift user was generated from, when it is in the PodShift Quadlet folder.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "unit": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\A[A-Za-z0-9:_@]([A-Za-z0-9:_.@-]|\\\\x[0-9a-f]{2})*\\.service\\z" }
+    },
+    "required": ["unit"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "unit": { "type": "string" },
+      "found": { "type": "boolean" },
+      "quadlet": { "type": "boolean" },
+      "error": { "type": "string", "enum": ["NOT_QUADLET", "FILE_NOT_FOUND", "OUTSIDE_QUADLET_DIR", "FILE_UNREADABLE"] },
+      "name": { "type": "string" },
+      "path": { "type": "string" },
+      "kind": { "type": "string", "enum": ["container", "pod", "kube", "network", "volume", "image", "build"] },
+      "text": { "type": "string" },
+      "tooLarge": { "type": "boolean", "const": true },
+      "size": { "type": "integer" }
+    },
+    "required": ["unit", "found"],
+    "additionalProperties": false
+  }
+}

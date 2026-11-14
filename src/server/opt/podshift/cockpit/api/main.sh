@@ -79,7 +79,7 @@ cockpit-finish() {
 cockpit-serve() {
     local start_ms body read_rc parsed code action args_json dispatch_json
     local canonical fn_name module_dir cap_json cap_rc input_contract output_contract
-    local contract_rc data run_rc out_rc request_json message
+    local contract_rc data run_rc out_rc request_json message failing
     start_ms="${1:-0}"
     # shellcheck source=fn/cockpit-read-request.sh
     declare -F cockpit-read-request >/dev/null || source "${DIR_79C489F39EE5}/fn/cockpit-read-request.sh"
@@ -144,11 +144,19 @@ cockpit-serve() {
     input_contract="$(printf '%s' "${cap_json}" | jq -c '.input')" || input_contract=""
     cockpit-validate-contract "${input_contract}" "${args_json}" && contract_rc=0 || contract_rc=$?
     if [[ "${contract_rc}" -ne 0 ]]; then
-        cockpit-finish "INVALID_ARGS" "The arguments do not match this action." "${request_json}" "" "${canonical}" "${start_ms}"
+        # shellcheck source=fn/cockpit-contract-failing-args.sh
+        declare -F cockpit-contract-failing-args >/dev/null || source "${DIR_79C489F39EE5}/fn/cockpit-contract-failing-args.sh"
+        failing="$(cockpit-contract-failing-args "${input_contract}" "${args_json}" 2>/dev/null)" || failing=""
+        if [[ -n "${failing}" ]]; then
+            message="Given arguments are not supported: ${failing}."
+        else
+            message="Given arguments are not supported."
+        fi
+        cockpit-finish "INVALID_ARGS" "${message}" "${request_json}" "" "${canonical}" "${start_ms}"
         return $?
     fi
     request_json="$(jq -n -c --arg action "${canonical}" --argjson args "${args_json}" '{action:$action, args:$args}')" || request_json="null"
-    data="$(cockpit-run-module "${canonical}")" && run_rc=0 || run_rc=$?
+    data="$(cockpit-run-module "${canonical}" "${args_json}")" && run_rc=0 || run_rc=$?
     if [[ "${run_rc}" -eq 10 ]]; then
         cockpit-finish "REALM_UNAVAILABLE" "The podshift session could not be entered. Check that the podshift user is logged in and linger is enabled." "${request_json}" "" "${canonical}" "${start_ms}"
         return $?

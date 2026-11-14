@@ -35,6 +35,7 @@ These rules apply to all code. "Deployed" means `src/server` (ships in the RPM) 
 - No em-dashes anywhere.
 - Step output: each RPM or deployment step (`@category: step` in the RPM and deployment) prints a header `[PS-<phase>-<id>] <message>`, then an indented short status `[OK]` / `[WARN]` / `[SKIP]`. `[WARN]` goes to stderr. The prefix comes from the file's `@step` tag, for example `@step: PS-DP-DRS`.
 - Fixed identity is intentional: user `podshift`, UID `300`, home `/home/podshift`, `300@.host`, `/run/user/300`.
+- Never make PodShift install `cockpit-podshift`. The UI is installed only by the admin from Cockpit Applications. See [scope.md](./docs/scope.md#what-podshift-is-not).
 
 ### Environment
 
@@ -54,7 +55,9 @@ Anything temporary the agent creates, such as scratch scripts, notes, staging ar
 - Change only what the task needs, one issue at a time. Do not add features nobody asked for.
 - Test real behaviour; do not guess values, paths or command output.
 - Ask before deleting any file.
+- Bump the version as the last step of a change, and say so in your report. See [Versioning](./docs/coding.md#versioning).
 - Docs state only verified facts. Status notes such as "Coming soon" belong only in [roadmap.md](./docs/roadmap.md).
+- Only the root readme has a Finnish version, `readme.fi.md`. Update it whenever `readme.md` changes. No other files are translated.
 
 ### Built-in help
 
@@ -72,6 +75,7 @@ Run from the project folder:
 - Cockpit handler: `./test --plain unit-cockpit-api`
 - Build the RPM only (needs the dev host): `./test --plain build-rpm`
 - Full check (needs the dev host: build, install in a test VM, validate): `./test --plain bundle-build-install-validate`
+- Cockpit UI dev mount (needs the dev host: build, install, then mount the local UI dist): `./test --plain bundle-ui-dev-mount`. If the VM is already installed, `./test --plain postinstall-ui-dev-mount`. To copy `dist/` over the installed UI files instead (does nothing when the dev mount is in use), `./test --plain postinstall-ui-sync-files`. To set the VM login user password only, `./test --plain postinstall-vm-user-password`. Example data for the UI (on demand only; the only bundle with it is `bundle-ui-dev-mount-examples`): `./test --plain postinstall-examples` adds the `example-*` resources from `src/test/fixtures/examples/` to the VM, `./test --plain bundle-ui-dev-mount-examples` runs `bundle-ui-dev-mount` and then `postinstall-examples` in one run, and `./test --plain cleanup-examples` removes them.
 
 Which tests run where:
 

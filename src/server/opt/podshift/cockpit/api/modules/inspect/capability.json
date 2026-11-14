@@ -1,0 +1,38 @@
+{
+  "action": "inspect",
+  "name": "Inspect",
+  "description": "Shows the podman inspect object of one container, image, volume, network or secret of the podshift user (never a secret value), or writes it to a private file.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "kind": { "type": "string", "enum": ["container", "image", "volume", "network", "secret"] },
+      "ref": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\A[A-Za-z0-9._:/@][A-Za-z0-9._:/@-]*\\z" },
+      "mode": { "type": "string", "enum": ["file"] }
+    },
+    "required": ["kind", "ref"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "kind": { "type": "string", "enum": ["container", "image", "volume", "network", "secret"] },
+      "ref": { "type": "string" },
+      "found": { "type": "boolean" },
+      "object": { "type": "object" },
+      "tooLarge": { "type": "boolean", "const": true },
+      "size": { "type": "integer" },
+      "file": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string", "pattern": "\\A/[A-Za-z0-9._/-]*/podshift/inspect-[A-Za-z0-9]+\\.json\\z" },
+          "size": { "type": "integer" }
+        },
+        "required": ["path", "size"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["kind", "ref", "found"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,3 @@
+# Example images pulled by hand (dev/test data only).
+# Each line: one full image reference, pulled with podman pull.
+docker.io/library/hello-world:latest

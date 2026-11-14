@@ -1,0 +1,14 @@
+# Example user service that creates a network (dev/test data only).
+[Unit]
+Description=PodShift example network created by a user service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/podman network create --ignore --subnet 10.202.0.0/24 --label podshift.example=1 example-unit
+ExecStop=/usr/bin/podman network rm --force example-unit
+
+[Install]
+WantedBy=default.target

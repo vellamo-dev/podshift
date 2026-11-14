@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.9.2
+Version: 0.15.3
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,34 @@ wait
 
 
 %changelog
+* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.3
+- Documentation: Finnish readme (readme.fi.md)
+
+* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.2
+- Documentation: security policy (security.md)
+
+* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.1
+- Documentation: PodShift never installs PodShift UI itself
+
+* Fri Nov 13 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.0
+- PodShift UI listed in Cockpit Applications as an optional add-on
+- Cockpit API modules for the overview, health, resources, services and Quadlets
+- Environment tag (TSV_ENV) is empty until set with podshift env
+- Documentation for the PodShift UI
+
+* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.14.0
+- Cockpit API improvements
+- Documentation improvements
+
+* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.13.0
+- Cockpit API improvements
+
+* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.12.0
+- Cockpit API tests
+
+* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.10.0
+- Cockpit API improvements
+
 * Tue Nov 10 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.9.1
 - RPM improvements
 - Initial version of Cockpit API

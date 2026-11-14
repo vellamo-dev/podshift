@@ -11,17 +11,21 @@
 # @description: Clones the RPM installer VM from the stopped Lima base VM TST_RPM_INSTALLER_BASE (see install-image) and boots it.
 # @details:
 #   It sets the CPUs and memory (TST_RPM_INSTALLER_CPUS, TST_RPM_INSTALLER_MEMORY) and the MAC
-#   address (TST_VM_MAC). At boot the clone runs the config's provision script again, which only
-#   updates packages that are newer than the base. It returns once that has finished, up to
-#   TST_LIMA_START_TIMEOUT. The limactl output is saved to lima-start.log in the run folder.
+#   address (TST_VM_MAC). If TST_DEV_SHARE exists, a read-only virtiofs mount is added on the
+#   clone at TST_DEV_SHARE_MOUNT, using limactl clone --set, without changing the base image.
+#   At boot the clone runs the config's provision script again, which only updates packages that
+#   are newer than the base. It returns once that has finished, up to TST_LIMA_START_TIMEOUT. The
+#   limactl output is saved to lima-start.log in the run folder.
 # @arg: $1 - the run folder.
 # @stdout: NOTE with the CPUs and memory, and the end of the limactl output on failure.
 # @exitcode: 0 if cloned and started, 1 otherwise.
 clone-vm() {
-    local run_dir base mem log
+    local run_dir base mem log share_note
+    local -a clone_opts
     run_dir="${1}"
     base="${TST_RPM_INSTALLER_BASE}"
     log="${run_dir}/lima-start.log"
+    share_note=""
     case "${TST_RPM_INSTALLER_MEMORY}" in
         *G) mem="${TST_RPM_INSTALLER_MEMORY%G}" ;;
         *)  echo "TST_RPM_INSTALLER_MEMORY must end in G, for example 8G, not ${TST_RPM_INSTALLER_MEMORY}"; return 1 ;;
@@ -32,9 +36,16 @@ clone-vm() {
         echo "Fix: ./test install-image"
         return 1
     fi
-    if ! vm clone --tty=false "${base}" "${TST_RPM_INSTALLER_VM}" \
-        --cpus "${TST_RPM_INSTALLER_CPUS}" --memory "${mem}" \
-        --set ".networks[0].macAddress = \"${TST_VM_MAC}\"" >"${log}" 2>&1; then
+    clone_opts=(
+        --tty=false "${base}" "${TST_RPM_INSTALLER_VM}"
+        --cpus "${TST_RPM_INSTALLER_CPUS}" --memory "${mem}"
+        --set ".networks[0].macAddress = \"${TST_VM_MAC}\""
+    )
+    if [[ -n "${TST_DEV_SHARE}" && -d "${TST_DEV_SHARE}" ]]; then
+        clone_opts+=(--set ".mounts += [{\"location\": \"${TST_DEV_SHARE}\", \"mountPoint\": \"${TST_DEV_SHARE_MOUNT}\", \"writable\": false}]")
+        share_note=", share ${TST_DEV_SHARE} -> ${TST_DEV_SHARE_MOUNT}"
+    fi
+    if ! vm clone "${clone_opts[@]}" >"${log}" 2>&1; then
         write-log "${run_dir}" install-vm-start "VM ${TST_RPM_INSTALLER_VM}: limactl clone failed, see ${log}"
         tail -n 20 "${log}"
         echo "The VM ${TST_RPM_INSTALLER_VM} could not be cloned from ${base}, see ${log}"
@@ -46,6 +57,6 @@ clone-vm() {
         echo "The VM ${TST_RPM_INSTALLER_VM} could not be started, see ${log}"
         return 1
     fi
-    write-log "${run_dir}" install-vm-start "VM ${TST_RPM_INSTALLER_VM}: cloned from ${base}, ${TST_RPM_INSTALLER_CPUS} CPUs, ${TST_RPM_INSTALLER_MEMORY}"
-    echo "NOTE: ${TST_RPM_INSTALLER_CPUS} CPUs, ${TST_RPM_INSTALLER_MEMORY}"
+    write-log "${run_dir}" install-vm-start "VM ${TST_RPM_INSTALLER_VM}: cloned from ${base}, ${TST_RPM_INSTALLER_CPUS} CPUs, ${TST_RPM_INSTALLER_MEMORY}${share_note}"
+    echo "NOTE: ${TST_RPM_INSTALLER_CPUS} CPUs, ${TST_RPM_INSTALLER_MEMORY}${share_note}"
 }

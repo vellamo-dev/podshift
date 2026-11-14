@@ -1,0 +1,9 @@
+# Example containers run by hand with podman run (dev/test data only).
+# Each line: <name> <running|exited|paused> <podman run options>. Names must start with example-.
+# The image is docker.io/library/alpine:latest and every container gets the podshift.example=1 label.
+example-unmanaged-running running --label io.containers.autoupdate=registry
+example-unmanaged-exited exited
+example-unmanaged-paused paused
+# Uses the example secrets from ../secrets/secrets.list: example-api-token (shared with
+# example-secret-quadlet) as a file at /etc/example/token, example-tls-key at the default target.
+example-secret-stopped exited --secret example-api-token,target=/etc/example/token --secret example-tls-key

@@ -1,0 +1,6 @@
+# Example Quadlet image for the Cockpit UI (dev/test data only).
+[Unit]
+Description=PodShift example Quadlet image
+
+[Image]
+Image=docker.io/library/busybox:latest

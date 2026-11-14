@@ -1,0 +1,5 @@
+[
+  {"id": "3f9c1a7e2b4d", "name": "db", "cpu_percent": "1.20%", "mem_usage": "84.2MB / 2.06GB"},
+  {"id": "e1f3a5c7e9b1", "name": "scratch", "cpu_percent": "0.00%", "mem_usage": "1.044MiB / 2GiB"},
+  {"id": "b8d0f2a4c6e8", "name": "worker", "cpu_percent": "9.99%", "mem_usage": "46MB / 2GB"}
+]

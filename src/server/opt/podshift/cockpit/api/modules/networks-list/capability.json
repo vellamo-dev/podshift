@@ -1,0 +1,71 @@
+{
+  "action": "networks-list",
+  "name": "Networks list",
+  "description": "Lists the podshift user's Podman networks with their source, settings, containers and labels.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "subtitle": { "type": "string" },
+            "status": { "type": "string", "enum": ["In use", "Unused"] },
+            "source": { "type": "string", "enum": ["builtin", "quadlet", "unit", "unmanaged"] },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "value": { "type": "string" }
+                },
+                "required": ["id", "label", "value"],
+                "additionalProperties": false
+              }
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "rows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "label": { "type": "string" },
+                        "value": { "type": "string" }
+                      },
+                      "required": ["id", "label", "value"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["id", "label", "rows"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["id", "title", "subtitle", "status", "source", "rows", "groups"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["items"],
+    "additionalProperties": false
+  }
+}

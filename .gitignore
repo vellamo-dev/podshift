@@ -19,3 +19,4 @@ tmp/
 
 # Internal working notes (not published)
 docs/internal-*.md
+/.env

@@ -16,6 +16,10 @@ if [[ -z "${DIR_A6D8F81179BE:-}" ]]; then
 fi
 
 # @description: Renders the help document for the given id (Markdown via glow, plain text via cat).
+# @details:
+#   Markdown is shown with glow when stdout is a terminal and glow is installed. If stdout is not a
+#   terminal, or glow is missing, the file is printed as is with cat. Glow writes nothing when
+#   stdout is not a terminal. Plain text files are always printed with cat.
 # @arg: $1 - document id (defaults to podshift, the main help as plain text)
 # @exitcode: 0 on success, 1 if the document id is unknown.
 podshift-help() {
@@ -35,7 +39,12 @@ podshift-help() {
     path_md_file="${path_doc_root}/${doc_id}.md"
     path_txt_file="${path_doc_root}/${doc_id}.txt"
     if [[ -f "${path_md_file}" ]]; then
-        glow "${path_md_file}"
+        # Glow writes nothing when stdout is not a terminal.
+        if [[ ! -t 1 ]] || ! command -v glow >/dev/null 2>&1; then
+            cat "${path_md_file}"
+        else
+            glow "${path_md_file}"
+        fi
         return
     fi
     if [[ -f "${path_txt_file}" ]]; then

@@ -4,10 +4,10 @@ IMPORTANT NOTE
 Please set an environment tag for the current system.
 
 To set the environment tag, run:
-    podshift --set-env
+    sudo podshift env --set <env>
 
 Examples:
-    podshift --set-env dev
-    podshift --set-env prd
+    sudo podshift env --set dev
+    sudo podshift env --set prd
 -----------------------------------------------------------
 

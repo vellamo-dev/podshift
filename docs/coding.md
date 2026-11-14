@@ -144,6 +144,7 @@ Older names map as follows. None remain in the tree.
 ### Readme files
 
 - A `readme.md` documents a directory only when the files' purpose or nature cannot be expressed in the files themselves, or to cover a directory's content and purpose.
+- Only the root readme has a Finnish version, `readme.fi.md`. Update it whenever `readme.md` changes. No other files are translated.
 
 ## Functions
 
@@ -205,3 +206,17 @@ Older names map as follows. None remain in the tree.
 - A script that needs PodShift settings loads `main.conf` itself with `load-podshift-conf-main`, with no hardcoded fallback values. When a needed setting is missing, it says so, for example a health check prints `WARN` with `<VAR> is not set`.
 - `export` is used only for configuration that other processes must see, such as the settings in `main.conf`.
 - No symlinks in the repository.
+
+## Packaging
+
+PodShift must not install `cockpit-podshift` in any way. That means no `Requires`, `Recommends`, `Suggests` or `Supplements` in `podshift.spec`, and no `dnf install` in `%post`, scripts or setup commands. Shipping the AppStream entry and enabling the Copr repository are allowed.
+
+## Versioning
+
+Versions are `x.y.z`. The `Version:` line in `podshift.spec` is the single source of truth and the only file that holds the version. At runtime, `get-podshift-version` reads it from the installed RPM (`0.0.0-local-dev` outside an RPM install), and the Cockpit API reports that value.
+
+- **Patch (`z`)** goes up on any change that ships, such as a fix, a text change or a docs edit in the package.
+- **Minor (`y`)** goes up when a feature is added or after a bigger refactor, and `z` goes back to 0.
+- **Major (`x`)** stays at 0 until the first stable release. Only the maintainer changes it, never an agent.
+
+Every bump adds a spec `%changelog` entry (`- x.y.z-1`) and sets `Release:` back to `1`. Bump once per task or delivery, not per saved file. An agent bumps the version as the last step of a change and says so in its report.

@@ -33,7 +33,7 @@ PodShift is free software, maintained with limited time. This page sets the expe
 
 ## Security
 
-Found a vulnerability? Don't report it publicly; PodShift hardens servers, so it matters. Report it privately via [vellamo.fyi](https://vellamo.fyi).
+The security policy, including what is in scope and how to report a problem, is in [security.md](../security.md).
 
 ## Sponsored support
 

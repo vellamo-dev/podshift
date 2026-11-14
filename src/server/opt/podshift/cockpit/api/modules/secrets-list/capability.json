@@ -1,0 +1,66 @@
+{
+  "action": "secrets-list",
+  "name": "Secrets list",
+  "description": "Lists the podshift user's Podman secrets with their driver, times and the containers that use them, never the secret values.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "subtitle": { "type": "string" },
+            "name": { "type": "string" },
+            "driver": { "type": "string" },
+            "created": { "type": "string" },
+            "updated": { "type": "string" },
+            "status": { "type": "string", "enum": ["In use", "Unused"] },
+            "inUse": { "type": "boolean" },
+            "running": { "type": "boolean" },
+            "usedBy": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "container": { "type": "string" },
+                  "containerId": { "type": "string" },
+                  "state": { "type": "string" },
+                  "type": { "type": "string", "enum": ["file", "env"] },
+                  "target": { "type": "string" }
+                },
+                "required": ["container", "containerId", "state", "type", "target"],
+                "additionalProperties": false
+              }
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "value": { "type": "string" }
+                },
+                "required": ["id", "label", "value"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["id", "title", "subtitle", "name", "driver", "created", "updated", "status", "inUse", "running", "usedBy", "rows"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["items"],
+    "additionalProperties": false
+  }
+}

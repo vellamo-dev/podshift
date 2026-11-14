@@ -1,0 +1,42 @@
+{
+  "action": "service-logs",
+  "name": "Service logs",
+  "description": "Shows the last 100 journal entries of one loaded systemd user service of the podshift user, read from the journal as root.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "unit": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\A[A-Za-z0-9:_@]([A-Za-z0-9:_.@-]|\\\\x[0-9a-f]{2})*\\.service\\z" }
+    },
+    "required": ["unit"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "unit": { "type": "string" },
+      "found": { "type": "boolean" },
+      "readable": { "type": "boolean" },
+      "error": { "type": "string", "enum": ["JOURNAL_UNREADABLE"] },
+      "reason": { "type": "string", "maxLength": 200 },
+      "entries": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "time": { "type": "string" },
+            "hostname": { "type": "string" },
+            "identifier": { "type": "string" },
+            "pid": { "type": "integer" },
+            "priority": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5, 6, 7] },
+            "message": { "type": "string" }
+          },
+          "required": ["time", "hostname", "identifier", "priority", "message"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["unit", "found"],
+    "additionalProperties": false
+  }
+}

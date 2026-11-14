@@ -1,0 +1,4 @@
+# Example networks created by hand (dev/test data only).
+# Each line: <name> <podman network create options>. Names must start with example-.
+example-unmanaged --subnet 10.203.0.0/24 --label podshift.example=1
+example-unmanaged-internal --internal --subnet 10.204.0.0/24 --label podshift.example=1

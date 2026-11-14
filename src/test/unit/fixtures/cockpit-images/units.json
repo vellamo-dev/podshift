@@ -1,0 +1,4 @@
+{
+  "web.service": {"unit_state": "active", "file": "~/.config/containers/systemd/web.container"},
+  "cache.service": {"unit_state": "active", "file": "~/.config/containers/systemd/cache.container"}
+}

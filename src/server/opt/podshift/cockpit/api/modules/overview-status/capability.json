@@ -1,0 +1,33 @@
+{
+  "action": "overview-status",
+  "name": "Overview status",
+  "description": "Lists the state of PodShift services, the firewall, Fail2Ban and the SSH port.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "rows": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "label": { "type": "string" },
+            "value": {},
+            "unit": { "type": "string" },
+            "scope": { "type": "string", "enum": ["user", "system"] }
+          },
+          "required": ["id", "label", "value"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["rows"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "action": "health-check",
+  "name": "Health check",
+  "description": "Runs the PodShift health checks and returns grouped results with a summary.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "groups": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "label": { "type": "string" },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "state": { "type": "string", "enum": ["ok", "note", "warn", "fail"] },
+                  "value": { "type": "string" },
+                  "fix": {}
+                },
+                "required": ["id", "label", "state", "value", "fix"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["id", "label", "rows"],
+          "additionalProperties": false
+        }
+      },
+      "summary": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string", "enum": ["ok", "note", "warn", "fail"] },
+          "label": { "type": "string" },
+          "passed": { "type": "integer" },
+          "notes": { "type": "integer" },
+          "warnings": { "type": "integer" },
+          "failed": { "type": "integer" }
+        },
+        "required": ["state", "label", "passed", "notes", "warnings", "failed"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["groups", "summary"],
+    "additionalProperties": false
+  }
+}

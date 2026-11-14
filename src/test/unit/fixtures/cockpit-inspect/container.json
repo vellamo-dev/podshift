@@ -1,0 +1,22 @@
+[
+    {
+        "Id": "3f9c1a7e2b4d5c6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6",
+        "Created": "2026-11-08T11:12:00.512345678+02:00",
+        "Path": "docker-entrypoint.sh",
+        "Args": ["postgres"],
+        "State": {"Status": "running", "Running": true, "Paused": false, "Pid": 4242, "ExitCode": 0, "StartedAt": "2026-11-08T11:12:01.1+02:00"},
+        "Image": "8c1d4e0f9a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d",
+        "ImageName": "docker.io/library/postgres:16",
+        "Name": "db",
+        "RestartCount": 0,
+        "Mounts": [{"Type": "volume", "Name": "pgdata", "Source": "/home/podshift/.local/share/containers/storage/volumes/pgdata/_data", "Destination": "/var/lib/postgresql/data", "RW": true}],
+        "Config": {
+            "Hostname": "3f9c1a7e2b4d",
+            "Env": ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", "POSTGRES_PASSWORD=fixture-only", "TZ=Europe/Helsinki", "container=podman"],
+            "Cmd": ["postgres"],
+            "Labels": {"PODMAN_SYSTEMD_UNIT": "db.service", "io.containers.autoupdate": "registry"}
+        },
+        "HostConfig": {"NetworkMode": "bridge", "RestartPolicy": {"Name": "", "MaximumRetryCount": 0}},
+        "NetworkSettings": {"Networks": {"shop-net": {"IPAddress": "10.89.0.2", "IPPrefixLen": 24}}}
+    }
+]

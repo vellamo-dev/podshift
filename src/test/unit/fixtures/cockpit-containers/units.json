@@ -1,0 +1,6 @@
+{
+  "db.service": {"unit_state": "active", "load_state": "loaded", "file": "~/.config/containers/systemd/shop.qdl-bundle/db.container", "app": "shop"},
+  "shop-worker.service": {"unit_state": "active", "load_state": "loaded", "file": "~/.config/containers/systemd/worker.container"},
+  "db-backup.service": {"unit_state": "inactive", "load_state": "loaded", "file": "~/.config/systemd/user/db-backup.service"},
+  "gone.service": {"unit_state": "inactive", "load_state": "not-found"}
+}

@@ -1,0 +1,36 @@
+{
+  "action": "quadlets-list",
+  "name": "Quadlets list",
+  "description": "Lists Quadlet files for the podshift user as resource cards.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "required": ["items"],
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["id", "title", "unitName", "path", "status", "app", "pod", "description"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "type": { "type": "string" },
+            "unitName": { "type": "string" },
+            "path": { "type": "string" },
+            "status": { "type": "string" },
+            "app": { "type": "string" },
+            "pod": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

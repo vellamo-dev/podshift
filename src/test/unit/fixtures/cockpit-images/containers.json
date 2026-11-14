@@ -1,0 +1,6 @@
+[
+  {"Id": "1a2b3c4d5e6f1a2b3c4d5e6f", "Names": ["web"], "Image": "docker.io/library/nginx:1.27", "ImageID": "9f1c3e28b4d1a3c5e7f9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3", "State": "running", "Labels": {"PODMAN_SYSTEMD_UNIT": "web.service"}},
+  {"Id": "2b3c4d5e6f7a2b3c4d5e6f7a", "Names": ["db-backup"], "Image": "docker.io/library/postgres:16", "ImageID": "c4d8a21e6f70b2a4c6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2", "State": "exited", "Labels": null},
+  {"Id": "3c4d5e6f7a8b3c4d5e6f7a8b", "Names": ["db"], "Image": "docker.io/library/postgres:16", "ImageID": "c4d8a21e6f70b2a4c6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2", "State": "running", "Labels": {}},
+  {"Id": "4d5e6f7a8b9c4d5e6f7a8b9c", "Names": ["cache"], "Image": "docker.io/library/busybox:latest", "ImageID": "e1c50b84a672c4e6a8c0e2a4c6e8a0c2e4a6c8e0a2c4e6a8c0e2a4c6e8a0c2e4", "State": "running", "Labels": {"PODMAN_SYSTEMD_UNIT": "cache.service"}}
+]

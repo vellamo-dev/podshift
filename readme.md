@@ -1,5 +1,7 @@
 # PodShift - Lightweight CD Orchestration
 
+English | [Suomi](readme.fi.md)
+
 PodShift is a lightweight container orchestration enabler for small servers. It turns any server, from bare metal to a cloud VM at a provider like Hetzner, into one that sets itself up, keeps itself secure, and updates your apps automatically, with the same configuration from the first day on a developer's computer all the way to production.
 
 Use any cloud you like, or none at all. PodShift simply never locks you in.
@@ -81,6 +83,7 @@ PodShift takes a different path. The same Quadlet files run on bare metal, on a 
 - **Server Health Check:** `podshift health-check` checks the whole server and gives a fix for each problem.
 - **Monitoring:** built-in tools to see how the server is doing.
 - **PodShift CLI:** the `podshift` command for everyday server management.
+- **[PodShift UI](https://github.com/vellamo-dev/cockpit-podshift) (optional):** a Cockpit page for monitoring the server in a browser. PodShift works fully without it. See [install](./docs/usage.md#podshift-ui-optional).
 
 PodShift ships as a single RPM for Fedora. The status of each feature is in the [roadmap](./docs/roadmap.md).
 
@@ -97,3 +100,5 @@ Want to dig deeper? The project is divided into the parts below, so feel free to
 ## Documentation
 
 Installation, usage, scope and everything else are in the [documentation](./docs/readme.md).
+
+The security policy is in [security.md](./security.md).

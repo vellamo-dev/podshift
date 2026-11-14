@@ -1,0 +1,73 @@
+{
+  "action": "images-list",
+  "name": "Images list",
+  "description": "Lists the podshift user's Podman images with their source, tags, size, users, details and systemd unit.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "fullId": { "type": "string", "pattern": "\\A[0-9a-f]{1,64}\\z" },
+            "title": { "type": "string" },
+            "subtitle": { "type": "string" },
+            "status": { "type": "string", "enum": ["In use", "Unused"] },
+            "running": { "type": "boolean" },
+            "source": { "type": "string", "enum": ["quadlet", "container", "unmanaged"] },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "value": { "type": "string" }
+                },
+                "required": ["id", "label", "value"],
+                "additionalProperties": false
+              }
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "rows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "label": { "type": "string" },
+                        "value": { "type": "string" }
+                      },
+                      "required": ["id", "label", "value"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["id", "label", "rows"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["id", "fullId", "title", "subtitle", "status", "running", "source", "rows", "groups"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["items"],
+    "additionalProperties": false
+  }
+}

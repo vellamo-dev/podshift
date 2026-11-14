@@ -1,0 +1,25 @@
+# @file: Dockerfile.ui-rpm-builder
+# @source-dir: src/test/cli/shared/containerfiles
+# @description: cockpit-podshift RPM builder image. The Fedora version comes from TST_FEDORA_VERSION as a build argument.
+# @details:
+#   Only the build tools are installed. The spec's BuildRequires are not baked in: ui-rpm-build
+#   installs them with dnf builddep, so a missing BuildRequires fails here as it would on COPR.
+#   rpmlint is only for the warning-only lint step.
+ARG FEDORA_VERSION=45
+FROM fedora:${FEDORA_VERSION}
+
+RUN dnf install -y \
+    'dnf-command(builddep)' \
+    gzip \
+    rpm-build \
+    rpmlint \
+    tar \
+    && dnf clean all
+
+RUN mkdir /builder /share
+
+VOLUME /share
+
+WORKDIR /builder
+
+CMD ["sleep", "infinity"]

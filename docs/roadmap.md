@@ -27,7 +27,7 @@ Documentation lives in the code and in the commands, so it doesn't fall out of d
 | ✅ | Forking | The rules for forks: rebrand, state the changes and give your own support. |
 | ✅ | Support | Where and how to report bugs and ideas. |
 | ✅ | Roadmap | This document. |
-| ✅ | Cockpit API | The JSON handler, the ping module and capability discovery are in the source tree. The Cockpit screen is not built. |
+| ✅ | Cockpit API | The JSON handler, the ping module and capability discovery are in the source tree. The Cockpit UI is the separate, optional add-on [cockpit-podshift](https://github.com/vellamo-dev/cockpit-podshift). |
 | ✅ | Usage guide | How to install PodShift from COPR and use it day to day. |
 
 ### Rootless Podman server
@@ -72,6 +72,7 @@ Built-in tools to see how the server is doing.
 | Status | Name | Description |
 |:---:|---|---|
 | ✅ | Web console | Cockpit is enabled for managing the server in a browser. |
+| ✅ | PodShift UI | Optional Cockpit page for monitoring PodShift. See its [roadmap](https://github.com/vellamo-dev/cockpit-podshift/blob/main/docs/roadmap.md). |
 | ✅ | Metrics | PCP collects and records system metrics. |
 | ✅ | Status shortcuts | Short commands for the state of Podman, the firewall, Cockpit and the podshift user. |
 
@@ -135,8 +136,8 @@ PodShift is a single RPM for Fedora.
 | Status | Name | Description |
 |:---:|---|---|
 | ✅ | RPM package | One `noarch` RPM built from this repository. |
-| 🚧 | GitHub publishing | Publish the source on GitHub, which COPR builds the RPM from. |
-| 🚧 | COPR repository | Publish the RPM through Fedora's COPR so users install it with `dnf`. |
+| ✅ | GitHub publishing | Publish the source on GitHub, which COPR builds the RPM from. |
+| ✅ | COPR repository | Publish the RPM through Fedora's COPR so users install it with `dnf`. |
 
 ### Test Lab
 

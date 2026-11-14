@@ -1,0 +1,3 @@
+# Example volumes created by hand (dev/test data only).
+# Each line: <name> <podman volume create options>. Names must start with example-.
+example-unmanaged --label podshift.example=1

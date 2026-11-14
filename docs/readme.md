@@ -15,8 +15,9 @@ PodShift is meant for small and medium teams running a few containerized apps ac
 - [Coding Style and Principles](coding.md) - the shell conventions and bashdoc tags every contribution follows.
 - [Testing](../src/test/readme.md) - how the build and install are verified.
 - [Usage Instructions](usage.md) - installing and operating a PodShift server.
-- [Cockpit API](./cockpit-api.md) - the local JSON handler for a future Cockpit plugin, and how to add an action.
+- [Cockpit API](./cockpit-api.md) - the local JSON handler used by the Cockpit UI ([cockpit-podshift](https://github.com/vellamo-dev/cockpit-podshift)), and how to add an action.
 - [Forking](forking.md) - the rules and responsibilities for forks.
+- [Security](../security.md) - the security policy and how to report a problem.
 - [Support](support.md) - how issues are handled and how to get more help.
 - [Roadmap](./roadmap.md) - what PodShift does today and what is planned.
 
@@ -43,6 +44,7 @@ PodShift is not magic. Everything it does, you could build yourself on any Fedor
 - **You do not need a team of specialists.** Day-to-day work is covered by short, clear commands with help built into the terminal, so one person can run and understand the whole setup.
 - **Your servers look after themselves.** Apps start on their own after a reboot, keep themselves updated, and log what happens in one place.
 - **You can see your server in a browser.** Cockpit gives a clear web view of services and performance, without extra setup.
+- **PodShift can have its own page in Cockpit.** The optional PodShift UI shows containers, services and health in the browser. See [PodShift UI](usage.md#podshift-ui-optional).
 - **Costs stay low and predictable.** One small server covers the whole setup, with no per-service fees that grow over time.
 
 ### You stay free to choose

@@ -1,0 +1,14 @@
+# Example user service that runs a container once, which then exits (dev/test data only).
+# PODMAN_SYSTEMD_UNIT makes podman label the container with this unit, as Quadlet does.
+[Unit]
+Description=PodShift example container run by a user service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PODMAN_SYSTEMD_UNIT=%n
+ExecStart=/usr/bin/podman run --replace --name example-unit-container --label podshift.example=1 docker.io/library/alpine:latest echo PodShift example
+
+[Install]
+WantedBy=default.target

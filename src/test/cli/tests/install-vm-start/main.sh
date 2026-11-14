@@ -6,7 +6,7 @@
 # @title: Starting RPM installer VM
 # @platforms: mac fedora
 # @needs: host-check host-container-start install-image
-# @description: Creates a fresh RPM installer VM, boots it and waits for systemd.
+# @description: Creates a fresh RPM installer VM, boots it, waits for systemd and sets the VM user password if one is given.
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi

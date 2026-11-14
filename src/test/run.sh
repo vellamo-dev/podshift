@@ -49,8 +49,12 @@ source "${DIR_3C8E61A94F27}/cli/shared/fn/utils/text-distance.sh"
 source "${DIR_3C8E61A94F27}/cli/shared/fn/utils/is-version-at-least.sh"
 # shellcheck source=cli/shared/fn/rpm/run-check-in-builder.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/rpm/run-check-in-builder.sh"
+# shellcheck source=cli/shared/fn/rpm/run-check-in-ui-builder.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/rpm/run-check-in-ui-builder.sh"
 # shellcheck source=cli/shared/fn/rpm/find-exported-rpm.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/rpm/find-exported-rpm.sh"
+# shellcheck source=cli/shared/fn/rpm/find-ui-rpm.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/rpm/find-ui-rpm.sh"
 # shellcheck source=cli/shared/fn/podshift/is-valid-cli-name.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/podshift/is-valid-cli-name.sh"
 # shellcheck source=cli/shared/fn/podshift/podshift-command-list.sh
@@ -75,6 +79,18 @@ source "${DIR_3C8E61A94F27}/cli/shared/fn/tests/list-test-needs.sh"
 source "${DIR_3C8E61A94F27}/cli/shared/fn/tests/print-test-title.sh"
 # shellcheck source=cli/shared/fn/tests/print-test-purpose.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/tests/print-test-purpose.sh"
+# shellcheck source=cli/shared/fn/tests/load-local-env.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/tests/load-local-env.sh"
+# shellcheck source=cli/shared/fn/vm/vm-podshift-run.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/vm/vm-podshift-run.sh"
+# shellcheck source=cli/shared/fn/vm/vm-set-user-password.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/vm/vm-set-user-password.sh"
+# shellcheck source=cli/shared/fn/vm/example-network-lines.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/vm/example-network-lines.sh"
+# shellcheck source=cli/shared/fn/vm/example-image-lines.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/vm/example-image-lines.sh"
+# shellcheck source=cli/shared/fn/vm/example-container-lines.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/vm/example-container-lines.sh"
 
 # @description: Finds the platform of this computer with the first is-this-os.sh that says yes.
 # @arg: $1 - path of the cli folder.
@@ -283,6 +299,7 @@ lab-cli-run() {
         source "${helper}"
     done
     cd "${repo_root}" || return 1
+    load-local-env "${repo_root}" || return 1
     # The whole lab refuses to run on a Fedora computer that is not marked as a desktop.
     [[ "${os}" != "fedora" ]] || check-desktop-flag "${repo_root}" || return 3
     require-bash-version || return $?

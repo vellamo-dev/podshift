@@ -1,0 +1,6 @@
+[
+  {"Id": "1a2b3c4d5e6f", "Names": ["db"], "State": "running", "Labels": {"PODMAN_SYSTEMD_UNIT": "db.service"}, "VolumeNames": ["pgdata"]},
+  {"Id": "2b3c4d5e6f7a", "Names": ["web"], "State": "running", "Labels": {"PODMAN_SYSTEMD_UNIT": "web.service"}, "Mounts": [{"Type": "volume", "Name": "web-data", "Destination": "/srv"}, {"Type": "bind", "Name": "", "Destination": "/etc/x"}]},
+  {"Id": "3c4d5e6f7a8b", "Names": ["cache-warmup"], "State": "exited", "Labels": null, "VolumeNames": ["cache"]},
+  {"Id": "4d5e6f7a8b9c", "Names": ["redis-tmp"], "State": "running", "Labels": {}, "VolumeNames": ["3f9a1c7e5b2d4086a1e9c3b7d5f2048e6a9c1b3d5f7e9a2c4b6d8f0e1a3c5b7d"]}
+]

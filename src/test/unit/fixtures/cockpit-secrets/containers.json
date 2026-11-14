@@ -1,0 +1,38 @@
+[
+    {
+        "Id": "a1a1a1a1a1a1b2b2b2b2b2b2c3c3c3c3c3c3d4d4d4d4d4d4e5e5e5e5e5e5f6f6",
+        "Name": "shop-db",
+        "State": {"Status": "running"},
+        "Config": {
+            "Env": ["DB_PASSWORD=must-never-leak", "PATH=/usr/bin"],
+            "CreateCommand": ["/usr/bin/podman", "run", "--name", "shop-db", "--secret", "db-password,type=env,target=DB_PASSWORD", "--secret=api-token,target=/etc/shop/token,mode=0400", "docker.io/library/postgres:16"],
+            "Secrets": [{"Name": "api-token", "ID": "7a1b2c3d4e5f60718293a4b5c", "UID": 0, "GID": 0, "Mode": 256}]
+        }
+    },
+    {
+        "Id": "b2b2b2b2b2b2c3c3c3c3c3c3d4d4d4d4d4d4e5e5e5e5e5e5f6f6f6f6f6f6a1a1",
+        "Name": "db-backup",
+        "State": {"Status": "exited"},
+        "Config": {
+            "CreateCommand": ["podman", "run", "--secret", "db-password", "alpine"],
+            "Secrets": [{"Name": "db-password", "ID": "3c8e1f0a9b7d6c5e4f3a2b1c0", "UID": 0, "GID": 0, "Mode": 292}]
+        }
+    },
+    {
+        "Id": "c3c3c3c3c3c3d4d4d4d4d4d4e5e5e5e5e5e5f6f6f6f6f6f6a1a1a1a1a1a1b2b2",
+        "Name": "mailer",
+        "State": {"Status": "created"},
+        "Config": {
+            "CreateCommand": null,
+            "Secrets": [{"Name": "smtp-password", "ID": "1d2c3b4a5f6e7d8c9b0a1f2e3", "UID": 0, "GID": 0, "Mode": 292}]
+        }
+    },
+    {
+        "Id": "d4d4d4d4d4d4e5e5e5e5e5e5f6f6f6f6f6f6a1a1a1a1a1a1b2b2b2b2b2b2c3c3",
+        "Name": "web",
+        "State": {"Status": "running"},
+        "Config": {
+            "CreateCommand": ["podman", "run", "--secret", "smtp-password,type=env", "nginx"]
+        }
+    }
+]

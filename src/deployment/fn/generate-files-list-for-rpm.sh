@@ -28,7 +28,9 @@ generate-files-list-for-rpm() {
     declare -F print-step-header >/dev/null || source "${DIR_185352DC4DF7}/utils/print-step.sh"
     print-step-header "${step_tag}" "Generating files list..."
     : >"${path_files_list}"
-    find "${path_build}" \( -type f -o -type l \) -printf '/%P\n' | sort >>"${path_files_list}"
+    # Repo files are config: keep local edits (for example enabled=0) on upgrade.
+    find "${path_build}" \( -type f -o -type l \) -printf '/%P\n' | sort |
+        sed 's|^/etc/yum\.repos\.d/|%config(noreplace) /etc/yum.repos.d/|' >>"${path_files_list}"
     cat "${path_files_list}"
     print-step-ok
 }
