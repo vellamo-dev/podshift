@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.16.0
+Version: 0.16.1
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,9 @@ wait
 
 
 %changelog
+* Mon Nov 16 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.1
+- Illustrations updated
+
 * Mon Nov 16 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.0
 - Cockpit API: overview info reports the install type (desktop or server)
 - Docs: readme intro and "How Your Code Gets to the Server" rewritten for beginners
