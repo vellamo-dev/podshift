@@ -14,6 +14,7 @@
 # @description: Prints the Overview info card as a rows object, in a fixed order.
 # @details:
 #   Missing keys become null. Each value is already the display text, or null when missing.
+#   The install value is desktop or server; the UI shows it as Desktop or Server.
 # @arg: $1 - a JSON object mapping row ids to string values or null.
 # @stdout: one JSON object with a rows array.
 # @exitcode: 0 when the rows were written, 1 when the argument is not a JSON object.
@@ -27,7 +28,8 @@ cockpit-overview-info-rows() {
             {id: "os", label: "OS", value: v("os")},
             {id: "podman", label: "Podman", value: v("podman")},
             {id: "podshift", label: "PodShift", value: v("podshift")},
-            {id: "fail2ban", label: "Fail2Ban", value: v("fail2ban")}
+            {id: "fail2ban", label: "Fail2Ban", value: v("fail2ban")},
+            {id: "install", label: "Install type", value: v("install")}
         ]}
     '
 }

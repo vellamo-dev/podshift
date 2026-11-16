@@ -4,52 +4,39 @@
 
 Muu dokumentaatio on englanniksi.
 
-PodShift on kevyt konttiorkestroinnin mahdollistaja pienille palvelimille. Se muuttaa minkä tahansa palvelimen, fyysisestä koneesta pilven virtuaalikoneeseen vaikkapa Hetznerillä, sellaiseksi, joka asentaa itsensä, pitää itsensä turvassa ja päivittää sovelluksesi automaattisesti, samalla asetuksella kehittäjän koneen ensimmäisestä päivästä tuotantoon asti.
+![PodShift](./docs/img/poster-podshift-zoon-in.webp)
 
-Käytä mitä pilveä tahansa, tai älä käytä pilveä lainkaan. PodShift ei yksinkertaisesti koskaan sido sinua yhteen toimittajaan.
+Olet rakentanut sovelluksen. Nyt sen pitää pyöriä jossain, pysyä turvassa ja päivittyä aina, kun parannat sitä. Siihen moni tiimi jää jumiin: joko palvelimia päivitetään käsin, tai päädytään monimutkaisiin pilvialustoihin, joita ei oikeasti tarvittu.
 
-Tässä ei ole mitään taikuutta. PodShift on niin yksinkertainen, että olisit voinut rakentaa sen itse jo aikoja sitten. Se tekee sen vain puolestasi, oikealla tavalla, muutamassa minuutissa.
+PodShift asettuu näiden väliin. Asenna se yhdelle tavalliselle palvelimelle, ja palvelin asentaa itsensä, pitää itsensä turvassa ja päivittää sovelluksesi itse. Se toimii samalla tavalla työpöytäkoneellasi, toimiston pienellä koneella tai millä tahansa hosting-tarjoajalla.
 
-## Koodista tuotantoon
+Ei taikuutta eikä sidonnaisuutta. PodShift käyttää Linuxin vakiotyökaluja, ja voisit rakentaa kaiken itsekin. Se vain tekee sen puolestasi, oikealla tavalla, muutamassa minuutissa.
 
-Lähetät koodin. Kaikki sen jälkeen tapahtuu automaattisesti.
+## Näin koodisi päätyy palvelimelle
 
-```mermaid
-flowchart LR
-    subgraph Developer [Developer: person or AI agent]
-        dev[Developer machine]
-    end
-    subgraph CI [Continuous integration: automatic]
-        gh[GitHub]
-        quay[quay.io]
-    end
-    subgraph CD [Continuous deployment: automatic]
-        ps[PodShift server]
-        subgraph appA [App A]
-            a1[Container]
-        end
-        subgraph appB [App B]
-            b1[Container]
-            b2[Container]
-        end
-    end
-    dev -->|push code| gh
-    gh -->|trigger build| quay
-    quay -->|build image| quay
-    quay -.->|pull image| ps
-    ps -->|run image| appA
-    ps -->|run image| appB
-```
+Monella palvelimella sovelluksia ajetaan yhä perinteiseen tapaan: joku kirjautuu sisään, kopioi tiedostot, asentaa sovelluksen tarvitsemat asiat ja käynnistää sen uudelleen. Se toimii, mutta jokainen palvelin muuttuu vähitellen erilaiseksi, päivitykset pelottavat, ja vain yksi ihminen tietää, miten kaikki tehtiin.
 
-1. Kehittäjä, ihminen tai tekoälyagentti, lähettää koodin koodialustalle, tässä GitHubiin.
-2. Koodialusta käynnistää buildin konttirekisterissä, tässä quay.io:ssa, joka rakentaa imagen ja tallentaa sen.
-3. PodShift-palvelin tarkkailee rekisteriä jatkuvasti. Kun uusi image ilmestyy, se hakee sen ja käynnistää sovelluksen uudelleen. Jos uusi versio osoittautuu rikkinäiseksi, se palaa vanhaan.
+Kontit muuttavat tämän. Idea selkokielellä:
 
-GitHub ja quay.io ovat vain esimerkkejä. Mikä tahansa vastaava koodialusta tai konttirekisteri käy, myös yksityinen. Suosittelemme quay.io:ta, koska se on ilmainen, siinä on paljon ominaisuuksia, ja se voi rakentaa imaget automaattisesti koodistasi.
+- **Image:** sovelluksesi pakattuna yhteen kaiken sen kanssa, mitä se tarvitsee toimiakseen, kuten oikeat kirjastot ja asetukset. Se on kuin suljettu laatikko, jonka resepti antaa aina saman tuloksen. Rakennat sen kerran, eikä se enää muutu.
+- **Kontti:** käynnissä oleva image. Samasta imagesta voi käynnistää monta konttia, työpöytäkoneella tai palvelimella, ja ne toimivat kaikkialla samoin.
+- **Rekisteri:** hylly, jolla imaget säilytetään, jotta palvelimet voivat hakea ne.
 
-Yksi palvelin pyörittää monia sovelluksia. Jokainen sovellus on yksi tai useampi kontti omassa yksityisessä verkossaan, joten sovellukset eivät näe toisiaan.
+Koska image on kaikkialla sama, "toimii minun koneellani" tarkoittaa vihdoin, että se toimii myös palvelimella.
 
-Commit sisään, käynnissä oleva sovellus ulos. Jatkuva käyttöönotto, ei mitään väliin.
+**CI/CD** on automaattinen polku koodistasi käynnissä olevaksi kontiksi:
+
+![Näin koodisi päätyy palvelimelle](./docs/img/poster-ci-cd-flow.webp)
+
+1. **Kehitys:** kirjoitat koodia omalla koneellasi. Kun PodShift on työpöytäkoneellasi tai pienellä paikallisella palvelimella, saat oman testipalvelimen muutamassa minuutissa. Kokeile, miten sovelluksesi pakataan kontteihin, yhdistä useita kontteja yhdeksi sovellukseksi, tai pystytä nopeasti tietokanta, testiympäristö tai mitä ikinä työssäsi tarvitset. Kaikki toimii juuri niin kuin tuotannossa. Kun ideasi toimii, lähetä koodi koodialustalle, kuten GitHubiin.
+2. **Jatkuva integraatio (CI):** palvelu rakentaa koodistasi uuden imagen ja vie sen rekisterin hyllylle.
+3. **Jatkuva käyttöönotto (CD):** palvelimesi, jossa myös on PodShift, huomaa uuden imagen, käynnistää sen konttina ja palaa vanhaan, jos jokin menee rikki.
+
+**Mihin PodShift sopii.** PodShift on yksinkertaisin tapa siirtyä perinteisestä tavasta imageihin, kontteihin ja CI/CD:hen. Se on mukana polun molemmissa päissä: omalla koneellasi, jotta voit kokeilla ideoita turvallisesti, ja palvelimella, jossa se ajaa sovelluksesi ja pitää ne ajan tasalla. Samat tiedostot toimivat molemmissa paikoissa, joten se mitä testasit, on se mikä pyörii. Ei Kubernetesia, ei klusteria eikä suurta pilvialustaa: vain tavallisia koneita ja muutama tiedosto, jotka voit lukea.
+
+Työpöytäkoneella PodShift on myös yksinkertaisesti kätevä paikallinen testipalvelin: pystytä mitä tarvitset, kokeile ja heitä pois.
+
+Haluatko teknisen näkymän? Katso [tarkempi kuvaus](./docs/readme.md#from-push-to-production) (englanniksi).
 
 ## Suuret ongelmat, jotka PodShift ratkaisee
 

@@ -5,7 +5,7 @@
 # @host-edit: no
 # @group: cockpit
 # @category: helper
-# @description: Overview info module: lists the OS, Podman, PodShift and Fail2Ban versions.
+# @description: Overview info module: lists the OS, Podman, PodShift and Fail2Ban versions and the install type.
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
@@ -76,10 +76,25 @@ cockpit-overview-info-fail2ban-version() {
     printf '%s\n' "${version}"
 }
 
-# @description: Lists the OS, Podman, PodShift and Fail2Ban versions.
+# @description: Prints the install type, desktop or server.
+# @details:
+#   Runs the check in a subshell, so the main configuration it loads stays out of this module.
+# @stdout: desktop or server.
+# @exitcode: 0 always.
+cockpit-overview-info-install-type() {
+    # shellcheck source=../../../../fn/utils/is-install-type-desktop.sh
+    declare -F is-install-type-desktop >/dev/null || source "${DIR_E6A30C49D1F2}/../../../../fn/utils/is-install-type-desktop.sh"
+    if (is-install-type-desktop); then
+        printf 'desktop\n'
+    else
+        printf 'server\n'
+    fi
+}
+
+# @description: Lists the OS, Podman, PodShift and Fail2Ban versions and the install type.
 # @details:
 #   The OS name comes from PRETTY_NAME in /etc/os-release. A missing package or file
-#   becomes a null value.
+#   becomes a null value. The install type is desktop or server.
 # @stdout: one JSON object with a rows array.
 # @exitcode: 0 when the rows were written, 1 otherwise.
 cockpit-module-overview-info() {
@@ -103,5 +118,7 @@ cockpit-module-overview-info() {
     _overview_info_put podshift "${text}" || return 1
     text="$(cockpit-overview-info-fail2ban-version)"
     _overview_info_put fail2ban "${text}" || return 1
+    text="$(cockpit-overview-info-install-type)"
+    _overview_info_put install "${text}" || return 1
     cockpit-overview-info-rows "${values}"
 }

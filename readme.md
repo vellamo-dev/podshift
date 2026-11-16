@@ -2,52 +2,39 @@
 
 English | [Suomi](readme.fi.md)
 
-PodShift is a lightweight container orchestration enabler for small servers. It turns any server, from bare metal to a cloud VM at a provider like Hetzner, into one that sets itself up, keeps itself secure, and updates your apps automatically, with the same configuration from the first day on a developer's computer all the way to production.
+![PodShift](./docs/img/poster-podshift-zoon-in.webp)
 
-Use any cloud you like, or none at all. PodShift simply never locks you in.
+You've built an app. Now it needs to run somewhere, stay safe, and get updated every time you improve it. That's where many teams get stuck: either they update servers by hand, or they end up with complex cloud platforms they didn't really need.
 
-There is no magic here. PodShift is so simple you could have built it yourself long ago. It just does it for you, the right way, in minutes.
+PodShift sits in between. Install it on one ordinary server, and that server sets itself up, keeps itself secure, and updates your apps on its own. It works the same on your desktop, on a small machine at the office, or at any hosting provider.
 
-## From Push to Production
+There's no magic and no lock-in. PodShift uses standard Linux tools, and you could build all of it yourself. It just does it for you, the right way, in minutes.
 
-You push code. Everything after that is automatic.
+## How Your Code Gets to the Server
 
-```mermaid
-flowchart LR
-    subgraph Developer [Developer: person or AI agent]
-        dev[Developer machine]
-    end
-    subgraph CI [Continuous integration: automatic]
-        gh[GitHub]
-        quay[quay.io]
-    end
-    subgraph CD [Continuous deployment: automatic]
-        ps[PodShift server]
-        subgraph appA [App A]
-            a1[Container]
-        end
-        subgraph appB [App B]
-            b1[Container]
-            b2[Container]
-        end
-    end
-    dev -->|push code| gh
-    gh -->|trigger build| quay
-    quay -->|build image| quay
-    quay -.->|pull image| ps
-    ps -->|run image| appA
-    ps -->|run image| appB
-```
+Many servers still run apps the classic way: someone logs in, copies files, installs what the app needs, and restarts it. It works, but every server slowly becomes different, updates are scary, and only one person knows how it was done.
 
-1. The developer, a person or an AI agent, pushes code to a code platform, here GitHub.
-2. The code platform triggers a build on the container registry, here quay.io, which builds the image and stores it.
-3. The PodShift server constantly watches the registry. When a new image appears, it pulls it and restarts the app. If the new version turns out broken, it goes back to the old one.
+Containers change that. Here's the idea in plain words:
 
-GitHub and quay.io are just examples. Any similar code platform or container registry works, including a private one. We recommend quay.io because it's free, has a lot of features, and can build images automatically from your code.
+- **Image:** your app packed together with everything it needs to run, such as the right libraries and settings. It's like a sealed box with a recipe that always gives the same result. You build it once, and it never changes.
+- **Container:** an image that is running. You can start many containers from the same image, on your desktop or on a server, and they behave the same everywhere.
+- **Registry:** a shelf where images are stored, so servers can fetch them.
 
-One server runs many apps. Each app is one or more containers on its own private network, so apps don't see each other.
+Because the image is the same everywhere, "it works on my machine" finally means it works on the server too.
 
-Commit in, running app out. Continuous deployment, nothing in between.
+**CI/CD** is the automatic path from your code to a running container:
+
+![How your code gets to the server](./docs/img/poster-ci-cd-flow.webp)
+
+1. **Development:** you write code on your own computer. With PodShift on your desktop or a small local server, you get your own test server in minutes. Try out how to pack your app into containers, combine several containers into one app, or quickly set up a database, a test environment, or whatever your work needs. Everything runs just as it will in production. When your idea works, push the code to a code platform such as GitHub.
+2. **Continuous Integration (CI):** a service builds a new image from your code and puts it on the registry shelf.
+3. **Continuous Deployment (CD):** your server, also running PodShift, notices the new image, starts it as a container, and goes back to the old one if something breaks.
+
+**Where PodShift fits.** PodShift is the simplest way to move from the classic way to images, containers and CI/CD. It's there at both ends of the path: on your own machine, so you can try ideas safely, and on the server, where it runs your apps and keeps them updated. The same files work in both places, so what you tested is what runs. No Kubernetes, no cluster and no big cloud platform: just ordinary machines and a few files you can read.
+
+On your desktop, PodShift is also simply a handy local test server: spin up what you need, try it, and throw it away.
+
+Want the technical view? See [how it works in detail](./docs/readme.md#from-push-to-production).
 
 ## Big Problems PodShift Solves
 

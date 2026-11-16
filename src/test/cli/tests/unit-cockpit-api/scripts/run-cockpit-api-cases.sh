@@ -1258,17 +1258,35 @@ else
     bad "overview-usage-stubbed" "${usage_out}"
 fi
 
+is-install-type-desktop() { return 0 ; }
+install_out="$(cockpit-overview-info-install-type)"
+if [[ "${install_out}" == "desktop" ]]; then
+    ok "overview-info-install-desktop"
+else
+    bad "overview-info-install-desktop" "${install_out}"
+fi
+is-install-type-desktop() { return 1 ; }
+install_out="$(cockpit-overview-info-install-type)"
+if [[ "${install_out}" == "server" ]]; then
+    ok "overview-info-install-server"
+else
+    bad "overview-info-install-server" "${install_out}"
+fi
+
 cockpit-overview-info-os-release() { printf 'PRETTY_NAME="Fedora Linux 45"\n' ; }
 cockpit-overview-info-podman-version() { printf '5.0.0\n' ; }
 cockpit-overview-info-podshift-version() { printf '0.1.0\n' ; }
 cockpit-overview-info-fail2ban-version() { return 0 ; }
+cockpit-overview-info-install-type() { printf 'server\n' ; }
 info_out="$(cockpit-module-overview-info)"
 if printf '%s' "${info_out}" | jq -e '
-    [.rows[].id] == ["os","podman","podshift","fail2ban"]
+    [.rows[].id] == ["os","podman","podshift","fail2ban","install"]
     and .rows[0].value == "Fedora Linux 45"
     and .rows[1].value == "5.0.0"
     and .rows[2].value == "0.1.0"
     and .rows[3].value == null
+    and .rows[4].value == "server"
+    and .rows[4].label == "Install type"
 ' >/dev/null; then
     expect_row_contract "overview-info-stubbed" "${info_out}"
 else

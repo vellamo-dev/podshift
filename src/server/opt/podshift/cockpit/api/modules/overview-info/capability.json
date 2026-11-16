@@ -1,7 +1,7 @@
 {
   "action": "overview-info",
   "name": "Overview info",
-  "description": "Lists the OS, Podman, PodShift and Fail2Ban versions.",
+  "description": "Lists the OS, Podman, PodShift and Fail2Ban versions and the install type.",
   "status": "active",
   "input": {
     "type": "object",

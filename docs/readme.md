@@ -8,6 +8,49 @@ The same configuration is used from the first day of development through test an
 
 PodShift is meant for small and medium teams running a few containerized apps across a few environments, without a cluster, a cloud platform or a dedicated operations team. To understand its boundaries, start with [Scope](scope.md). To install and operate it, see [Usage](usage.md).
 
+## From Push to Production
+
+You push code. Everything after that is automatic.
+
+```mermaid
+flowchart LR
+    subgraph Developer [Developer: person or AI agent]
+        dev[Developer machine]
+    end
+    subgraph CI [Continuous integration: automatic]
+        gh[GitHub]
+        quay[quay.io]
+    end
+    subgraph CD [Continuous deployment: automatic]
+        ps[PodShift server]
+        subgraph appA [App A]
+            a1[Container]
+        end
+        subgraph appB [App B]
+            b1[Container]
+            b2[Container]
+        end
+    end
+    dev -->|push code| gh
+    gh -->|trigger build| quay
+    quay -->|build image| quay
+    quay -.->|pull image| ps
+    ps -->|run image| appA
+    ps -->|run image| appB
+```
+
+1. **Development.** You, or an AI agent, write code and push it to a code platform, here GitHub. If you run PodShift on your local test environment, you can try the app there first, with the same Quadlet files the server will use.
+2. **Continuous integration.** The container registry, here quay.io, builds a new image from the code and stores it. PodShift isn't part of this step.
+3. **Continuous deployment.** Podman on the server checks the registry regularly, and you can change how often to suit your needs. When a new image is there, Podman pulls it and restarts the app. If the updated app is broken, Podman goes back to the previous version.
+
+**What PodShift does.** PodShift doesn't run your containers, Podman and systemd do. PodShift sets up the server so that all of this just works, and gives you a drop folder: put an app's Quadlet files there, and PodShift checks them and hands them over to Podman as services. After that, every push follows the same path without you.
+
+**One server, many apps.** Each app is one or more containers on its own private network, so apps don't see each other.
+
+**Use any provider.** GitHub and quay.io are just examples. Any similar code platform or container registry works, including a private one. We recommend quay.io because it's free, has plenty of features, and builds images from your code automatically.
+
+Commit in, running app out.
+
 ## Content
 
 - [Design Choices](./design-choices.md) - the factors guiding decisions behind PodShift.

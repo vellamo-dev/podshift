@@ -130,7 +130,7 @@ Overview usage runs in the `podshift` realm. A `value` is `"<in-use> / <all>"` f
 
 ### Overview info
 
-Overview info runs in the `podshift` realm. It lists the OS (`PRETTY_NAME` from `/etc/os-release`), the Podman version, the PodShift version (`get-podshift-version`) and the Fail2Ban version. A missing package or file is `null`.
+Overview info runs in the `podshift` realm. It lists the OS (`PRETTY_NAME` from `/etc/os-release`), the Podman version, the PodShift version (`get-podshift-version`), the Fail2Ban version and the install type (`install`, `desktop` or `server` from `is-install-type-desktop`). A missing package or file is `null`.
 
 ### Overview config
 

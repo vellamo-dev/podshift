@@ -29,6 +29,7 @@ Documentation lives in the code and in the commands, so it doesn't fall out of d
 | ✅ | Roadmap | This document. |
 | ✅ | Cockpit API | The JSON handler, the ping module and capability discovery are in the source tree. The Cockpit UI is the separate, optional add-on [cockpit-podshift](https://github.com/vellamo-dev/cockpit-podshift). |
 | ✅ | Usage guide | How to install PodShift from COPR and use it day to day. |
+| 📋 | CI/CD guide | An example of how to set up a full CI/CD workflow with PodShift. |
 
 ### Rootless Podman server
 
