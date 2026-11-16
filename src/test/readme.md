@@ -83,7 +83,7 @@ The tests never need these. They are GUIs that make it easier to see what the te
 
 ## What runs where
 
-- Anywhere: `lint-*`, `dev-cli-help` and `quick`. `dev-cli-help-show-all` needs `glow`; `dev-cli-help-show` does not. `quick` also runs unit, so bats is still required for a full pass.
+- Anywhere: `lint-*`, `dev-cli-help` and `quick`. `release-version-check` too, with curl, jq and network. `dev-cli-help-show-all` needs `glow`; `dev-cli-help-show` does not. `quick` also runs unit, so bats is still required for a full pass.
 - Need bats: `unit-pure-functions` (it checks bats itself and exits 3 if it is missing).
 - Need the dev host: anything whose Needs include `host-check` (`build-*`, `install-*`, `postinstall-*`, `bundle-*`, `host-container-start`, `hello`). On a Mac that is Apple container and Lima; on Fedora the packages and desktop mark in [What you need](#what-you-need). Other Linux is unsupported and exits 3.
 
@@ -104,6 +104,7 @@ Test names put the area first and the action last.
 | `host-` | `host-check`, `host-container-start` | Check this computer and start its container system. |
 | `build-` | `build-image` to `build-rpm-export` | Build the RPM in a Fedora container. |
 | `ui-` | `ui-rpm-build` | Build the cockpit-podshift RPM (`../cockpit-podshift`) in its own Fedora container, check it and copy it to that project's `artifacts/rpm/`. Skips when that project is missing. |
+| `release-` | `release-version-check` | Check that Copr has built the version on the GitHub `stable` branch, for podshift and cockpit-podshift. Needs only curl, jq and network. |
 | `install-` | `install-rpm-check` to `install-validate` | Install the RPM in a Fedora VM and check the install. |
 | `postinstall-` | `postinstall-vm-check`, `postinstall-vm-user-password`, `postinstall-health-check`, `postinstall-health-output`, `postinstall-ui-dev-mount` | Check an already installed system: the VM, the VM user password, the health check and its output, or mount the local UI dist into Cockpit. |
 | `postinstall-` | `postinstall-examples` | On demand only, and the last part of `bundle-ui-dev-mount-examples`: puts the example resources from `src/test/fixtures/examples/` (secrets, networks, images, volumes and containers) into the installed VM as the `podshift` user, so the Cockpit UI has real data. Running it again gives the same state. |
@@ -123,7 +124,7 @@ Test names put the area first and the action last.
 
 A test runs the tests it needs first, in order, and each test runs only once per run. So you can start any test on its own.
 
-`clean-containers` removes the test VM, container and images. `clean-rpm-output` removes the built RPMs. `clean-tmp` removes `artifacts/tmp/`. `clean-work` removes `artifacts/work/`. `clean-logs` removes all logs. `clean-all` runs the container, RPM, tmp, work and logs cleanups and checks that nothing is left.
+`clean-containers` removes the test VM, the builder containers and their images. `clean-rpm-output` removes the built RPMs. `clean-tmp` removes `artifacts/tmp/`. `clean-work` removes `artifacts/work/`. `clean-logs` removes all logs. `clean-all` runs the container, RPM, tmp, work and logs cleanups and checks that nothing is left.
 
 ## Reading the output
 
@@ -295,4 +296,4 @@ ssh -i ~/.ssh/podshift-test-vm -p 1022 root@<ip>   # after PodShift
 
 After `./test bundle-ui-dev-mount` (or `./test bundle-ui-dev-mount-examples`, which also adds the example resources) or `./test postinstall-ui-dev-mount`, Cockpit is at `https://<vm-ip>:9090` (and `https://localhost:9090` on a Mac). If `RPM_VM_USER_PSW` is set, every new VM gets that password on the VM login user when it starts (run `./test postinstall-vm-user-password` to set it again on a running VM). If `../cockpit-podshift/dist` exists, it is mounted read-only at `/mnt/cockpit-podshift` and bind-mounted into `/usr/local/share/cockpit/podshift` for every login. Rebuild the plugin with `./src/dev/run make watch` in cockpit-podshift, then refresh the browser. To copy `dist/` over the installed files in `/usr/share/cockpit/podshift` instead, run `./test postinstall-ui-sync-files`. It does nothing when the dev mount is in use. Reinstalling the UI RPM restores the packaged files.
 
-Deleting the test VM is safe and cheap: the base survives, and the next run clones it again in seconds. `./test clean-containers` removes the test VM, the RPM builder container and the images together.
+Deleting the test VM is safe and cheap: the base survives, and the next run clones it again in seconds. `./test clean-containers` removes the test VM, the RPM and cockpit-podshift RPM builder containers and the images together.

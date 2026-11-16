@@ -8,7 +8,7 @@
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
 
-# @description: Checks that the RPM builder container, test images, RPM packages, temporary and work files and logs are gone.
+# @description: Checks that the RPM builder containers, test images, RPM packages, temporary and work files and logs are gone.
 # @details:
 #   The temporary files are those in artifacts/tmp, the work files those in artifacts/work.
 #   Only this run's own empty folder may be left in artifacts/logs, and it is removed at the end.
@@ -19,11 +19,13 @@ verify-nothing-left() {
     local run_dir left name image
     run_dir="${1}"
     left=0
-    if container-cli inspect "${TST_RPM_BUILDER_CNT}" >/dev/null 2>&1; then
-        echo "DETAIL: container ${TST_RPM_BUILDER_CNT}"
-        left=$((left + 1))
-    fi
-    for name in "${TST_RPM_BUILDER_IMG}" "${TST_RPM_INSTALLER_IMG}"; do
+    for name in "${TST_RPM_BUILDER_CNT}" "${TST_UI_RPM_BUILDER_CNT}"; do
+        if container-cli inspect "${name}" >/dev/null 2>&1; then
+            echo "DETAIL: container ${name}"
+            left=$((left + 1))
+        fi
+    done
+    for name in "${TST_RPM_BUILDER_IMG}" "${TST_RPM_INSTALLER_IMG}" "${TST_UI_RPM_BUILDER_IMG}"; do
         for image in $(image-tags "${name}"); do
             echo "DETAIL: image ${image}"
             left=$((left + 1))

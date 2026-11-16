@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.15.3
+Version: 0.15.4
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,12 @@ wait
 
 
 %changelog
+* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.4
+- Tests: release-version-check compares the stable branch with Copr builds
+- Docs: design choices explain the test suite
+- Docs: design choices explain the own test runner, the extra lint tests and the guiding idea
+- Docs: agents.md starts with Purpose first
+
 * Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.3
 - Documentation: Finnish readme (readme.fi.md)
 

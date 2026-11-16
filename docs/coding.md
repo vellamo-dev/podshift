@@ -220,3 +220,5 @@ Versions are `x.y.z`. The `Version:` line in `podshift.spec` is the single sourc
 - **Major (`x`)** stays at 0 until the first stable release. Only the maintainer changes it, never an agent.
 
 Every bump adds a spec `%changelog` entry (`- x.y.z-1`) and sets `Release:` back to `1`. Bump once per task or delivery, not per saved file. An agent bumps the version as the last step of a change and says so in its report.
+
+After a release reaches `stable` and Copr has built it, `./test release-version-check` checks that both versions match. See [release-version-check](../src/test/cli/tests/release-version-check/readme.md).

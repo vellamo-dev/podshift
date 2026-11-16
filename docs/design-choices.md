@@ -2,7 +2,7 @@
 
 PodShift is a lightweight container orchestration enabler for small servers. It installs on Fedora Server and turns any machine, from bare metal to a cloud VM, into a server that sets itself up, keeps itself secure, and updates your apps automatically, with the same configuration from a developer's computer all the way to production. For the full picture, see the [readme](../readme.md).
 
-Every IT solution is opinionated, and PodShift is too. There's rarely one right or wrong answer. What matters a lot to one team hardly matters to another, and the right choice depends on many things: your people, your budget, your apps and your plans.
+Software engineering is a creative field, and like any creative work it rarely has one right or wrong answer. What counts is whether a choice serves its purpose, is fair to the people it affects, works well in practice, and fits the goal to the time, people and money available to reach it. Every IT solution is opinionated, and PodShift is too. What matters a lot to one team hardly matters to another.
 
 Many tech stacks have no real reasoning behind them. They grew out of habits, past projects and choices made along the way. This page does the opposite: it shares the thinking behind PodShift's design, in plain words. You don't have to agree with it. It's here so you can see why things are the way they are and decide for yourself.
 
@@ -11,6 +11,7 @@ What each part does is in the code and the built-in help. This page covers only 
 What drives these choices:
 
 - **Proven tools over hype.** New technology often promises more than it delivers. In real life, the latest trend can turn into a heavy weight that drags you down, and you end up patching around problems nobody mentioned at the start. PodShift picks tools that have already proven themselves in daily use.
+- **Tested, not trusted.** Changes are proven on a fresh Fedora VM, not only on paper.
 - **Free software.** Every part is free and open source.
 - **Easy to try anywhere.** Install and test it on a cheap desktop, then run it on any cloud host or your own server.
 - **Works together out of the box.** All the parts are made to fit, with no complex patching.
@@ -400,3 +401,43 @@ Installing an app should be as easy as copying a file. PodShift adds a drop fold
 - [SnowflakeServer (Martin Fowler, 2012)](https://martinfowler.com/bliki/SnowflakeServer.html)
 - [ConfigurationSynchronization (Martin Fowler, 2012)](https://martinfowler.com/bliki/ConfigurationSynchronization.html)
 - [Exploring the new Podman secret command (Red Hat, 2021)](https://www.redhat.com/en/blog/new-podman-secrets-command)
+
+## Tested on Real Servers
+
+PodShift comes with its own test suite and a small runner, because a mistake in setup can lock you out or leave a hole. The goal is code that works on real servers, not code that only passes checks.
+
+### Its own test suite
+
+**In plain words:** PodShift changes a real server: users, firewall, SELinux, SSH and services. A mistake there can lock you out or leave a hole, so every change is tested on a fresh Fedora VM the way an admin would use it, not only on paper.
+
+**What you gain:**
+
+- Bash has no compiler that catches mistakes, so the tests do that job.
+- Shellcheck alone isn't enough, so extra lint tests check what it misses: every function is documented, every command has its help, and every pure function has its unit tests.
+- Fedora moves fast, so the tests check PodShift against the current Fedora release and catch breakage before you do.
+- The install report and the release checks show that what was shipped is what was tested.
+
+**When it's not enough:** The tests cover PodShift's own setup, not your apps or your provider's network. Testing your apps stays with you, as Drop-In Quadlets already says.
+
+**For the technical reader:** The suite has bats unit tests for single functions, and test bundles that build the RPM and install it in a fresh Fedora VM. `release-version-check` compares the version on GitHub's `stable` branch with the newest Copr build. A further test that installs those Copr packages on a fresh VM is planned. How to run the tests is in [the test readme](../src/test/readme.md). The tests are development tools and are not installed with PodShift.
+
+**Read more:**
+
+- [Bats: Bash Automated Testing System](https://bats-core.readthedocs.io/en/stable/)
+
+### Its own test runner
+
+**In plain words:** There are plenty of test frameworks, but most felt too heavy or aimed at something else. They want their own language, a CI setup or a whole platform before you can test one thing, and they rarely explain their own tests. PodShift needs tests that are small, sit right next to the code and run with one command, from a single function up to a whole server, and that serve a person at the keyboard as well as automation. Bash has nothing like that, so PodShift has a small runner of its own.
+
+**What you gain:**
+
+- A light start. Clone the repo on a Mac or Fedora, add a few small tools, and you can already run the source checks (bats is the main one). There is no separate test framework to install first. The extra tools for a full install test are listed in [What you need](../src/test/readme.md#what-you-need).
+- One command, `./test <name>`, for anything from a single function to a full VM install.
+- `./test --help <test>` says what the test does, its steps and how to run it, so you don't have to read its code first.
+- Readable step-by-step output for people, and clear exit codes for scripts and CI.
+- Tests in plain bash, the same language as PodShift.
+- It uses proven tools where they fit (bats for functions, Lima or libvirt for VMs) and adds only the steps and the final verdict.
+
+**When it's not enough:** It's built for PodShift, not as a general framework.
+
+**For the technical reader:** How to run the tests and what you need is in [the test readme](../src/test/readme.md). `./test --help` lists the tests; `./test --help <test>` shows one.

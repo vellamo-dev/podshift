@@ -47,6 +47,12 @@ source "${DIR_3C8E61A94F27}/cli/shared/fn/log/write-log.sh"
 source "${DIR_3C8E61A94F27}/cli/shared/fn/utils/text-distance.sh"
 # shellcheck source=cli/shared/fn/utils/is-version-at-least.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/utils/is-version-at-least.sh"
+# shellcheck source=cli/shared/fn/release/read-stable-version.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/release/read-stable-version.sh"
+# shellcheck source=cli/shared/fn/release/find-copr-build.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/release/find-copr-build.sh"
+# shellcheck source=cli/shared/fn/release/check-release-version.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/release/check-release-version.sh"
 # shellcheck source=cli/shared/fn/rpm/run-check-in-builder.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/rpm/run-check-in-builder.sh"
 # shellcheck source=cli/shared/fn/rpm/run-check-in-ui-builder.sh
