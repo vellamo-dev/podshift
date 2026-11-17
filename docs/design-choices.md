@@ -25,6 +25,7 @@ What drives these choices:
 PodShift doesn't invent its own platform. It's a thin layer that sets up and connects tools Fedora already ships.
 
 - **No hidden engine.** There's no extra background service and no black box. Podman runs your apps and systemd starts them, with a few small scripts on top.
+- **Small footprint.** Many deployment tools keep a controller, an agent or a dashboard running all the time. PodShift adds none of these. systemd starts its small scripts only when there's work, and Podman takes care of updates. When nothing is happening, your server's memory and CPU go to your apps.
 - **Nothing to get stuck with.** Your apps run on standard tools and open formats. If you remove PodShift, your apps, data and settings stay where they are and keep running.
 - **Decades of proven work.** Instead of writing its own security, startup or monitoring from scratch, PodShift relies on tools that have run countless servers for years, such as SELinux, firewalld and systemd.
 

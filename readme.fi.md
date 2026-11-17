@@ -12,6 +12,8 @@ PodShift asettuu näiden väliin. Asenna se yhdelle tavalliselle palvelimelle, j
 
 Ei taikuutta eikä sidonnaisuutta. PodShift käyttää Linuxin vakiotyökaluja, ja voisit rakentaa kaiken itsekin. Se vain tekee sen puolestasi, oikealla tavalla, muutamassa minuutissa.
 
+PodShift ei lisää palvelimelle raskasta taustapalvelua. Se rakentaa ympäristön ja jättää palvelimen resurssit sovelluksillesi.
+
 ## Näin koodisi päätyy palvelimelle
 
 Monella palvelimella sovelluksia ajetaan yhä perinteiseen tapaan: joku kirjautuu sisään, kopioi tiedostot, asentaa sovelluksen tarvitsemat asiat ja käynnistää sen uudelleen. Se toimii, mutta jokainen palvelin muuttuu vähitellen erilaiseksi, päivitykset pelottavat, ja vain yksi ihminen tietää, miten kaikki tehtiin.

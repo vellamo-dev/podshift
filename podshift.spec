@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.16.1
+Version: 0.16.2
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,9 @@ wait
 
 
 %changelog
+* Tue Nov 17 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.2
+- Docs: small footprint noted in readme and design choices
+
 * Mon Nov 16 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.1
 - Illustrations updated
 

@@ -10,6 +10,8 @@ PodShift sits in between. Install it on one ordinary server, and that server set
 
 There's no magic and no lock-in. PodShift uses standard Linux tools, and you could build all of it yourself. It just does it for you, the right way, in minutes.
 
+PodShift doesn't add a heavy background service to your server. It sets things up and steps aside, leaving your server's resources for your apps.
+
 ## How Your Code Gets to the Server
 
 Many servers still run apps the classic way: someone logs in, copies files, installs what the app needs, and restarts it. It works, but every server slowly becomes different, updates are scary, and only one person knows how it was done.
