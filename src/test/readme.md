@@ -93,7 +93,7 @@ Before full tests, run `./test host-check`, then `./test host-container-start`. 
 
 The test runner reads a `.env` file in the project root, if it is there. The file is local only and is gitignored (`/.env`). It is parsed, not sourced: only `KEY=VALUE` lines whose key matches `RPM_VM_[A-Z0-9_]+` are used, optional surrounding quotes on the value are stripped, comments and other lines are ignored, and a variable already set in the environment is left unchanged. Values are never printed.
 
-`RPM_VM_USER_PSW` is the password set on the VM login user (the current user on this computer, if that account exists in the VM). `install-vm-start` sets it on every new VM, and `postinstall-vm-user-password` sets it again on a running VM. If it is empty or missing, both skip it.
+`RPM_VM_USER_PSW` is the password set on the VM login user (the current user on this computer, if that account exists in the VM). `install-vm-start` sets it every time it starts the VM, and `postinstall-vm-user-password` sets it again on a running VM. If it is empty or missing, both skip it.
 
 ## Tests
 
@@ -102,10 +102,10 @@ Test names put the area first and the action last.
 | Area | Tests | What they do |
 |------|-------|--------------|
 | `host-` | `host-check`, `host-container-start` | Check this computer and start its container system. |
-| `build-` | `build-image` to `build-rpm-export` | Build the RPM in a Fedora container. |
+| `build-` | `build-image` to `build-rpm-export`, `build-container-stop` | Build the RPM in a Fedora container. `build-container-stop` stops the builder containers afterwards, so they free their memory. |
 | `ui-` | `ui-rpm-build` | Build the cockpit-podshift RPM (`../cockpit-podshift`) in its own Fedora container, check it and copy it to that project's `artifacts/rpm/`. Skips when that project is missing. |
 | `release-` | `release-version-check` | Check that Copr has built the version on the GitHub `stable` branch, for podshift and cockpit-podshift. Needs only curl, jq and network. |
-| `install-` | `install-rpm-check` to `install-validate` | Install the RPM in a Fedora VM and check the install. |
+| `install-` | `install-rpm-check` to `install-validate`, `install-vm-stop` | Install the RPM in a Fedora VM and check the install. `install-vm-create` makes a fresh installer VM without starting it, and `install-vm-start` starts the existing one. `install-vm-stop` stops the installer VM without removing it. |
 | `postinstall-` | `postinstall-vm-check`, `postinstall-vm-user-password`, `postinstall-health-check`, `postinstall-health-output`, `postinstall-ui-dev-mount` | Check an already installed system: the VM, the VM user password, the health check and its output, or mount the local UI dist into Cockpit. |
 | `postinstall-` | `postinstall-examples` | On demand only, and the last part of `bundle-ui-dev-mount-examples`: puts the example resources from `src/test/fixtures/examples/` (secrets, networks, images, volumes and containers) into the installed VM as the `podshift` user, so the Cockpit UI has real data. Running it again gives the same state. |
 | `postinstall-` | `postinstall-ui-install` | Installs the cockpit-podshift RPM from `ui-rpm-build` in the already installed VM, checks the repo file, the catalogue entry and the package, and keeps it installed. Skips when cockpit-podshift is missing. |
@@ -124,7 +124,7 @@ Test names put the area first and the action last.
 
 A test runs the tests it needs first, in order, and each test runs only once per run. So you can start any test on its own.
 
-`clean-containers` removes the test VM, the builder containers and their images. `clean-rpm-output` removes the built RPMs. `clean-tmp` removes `artifacts/tmp/`. `clean-work` removes `artifacts/work/`. `clean-logs` removes all logs. `clean-all` runs the container, RPM, tmp, work and logs cleanups and checks that nothing is left.
+`clean-containers` removes the test VM, the builder containers and their images. `build-container-stop` only stops the two builder containers, and the next build replaces them; set `TST_KEEP_BUILDERS=true` to keep them running for debugging. `install-vm-stop` stops the installer VM without removing it. The next `install-vm-start` starts it again, and `install-vm-create` replaces it with a fresh clone. `clean-rpm-output` removes the built RPMs. `clean-tmp` removes `artifacts/tmp/`. `clean-work` removes `artifacts/work/`. `clean-logs` removes all logs. `clean-all` runs the container, RPM, tmp, work and logs cleanups and checks that nothing is left.
 
 ## Reading the output
 
@@ -262,12 +262,12 @@ Unit rules:
 
 ## Mac installer VM notes
 
-On a Mac, the installer VM runs with Lima, from the Fedora Cloud image named in `cli/os-specific/mac/lima/rpm-installer.yaml`. `install-image` builds a stopped base VM from it once a week, and `install-vm-start` clones the test VM from that base in seconds. It is close to a server, but not the same:
+On a Mac, the installer VM runs with Lima, from the Fedora Cloud image named in `cli/os-specific/mac/lima/rpm-installer.yaml`. `install-image` builds a stopped base VM from it once a week, and `install-vm-create` clones the test VM from that base in seconds. It is close to a server, but not the same:
 
 - `systemd-detect-virt` reports `apple`;
 - it starts from the Fedora Cloud image, not Fedora Server, so the provision script in that file adds the server packages and settings;
 - systemd needs a moment after boot, so the tests wait for `systemctl is-system-running`;
-- the test VM is always cloned fresh and never started again after PodShift is installed;
+- the bundles always clone the test VM fresh, and `install-vm-start` on its own starts an existing one again;
 - the base must stay stopped. Started by hand, it saves a machine-id that every later clone would share; `./test --fresh install-image` builds a clean one.
 
 ## Using the installer VM by hand
@@ -276,6 +276,8 @@ The full chain leaves the test VM running, so you can inspect the installed serv
 
 - the base VM `ps-rpm-installer-base-fc45` is stopped and is only for cloning. Never start it by hand, because it would save a machine-id that every later clone would share. If you did, `./test --fresh install-image` rebuilds it;
 - the test VM `ps-rpm-installer-fc45` is the clone and the one to use.
+
+`./test install-vm-stop` stops the test VM without deleting it. `./test install-vm-start` starts it again and keeps what is inside. `./test install-vm-create` removes it and clones a fresh one from the base.
 
 ```sh
 limactl list                           # every VM and its state

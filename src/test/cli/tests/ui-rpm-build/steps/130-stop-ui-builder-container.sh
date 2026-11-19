@@ -16,11 +16,5 @@ stop-ui-builder-container() {
     local run_dir
     run_dir="${1}"
     [[ "${TST_UI_PRESENT}" == "true" ]] || { echo "NOTE: skipped"; return 0; }
-    if ! container-running "${TST_UI_RPM_BUILDER_CNT}"; then
-        echo "NOTE: not running"
-        return 0
-    fi
-    container-cli stop "${TST_UI_RPM_BUILDER_CNT}" || { echo "The container ${TST_UI_RPM_BUILDER_CNT} could not be stopped"; return 1; }
-    write-log "${run_dir}" ui-rpm-build "Container ${TST_UI_RPM_BUILDER_CNT}: stopped"
-    echo "NOTE: stopped"
+    container-stop-if-running "${run_dir}" ui-rpm-build "${TST_UI_RPM_BUILDER_CNT}"
 }

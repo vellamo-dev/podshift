@@ -5,7 +5,7 @@
 # @category: entry
 # @title: Installing PodShift and its UI with example resources
 # @platforms: mac fedora
-# @needs: host-check host-container-start build-image build-container-start build-data-copy build-source-tar build-rpm build-rpm-export install-rpm-check install-image install-vm-start install-rpm-copy install-rpm install-validate bundle-build-install-validate ui-rpm-build postinstall-ui-install bundle-ui-rpm-install postinstall-vm-check postinstall-examples
+# @needs: host-check host-container-start build-image build-container-start build-data-copy build-source-tar build-rpm build-rpm-export build-container-stop install-rpm-check install-image install-vm-create install-vm-start install-rpm-copy install-rpm install-validate bundle-build-install-validate ui-rpm-build postinstall-ui-install bundle-ui-rpm-install postinstall-vm-check postinstall-examples
 # @description: Runs bundle-ui-rpm-install, then puts the example resources into the fresh installer VM.
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE

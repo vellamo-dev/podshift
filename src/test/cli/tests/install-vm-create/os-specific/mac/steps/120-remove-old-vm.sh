@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: 120-remove-old-vm.sh
-# @source-dir: src/test/cli/tests/install-vm-start/os-specific/mac/steps
+# @source-dir: src/test/cli/tests/install-vm-create/os-specific/mac/steps
 # @group: test
 # @category: step
 # @description: Remove old RPM installer VM.
@@ -20,6 +20,6 @@ remove-old-vm() {
         return 0
     fi
     vm delete -f "${TST_RPM_INSTALLER_VM}" >/dev/null 2>&1 || { echo "The VM ${TST_RPM_INSTALLER_VM} could not be removed"; return 1; }
-    write-log "${run_dir}" install-vm-start "VM ${TST_RPM_INSTALLER_VM}: removed"
+    write-log "${run_dir}" install-vm-create "VM ${TST_RPM_INSTALLER_VM}: removed"
     echo "NOTE: removed"
 }

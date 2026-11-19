@@ -33,6 +33,6 @@ print-cockpit-url() {
         echo "DETAIL: Rebuild it in cockpit-podshift with ./src/dev/run make watch, then refresh the browser."
     else
         echo "DETAIL: cockpit-podshift dist/ was not found, so the plugin share was not mounted."
-        echo "DETAIL: Create that folder, then run ./test install-vm-start and this test again."
+        echo "DETAIL: Create that folder, then run ./test install-vm-create install-vm-start and this test again."
     fi
 }

@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.16.2
+Version: 0.17.0
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,11 @@ wait
 
 
 %changelog
+* Tue Nov 17 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.17.0
+- Tests: builder containers are stopped after use (build-container-stop)
+- Tests: install-vm-stop stops the installer VM without removing it
+- Tests: install-vm-create split from install-vm-start, which now starts the existing VM
+
 * Tue Nov 17 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.2
 - Docs: small footprint noted in readme and design choices
 

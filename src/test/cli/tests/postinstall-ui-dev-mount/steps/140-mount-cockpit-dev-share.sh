@@ -31,9 +31,9 @@ mount-cockpit-dev-share() {
         return 0
     fi
     if [[ -n "${TST_LIMA_CONFIG:-}" ]]; then
-        write-log "${run_dir}" postinstall-ui-dev-mount "plugin share: ${mount_point} is not mounted, recreate the VM"
+        write-log "${run_dir}" postinstall-ui-dev-mount "plugin share: ${mount_point} is not mounted, the share is set when the VM is created"
         echo "The share was not mounted in the VM at ${mount_point}"
-        echo "Fix: ./test install-vm-start"
+        echo "Fix: ./test install-vm-create install-vm-start"
         return 3
     fi
     if ! vm-run "${TST_RPM_INSTALLER_VM}" mkdir -p "${mount_point}"; then
@@ -43,7 +43,7 @@ mount-cockpit-dev-share() {
     if ! vm-run "${TST_RPM_INSTALLER_VM}" mount -t virtiofs cockpit-podshift "${mount_point}"; then
         write-log "${run_dir}" postinstall-ui-dev-mount "plugin share: mount -t virtiofs cockpit-podshift ${mount_point} failed"
         echo "Could not mount virtiofs cockpit-podshift at ${mount_point}"
-        echo "Fix: ./test install-vm-start"
+        echo "Fix: ./test install-vm-create install-vm-start"
         return 3
     fi
     write-log "${run_dir}" postinstall-ui-dev-mount "plugin share: mounted virtiofs at ${mount_point}"

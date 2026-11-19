@@ -10,7 +10,7 @@
 
 # @description: Builds the stopped Lima base VM that the RPM installer VM is cloned from, or reuses it if it is new enough.
 # @details:
-#   The base VM is TST_RPM_INSTALLER_BASE, and install-vm-start clones from it. It is rebuilt when
+#   The base VM is TST_RPM_INSTALLER_BASE, and install-vm-create clones from it. It is rebuilt when
 #   reuse is off, it is missing or running, the Lima config TST_LIMA_CONFIG is newer, or it is
 #   older than TST_RPM_INSTALLER_MAX_AGE_HOURS. Its age is the time its lima.yaml was written,
 #   which Lima changes only when the VM is created. A build runs limactl start with the config and

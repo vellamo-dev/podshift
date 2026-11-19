@@ -69,6 +69,8 @@ source "${DIR_3C8E61A94F27}/cli/shared/fn/podshift/podshift-command-list.sh"
 source "${DIR_3C8E61A94F27}/cli/shared/fn/image/build-or-reuse-image.sh"
 # shellcheck source=cli/shared/fn/image/image-exists.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/image/image-exists.sh"
+# shellcheck source=cli/shared/fn/container/container-stop-if-running.sh
+source "${DIR_3C8E61A94F27}/cli/shared/fn/container/container-stop-if-running.sh"
 # shellcheck source=cli/shared/fn/tests/is-platform-allowed.sh
 source "${DIR_3C8E61A94F27}/cli/shared/fn/tests/is-platform-allowed.sh"
 # shellcheck source=cli/shared/fn/tests/require-bash-version.sh

@@ -15,11 +15,5 @@
 stop-builder-container() {
     local run_dir
     run_dir="${1}"
-    if ! container-running "${TST_RPM_BUILDER_CNT}"; then
-        echo "NOTE: not running"
-        return 0
-    fi
-    container-cli stop "${TST_RPM_BUILDER_CNT}" || { echo "The container ${TST_RPM_BUILDER_CNT} could not be stopped"; return 1; }
-    write-log "${run_dir}" build-container-start "Container ${TST_RPM_BUILDER_CNT}: stopped"
-    echo "NOTE: stopped"
+    container-stop-if-running "${run_dir}" build-container-start "${TST_RPM_BUILDER_CNT}"
 }

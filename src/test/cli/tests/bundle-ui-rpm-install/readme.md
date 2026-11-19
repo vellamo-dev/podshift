@@ -1,6 +1,6 @@
 # bundle-ui-rpm-install
 
-The full run for PodShift with its Cockpit UI: everything that `bundle-build-install-validate` does (build the podshift RPM, install it in a fresh installer VM, validate, run the health check), then `ui-rpm-build`, which builds the cockpit-podshift RPM into `../cockpit-podshift/artifacts/rpm/`, then `postinstall-ui-install`, which installs that RPM in the VM, checks it and keeps it installed. Its own last step prints the Cockpit URL.
+The full run for PodShift with its Cockpit UI: everything that `bundle-build-install-validate` does (build the podshift RPM, install it in a fresh installer VM, validate, run the health check), then `ui-rpm-build`, which builds the cockpit-podshift RPM into `../cockpit-podshift/artifacts/rpm/` and stops its builder container at the end, then `postinstall-ui-install`, which installs that RPM in the VM, checks it and keeps it installed. Its own last step prints the Cockpit URL.
 
 It is composed only through `@needs`, so it is one run with one log folder and one summary. The run stops at the first test that does not pass.
 

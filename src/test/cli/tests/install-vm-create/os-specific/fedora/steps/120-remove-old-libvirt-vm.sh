@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file: 120-remove-old-libvirt-vm.sh
-# @source-dir: src/test/cli/tests/install-vm-start/os-specific/fedora/steps
+# @source-dir: src/test/cli/tests/install-vm-create/os-specific/fedora/steps
 # @group: test
 # @category: step
 # @description: Remove old RPM installer VM.
@@ -19,7 +19,7 @@ remove-old-libvirt-vm() {
     removed=()
     if vm-exists "${TST_RPM_INSTALLER_VM}"; then
         if ! vm-virsh undefine "${TST_RPM_INSTALLER_VM}" >/dev/null 2>&1; then
-            write-log "${run_dir}" install-vm-start "VM ${TST_RPM_INSTALLER_VM}: remove failed"
+            write-log "${run_dir}" install-vm-create "VM ${TST_RPM_INSTALLER_VM}: remove failed"
             echo "The VM ${TST_RPM_INSTALLER_VM} could not be removed"
             return 1
         fi
@@ -27,7 +27,7 @@ remove-old-libvirt-vm() {
     fi
     if vm-virsh vol-info --pool "${TST_VM_POOL}" "${vol}" >/dev/null 2>&1; then
         if ! vm-virsh vol-delete --pool "${TST_VM_POOL}" "${vol}" >/dev/null 2>&1; then
-            write-log "${run_dir}" install-vm-start "Disk ${TST_VM_POOL}/${vol}: remove failed"
+            write-log "${run_dir}" install-vm-create "Disk ${TST_VM_POOL}/${vol}: remove failed"
             echo "The disk ${vol} in the libvirt pool ${TST_VM_POOL} could not be removed"
             return 1
         fi
@@ -37,6 +37,6 @@ remove-old-libvirt-vm() {
         echo "NOTE: none found"
         return 0
     fi
-    write-log "${run_dir}" install-vm-start "VM ${TST_RPM_INSTALLER_VM}: removed ${removed[*]}"
+    write-log "${run_dir}" install-vm-create "VM ${TST_RPM_INSTALLER_VM}: removed ${removed[*]}"
     echo "NOTE: removed ${removed[*]}"
 }

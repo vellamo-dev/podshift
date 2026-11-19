@@ -14,6 +14,7 @@ It uses its own image (`ps-ui-rpm-builder`) and container (`ps-ui-rpm-builder-fc
 6. Checks the RPM: one noarch RPM and one source RPM, the version from the spec, `manifest.json`, `index.js` and the metainfo file inside, and no dependency on `podshift`.
 7. Copies the RPM and the source RPM to `../cockpit-podshift/artifacts/rpm/` (`TST_UI_RPM_SHARE_DIR`). Only old `cockpit-podshift-*.rpm` files there are removed first.
 8. Runs `rpmlint` as a warning only. Its output is in `ui-rpmlint.log`.
+9. Stops its builder container, so it frees its memory. It is not removed; the next run replaces it. With `TST_KEEP_BUILDERS=true` it keeps running.
 
 The run folder has `ui-builddep.log`, `ui-rpmbuild.log` and `ui-rpmlint.log`.
 
