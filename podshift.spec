@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.18.0
+Version: 0.18.1
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,10 @@ wait
 
 
 %changelog
+* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.18.1
+- Docs: Quick Start shows each command in its own copyable block
+- Docs: Quick Start explains what the precheck does
+
 * Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.18.0
 - Tools: utils/portable/precheck.sh, a single-file pre-install check
 - Tests: precheck-unit and precheck-vm-clean test the portable precheck

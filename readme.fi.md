@@ -18,14 +18,21 @@ PodShift ei lisää palvelimelle raskasta taustapalvelua. Se rakentaa ympärist�
 
 Fedora 45 -palvelimella (tai uudemmalla):
 
-```
-# 1. Tarkista kone
+1. Tarkista, voiko PodShiftin asentaa tähän koneeseen. Tarkistus vain lukee järjestelmää eikä muuta mitään:
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/vellamo-dev/podshift/stable/utils/portable/precheck.sh | sudo bash
+```
 
-# 2. Asenna
+2. Asenna PodShift:
+
+```bash
 sudo dnf copr enable -y vellamo/podshift && sudo dnf install -y podshift
+```
 
-# 3. Aloita tästä: näyttää kaikki komennot ja niiden käytön
+3. Aloita tästä. Komento näyttää kaikki komennot ja niiden käytön:
+
+```bash
 podshift --help
 ```
 

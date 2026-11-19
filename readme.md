@@ -16,14 +16,21 @@ PodShift doesn't add a heavy background service to your server. It sets things u
 
 On a Fedora 45 (or newer) server:
 
-```
-# 1. Check the machine
+1. Check whether PodShift can be installed on this machine. This only reads the system and changes nothing:
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/vellamo-dev/podshift/stable/utils/portable/precheck.sh | sudo bash
+```
 
-# 2. Install
+2. Install PodShift:
+
+```bash
 sudo dnf copr enable -y vellamo/podshift && sudo dnf install -y podshift
+```
 
-# 3. Start here: lists every command and how to use it
+3. Start here. This lists every command and how to use it:
+
+```bash
 podshift --help
 ```
 
