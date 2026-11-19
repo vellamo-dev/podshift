@@ -12,6 +12,23 @@ There's no magic and no lock-in. PodShift uses standard Linux tools, and you cou
 
 PodShift doesn't add a heavy background service to your server. It sets things up and steps aside, leaving your server's resources for your apps.
 
+## Quick Start
+
+On a Fedora 45 (or newer) server:
+
+```
+# 1. Check the machine
+curl -fsSL https://raw.githubusercontent.com/vellamo-dev/podshift/stable/utils/portable/precheck.sh | sudo bash
+
+# 2. Install
+sudo dnf copr enable -y vellamo/podshift && sudo dnf install -y podshift
+
+# 3. Start here: lists every command and how to use it
+podshift --help
+```
+
+From here on, `podshift --help` is your guide. Run it, pick what you want to do, and follow its steps. Desktop install and more details are in [Usage](./docs/usage.md#installation).
+
 ## How Your Code Gets to the Server
 
 Many servers still run apps the classic way: someone logs in, copies files, installs what the app needs, and restarts it. It works, but every server slowly becomes different, updates are scary, and only one person knows how it was done.
@@ -84,6 +101,7 @@ Want to dig deeper? The project is divided into the parts below, so feel free to
 - [src/server/](./src/server) - the application itself: the scripts, configuration, and templates installed on the server.
 - [src/deployment/](./src/deployment) - RPM Stager: turns the application into an installable package.
 - [src/test/](./src/test) - Test Lab: building and testing the application.
+- [utils/portable/](./utils/portable) - portable single-file tools run on the target machine, such as the pre-install check.
 - [.run/](./.run) - IDE shortcuts for building and testing.
 
 ## Documentation

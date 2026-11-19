@@ -1,0 +1,5 @@
+#!/bin/sh
+case "$1" in
+    get-default) echo "${STUB_TARGET:-multi-user.target}" ;;
+    is-active) [ "${STUB_DOCKER:-0}" = "1" ] && exit 0; exit 3 ;;
+esac

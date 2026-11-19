@@ -1,0 +1,8 @@
+#!/bin/sh
+# rpm -q [--qf fmt] name: versions come from STUB_RPM="name=ver name=ver".
+for last; do :; done
+for pair in ${STUB_RPM:-}; do
+    if [ "${pair%%=*}" = "${last}" ]; then echo "${pair#*=}"; exit 0; fi
+done
+echo "package ${last} is not installed"
+exit 1

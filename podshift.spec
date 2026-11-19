@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.17.0
+Version: 0.18.0
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,12 @@ wait
 
 
 %changelog
+* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.18.0
+- Tools: utils/portable/precheck.sh, a single-file pre-install check
+- Tests: precheck-unit and precheck-vm-clean test the portable precheck
+- Docs: precheck in usage, Quick Start and utils/portable in readme project structure
+- Tools: precheck documented with bashdoc and checked by the bashdoc lints
+
 * Tue Nov 17 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.17.0
 - Tests: builder containers are stopped after use (build-container-stop)
 - Tests: install-vm-stop stops the installer VM without removing it

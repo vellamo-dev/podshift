@@ -10,6 +10,14 @@ A desktop install is for trying PodShift on your own computer. It leaves the fir
 
 For a desktop install, create `/etc/podshift-desktop` before you install the package.
 
+### Check the machine first
+
+The precheck tells you whether PodShift can be installed and run on this machine. It only reads, and changes nothing. See the [precheck readme](../utils/portable/readme.md) for what it checks.
+
+```
+curl -fsSL https://raw.githubusercontent.com/vellamo-dev/podshift/stable/utils/portable/precheck.sh | sudo bash
+```
+
 ### Server install (default)
 
 #### From COPR

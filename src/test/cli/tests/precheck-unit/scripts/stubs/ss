@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "State  Recv-Q Send-Q Local Address:Port Peer Address:Port"
+for p in ${STUB_PORTS:-22 9090}; do echo "LISTEN 0      128          0.0.0.0:${p}      0.0.0.0:*"; done
+echo "LISTEN 0      128             [::]:22         [::]:*"

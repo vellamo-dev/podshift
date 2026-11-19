@@ -10,6 +10,7 @@
 
 # @description: Checks every @description tag and @details block in the source tree.
 # @details:
+#   Scans every .sh file under src and utils/portable.
 #   Each finding is also written to <run_dir>/lint-bashdoc-description-length.log as one line
 #   after the timestamp that write-log adds, with five tab-separated fields: severity, kind, file,
 #   line and text. severity is problem or warning. kind is one of empty, no-period, too-long,
@@ -80,7 +81,7 @@ verify-description-length() {
                 printf "SUMMARY %d\n", bad
             }
         ' "${file}")
-    done < <(find src -name '*.sh' | sort)
+    done < <(find src utils/portable -name '*.sh' | sort)
     write-log "${run_dir}" lint-bashdoc-description-length "Bashdoc: ${bad} problems"
     echo "NOTE: ${bad} problems"
     (( bad == 0 )) || return 2

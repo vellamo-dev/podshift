@@ -1,0 +1,6 @@
+#!/bin/sh
+case "$1" in
+    -u) echo "${STUB_UID:-1000}" ;;
+    -un) if [ "${STUB_UID:-1000}" = "0" ]; then echo root; else echo "${STUB_USER:-ivor}"; fi ;;
+    *) echo "uid=${STUB_UID:-1000}" ;;
+esac

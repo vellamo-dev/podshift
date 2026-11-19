@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "2: eth0    inet 192.0.2.10/24 brd 192.0.2.255 scope global eth0"

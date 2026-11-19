@@ -1,0 +1,2 @@
+#!/bin/sh
+if [ "${STUB_NET:-up}" = "up" ]; then printf 200; else printf 000; exit 6; fi

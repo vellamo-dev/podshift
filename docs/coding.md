@@ -4,7 +4,7 @@ The PodShift shell scripts follow a small set of consistent conventions. The cod
 
 ## Documentation
 
-Every `.sh` file is documented with bashdoc tags, so a person can read what a file and each function does without running it. Configuration files that PodShift reads itself, such as `main.conf` and `groups.conf`, use the same file header as scripts. The always-required tags, and that `@file` and `@source-dir` match the path, are enforced by `lint-bashdoc-required-tags` for every `.sh` file and every listed `.conf` file under `src/server` and `src/deployment`. Its lists live in `src/test/cli/tests/lint-bashdoc-tags/data/tags.conf`. Path- and category-dependent tags are enforced by `lint-bashdoc-conditional-tags`, which reads the same file. Tag names and allowed values are enforced by `lint-bashdoc-tag-values`, which reads the marked tables in this file.
+Every `.sh` file is documented with bashdoc tags, so a person can read what a file and each function does without running it. Configuration files that PodShift reads itself, such as `main.conf` and `groups.conf`, use the same file header as scripts. The always-required tags, and that `@file` and `@source-dir` match the path, are enforced by `lint-bashdoc-required-tags` for every `.sh` file and every listed `.conf` file under `src/server`, `src/deployment` and `utils/portable`. Its lists live in `src/test/cli/tests/lint-bashdoc-tags/data/tags.conf`. Path- and category-dependent tags are enforced by `lint-bashdoc-conditional-tags`, which reads the same file. Tag names and allowed values are enforced by `lint-bashdoc-tag-values`, which reads the marked tables in this file.
 
 Each tag is one of two kinds:
 
@@ -63,7 +63,7 @@ The test tags are used only by the test suite in `src/test/`, see [Testing](../s
 
 <!-- lint:allowed-values -->
 
-- `@group`: `cli`, `cockpit`, `common`, `config`, `deployment`, `drop`, `env`, `health-check`, `ingest`, `network`, `platform`, `podman`, `post`, `posttrans`, `postun`, `preun`, `quadlet`, `rootless`, `runtime`, `service`, `session`, `shortcuts`, `test`, `utils`
+- `@group`: `cli`, `cockpit`, `common`, `config`, `deployment`, `drop`, `env`, `health-check`, `ingest`, `network`, `platform`, `podman`, `portable`, `post`, `posttrans`, `postun`, `preun`, `quadlet`, `rootless`, `runtime`, `service`, `session`, `shortcuts`, `test`, `utils`
 - `@category`: `entry`, `helper`, `step`, `check`, `shortcut`, `config`
 - `@type`: `list`, `seconds`, `kilobytes`
 
@@ -149,6 +149,7 @@ Older names map as follows. None remain in the tree.
 ## Functions
 
 - One function per file, named the same as the file: `is-fedora.sh` holds `is-fedora`. Entry scripts (`podshift.sh`, module `main.sh`, `src/test/run.sh`) may keep several functions.
+- Files in `utils/portable/` are single-file scripts that run on their own. Each holds several functions, sources nothing and still uses bashdoc for the file and every function.
 - In code that is not deployed, such as `src/test/`, a file may also keep small private helpers that only its main function uses. Their names start with the same words as the main function, such as `run-task-spinner` next to `run-task`, or `verify-tar-check` next to `verify-tar-package`, and are unique across the project like any other function. Everything that ships in the RPM keeps one function per file.
 - Function names say what the function does in plain words, and are unique across the project.
 - A function receives only the arguments it uses; positional arguments are destructured into named `local` variables, never used as bare `$1` / `$2` in the body.

@@ -14,6 +14,23 @@ Ei taikuutta eikä sidonnaisuutta. PodShift käyttää Linuxin vakiotyökaluja, 
 
 PodShift ei lisää palvelimelle raskasta taustapalvelua. Se rakentaa ympäristön ja jättää palvelimen resurssit sovelluksillesi.
 
+## Pikaopas
+
+Fedora 45 -palvelimella (tai uudemmalla):
+
+```
+# 1. Tarkista kone
+curl -fsSL https://raw.githubusercontent.com/vellamo-dev/podshift/stable/utils/portable/precheck.sh | sudo bash
+
+# 2. Asenna
+sudo dnf copr enable -y vellamo/podshift && sudo dnf install -y podshift
+
+# 3. Aloita tästä: näyttää kaikki komennot ja niiden käytön
+podshift --help
+```
+
+Tästä eteenpäin `podshift --help` on oppaasi. Aja se, valitse mitä haluat tehdä ja seuraa sen ohjeita. Työpöytäasennus ja lisätiedot löytyvät englanninkielisestä [käyttöohjeesta](./docs/usage.md#installation).
+
 ## Näin koodisi päätyy palvelimelle
 
 Monella palvelimella sovelluksia ajetaan yhä perinteiseen tapaan: joku kirjautuu sisään, kopioi tiedostot, asentaa sovelluksen tarvitsemat asiat ja käynnistää sen uudelleen. Se toimii, mutta jokainen palvelin muuttuu vähitellen erilaiseksi, päivitykset pelottavat, ja vain yksi ihminen tietää, miten kaikki tehtiin.
@@ -86,6 +103,7 @@ Haluatko tutustua tarkemmin? Projekti on jaettu alla oleviin osiin, joten voit h
 - [src/server/](./src/server) - itse sovellus: skriptit, asetukset ja mallit, jotka asennetaan palvelimelle.
 - [src/deployment/](./src/deployment) - RPM Stager: muuttaa sovelluksen asennettavaksi paketiksi.
 - [src/test/](./src/test) - Test Lab: sovelluksen rakentaminen ja testaus.
+- [utils/portable/](./utils/portable) - siirrettävät yhden tiedoston työkalut, jotka ajetaan kohdekoneella, kuten asennusta edeltävä tarkistus.
 - [.run/](./.run) - IDE-oikopolut rakentamiseen ja testaukseen.
 
 ## Dokumentaatio

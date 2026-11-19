@@ -1,0 +1,25 @@
+#!/bin/sh
+case "$1" in
+    copr) exit "${STUB_DNF_COPR_RC:-0}" ;;
+    repoquery)
+        for last; do :; done
+        case "${last}" in
+            podman) [ -n "${STUB_DNF_PODMAN-6.0.2-1.fc45}" ] && echo "${STUB_DNF_PODMAN-6.0.2-1.fc45}" ;;
+            podshift) [ -n "${STUB_DNF_PODSHIFT:-}" ] && echo "${STUB_DNF_PODSHIFT}" ;;
+        esac
+        exit 0 ;;
+    install)
+        echo "Updating and loading repositories:"
+        echo "Repositories loaded."
+        if [ "${STUB_DNF_INSTALL:-ok}" = "conflict" ]; then
+            echo "Failed to resolve the transaction:"
+            echo "Problem: conflicting requests"
+            echo "  - nothing provides libfoo needed by glow-2.0-1.fc45.x86_64"
+        else
+            echo "Transaction Summary:"
+            echo " Installing:        42 packages"
+            echo "Operation aborted by the user."
+        fi
+        exit 1 ;;
+esac
+exit 1
