@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.21.4
+Version: 0.21.5
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,9 @@ wait
 
 
 %changelog
+* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.5
+- Docs: readme has short PodShift CLI and PodShift UI sections (also in Finnish)
+
 * Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.4
 - Tools: precheck no longer has Hetzner-specific checks; the cloud name comes only from cloud-init, and the DHCP warning gives a generic cloud-init note
 - Tests: precheck-unit drops the Hetzner checks and covers the cloud-init DHCP note

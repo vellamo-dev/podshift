@@ -100,6 +100,28 @@ PodShift takes a different path. The same Quadlet files run on bare metal, on a 
 
 PodShift ships as a single RPM for Fedora. The status of each feature is in the [roadmap](./docs/roadmap.md).
 
+### PodShift CLI
+
+The `podshift` command manages the server from a terminal: status, services, Quadlets, containers, images, volumes, networks, secrets, configuration and updates. Each command has its own help.
+
+See all commands:
+
+```bash
+podshift --help
+```
+
+See the help for one command:
+
+```bash
+podshift --help health-check
+```
+
+### PodShift UI
+
+![PodShift UI](./docs/img/poster-podshift-ui.webp)
+
+An optional Cockpit page that shows the server's containers, volumes, networks, images, secrets, services, Quadlets and health in a browser, for administrators and the podshift user. It's for monitoring only, and PodShift works fully without it. Install it from Cockpit's Applications page. See [install](./docs/usage.md#podshift-ui-optional) and the [PodShift UI docs](https://github.com/vellamo-dev/cockpit-podshift/blob/main/docs/readme.md).
+
 ## Project Structure
 
 Want to dig deeper? The project is divided into the parts below, so feel free to jump straight to the one that interests you.

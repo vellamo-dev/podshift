@@ -102,6 +102,28 @@ PodShift kulkee toista tietä. Samat Quadlet-tiedostot toimivat fyysisellä palv
 
 PodShift toimitetaan yhtenä RPM-pakettina Fedoralle. Kunkin ominaisuuden tila on [tiekartassa](./docs/roadmap.md).
 
+### PodShift CLI
+
+Komento `podshift` hallitsee palvelinta päätteestä: tila, palvelut, Quadletit, kontit, imaget, volumet, verkot, salaisuudet, asetukset ja päivitykset. Jokaisella komennolla on oma ohjeensa.
+
+Katso kaikki komennot:
+
+```bash
+podshift --help
+```
+
+Katso yhden komennon ohje:
+
+```bash
+podshift --help health-check
+```
+
+### PodShift UI
+
+![PodShift UI](./docs/img/poster-podshift-ui.webp)
+
+Valinnainen Cockpit-sivu, joka näyttää selaimessa palvelimen kontit, volumet, verkot, imaget, salaisuudet, palvelut, Quadletit ja kunnon ylläpitäjille ja podshift-käyttäjälle. Se on vain seurantaa varten, ja PodShift toimii täysin ilman sitä. Asenna se Cockpitin Sovellukset-sivulta (Applications). Katso [asennus](./docs/usage.md#podshift-ui-optional) ja [PodShift UI:n ohjeet](https://github.com/vellamo-dev/cockpit-podshift/blob/main/docs/readme.md).
+
 ## Projektin rakenne
 
 Haluatko tutustua tarkemmin? Projekti on jaettu alla oleviin osiin, joten voit hypätä suoraan siihen, mikä sinua kiinnostaa.
