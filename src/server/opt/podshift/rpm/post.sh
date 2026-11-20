@@ -51,6 +51,11 @@ podshift-rpm-do-post() {
     source "${rpm_dir}/post/enable-nw-manager.sh"
     enable-nw-manager
 
+    # Switch SELinux to enforcing on a first server install
+    # shellcheck source=./post/enforce-selinux.sh
+    source "${rpm_dir}/post/enforce-selinux.sh"
+    enforce-selinux "${action}"
+
 }
 
 podshift-rpm-do-post "${1:-0}" "${DIR_AB0D2891B52F}"

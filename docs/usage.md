@@ -133,6 +133,18 @@ sudo podshift ssh port 1022
 
 To open port 22 again, run `sudo podshift ssh port 22`. See `podshift --help ssh` for details.
 
+### SELinux
+
+PodShift needs SELinux to be enforcing, so containers stay apart from the server and from each other. On a first server install, PodShift switches SELinux from permissive to enforcing. Desktop installs and upgrades leave the mode as it is.
+
+To switch it yourself, for example on a desktop install or after an upgrade, run this command. It asks first, and `--force` skips the question. If SELinux is disabled, the command changes nothing and prints the steps instead.
+
+```bash
+sudo podshift selinux enforce
+```
+
+See `podshift --help selinux` for details.
+
 ## Day-to-day
 
 The built-in help lists every command: `podshift --help` and `podshift --help <command>`.
@@ -151,6 +163,7 @@ Run as root with `sudo podshift`:
 - `network` - examine, check, and fix the external network
 - `secret` - create, list, replace, and remove Podman secrets
 - `ssh` - turn the firewall ssh service (port 22) on or off
+- `selinux` - switch SELinux to enforcing
 - `update-self` - update PodShift itself
 - `health-check` - check the server
 - `status-cockpit`, `status-firewall`, `status-user` - system service status

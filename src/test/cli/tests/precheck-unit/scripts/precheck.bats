@@ -194,12 +194,36 @@ run_check() {
     run_check
     echo "${output}"
     [ "${status}" -eq 1 ]
-    [[ "${output}" == *"⚠ SELinux is enforcing [found permissive]"* ]]
+    [[ "${output}" == *"⚠ SELinux is not enforcing [permissive]"* ]]
+    [[ "${output}" == *"The PodShift install switches it to enforcing."* ]]
+    [[ "${output}" != *"sudo podshift selinux enforce to switch it on."* ]]
     [[ "${output}" == *"⚠ No Docker [docker service running]"* ]]
     [[ "${output}" == *"⚠ PodShift's ports are free [in use: 80]"* ]]
     [[ "${output}" == *"⚠ One person uses this machine [2 login users: ivor anna]"* ]]
     [[ "${output}" == *"⚠ UID 300 is free for the podshift user [used by web]"* ]]
     [[ "${output}" == *"⚠ SSH key for ivor"* ]]
+}
+
+@test "SELinux permissive on a desktop install: points to the command" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    touch "${ROOT}/etc/podshift-desktop"
+    export STUB_SELINUX=Permissive
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"⚠ SELinux is not enforcing [permissive]"* ]]
+    [[ "${output}" == *"sudo podshift selinux enforce to switch it on."* ]]
+    [[ "${output}" != *"The PodShift install switches it to enforcing."* ]]
+}
+
+@test "SELinux disabled: warning wording and steps hint" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_SELINUX=Disabled
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"⚠ SELinux is not enforcing [disabled]"* ]]
+    [[ "${output}" == *"sudo podshift selinux enforce prints the steps"* ]]
 }
 
 @test "--json is valid JSON with the result" {

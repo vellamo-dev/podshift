@@ -774,8 +774,22 @@ pc_check_clashes() {
     pc_section "Checking security and clashes"
     case "${SYS_SELINUX}" in
         enforcing) pc_result ok "SELinux is enforcing" ;;
-        *) pc_result warn "SELinux is enforcing" "found ${SYS_SELINUX}" "PodShift relies on SELinux to keep containers apart from the server and from each other.
-Fedora has it enforcing by default." ;;
+        permissive)
+            if [ "${SYS_INSTALL_TYPE}" = "desktop" ]; then
+                pc_result warn "SELinux is not enforcing" "permissive" "PodShift relies on SELinux to keep containers apart from the server and from each other.
+Fedora has it enforcing by default.
+After installing, run sudo podshift selinux enforce to switch it on."
+            else
+                pc_result warn "SELinux is not enforcing" "permissive" "PodShift relies on SELinux to keep containers apart from the server and from each other.
+Fedora has it enforcing by default.
+The PodShift install switches it to enforcing."
+            fi
+            ;;
+        *)
+            pc_result warn "SELinux is not enforcing" "${SYS_SELINUX}" "PodShift relies on SELinux to keep containers apart from the server and from each other.
+Fedora has it enforcing by default.
+After installing, sudo podshift selinux enforce prints the steps to turn it back on."
+            ;;
     esac
     docker=""
     if pc_has rpm; then

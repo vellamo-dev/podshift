@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.18.1
+Version: 0.20.0
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,17 @@ wait
 
 
 %changelog
+* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.20.0
+- Install: first server install switches SELinux from permissive to enforcing
+- Tools: precheck says the install switches SELinux on servers
+- Docs: usage says a first server install switches SELinux
+- Tests: lint-spec-scriptlets checks the spec calls its install scripts
+
+* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.19.0
+- CLI: podshift selinux enforce switches SELinux to enforcing
+- Tools: precheck SELinux warning wording fixed and points to the new command
+- Docs: usage mentions podshift selinux enforce
+
 * Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.18.1
 - Docs: Quick Start shows each command in its own copyable block
 - Docs: Quick Start explains what the precheck does

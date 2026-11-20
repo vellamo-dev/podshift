@@ -6,3 +6,4 @@ Post-install steps, applied in this order.
 |---|---|---|
 | DRS | `trigger-rootless-dirs-update` | Creates the rootless podman directories |
 | ENM | `enable-nw-manager` | Enables and starts NetworkManager |
+| SEL | `enforce-selinux` | Switches SELinux to enforcing on a first server install |

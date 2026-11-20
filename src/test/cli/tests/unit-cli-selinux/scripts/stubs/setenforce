@@ -1,0 +1,8 @@
+#!/bin/sh
+if [ -n "${SETENFORCE_LOG:-}" ]; then
+    echo "$*" >> "${SETENFORCE_LOG}"
+fi
+if [ "${STUB_SETENFORCE:-}" = "fail" ]; then
+    exit 1
+fi
+exit 0

@@ -9,7 +9,7 @@
 # @run-as: any
 # @description: Verifies SELinux is enforcing.
 # @rationale: Without it, container confinement is not enforced.
-# @fix: sudo setenforce 1, and set SELINUX=enforcing in /etc/selinux/config
+# @fix: sudo podshift selinux enforce
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
