@@ -79,3 +79,24 @@ payload() {
     [ "${output}" = "Issues found (22 passed, 2 issues, 1 warning, 1 note)" ]
 }
 
+@test "Environment tag set is ok and unset is a warning with the env fix" {
+    run payload $'config|env-tag|Environment tag|OK|dev\n' "healthy 1 0 0 0 0 0"
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '
+        .groups[0].rows[0] == {"id":"env-tag","label":"Environment tag","state":"ok","value":"dev","fix":null}
+        and .summary.state == "ok"
+        and .summary.passed == 1
+    '
+
+    run payload $'config|env-tag|Environment tag|WARN|not set|sudo podshift env --set <env>\n' "needs-attention 0 0 1 0 0 0"
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '
+        .groups[0].rows[0].id == "env-tag"
+        and .groups[0].rows[0].state == "warn"
+        and .groups[0].rows[0].value == "not set"
+        and .groups[0].rows[0].fix == "sudo podshift env --set <env>"
+        and .summary.state == "warn"
+        and .summary.warnings == 1
+        and .summary.label == "Needs attention (1 warning)"
+    '
+}

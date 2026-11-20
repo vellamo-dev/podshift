@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.21.5
+Version: 0.21.6
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,10 @@ wait
 
 
 %changelog
+* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.6
+- Health check: new Environment tag check warns when TSV_ENV is not set
+- Tests: unit tests cover the Environment tag check when TSV_ENV is set and when it is not
+
 * Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.5
 - Docs: readme has short PodShift CLI and PodShift UI sections (also in Finnish)
 
