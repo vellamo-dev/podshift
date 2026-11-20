@@ -37,7 +37,7 @@ fi
 #   PRECHECK_ROOT, when set by the tests, becomes PC_ROOT and stands in for / when files are read.
 # @exitcode: 0 always.
 pc_init() {
-    PC_VERSION="0.2.3"
+    PC_VERSION="0.2.4"
     # Same as PODSHIFT_MIN_FEDORA in src/server/opt/podshift/conf/main.conf.
     PC_MIN_FEDORA=45
     # Podman 6 is planned for Fedora 45 (docs/design-choices.md, Fedora Server).
@@ -468,10 +468,10 @@ pc_cloud_value() {
     printf '%s' "${v}"
 }
 
-# @description: Gathers the cloud name and zone into SYS_CLOUD_*, from local cloud-init files or hc-utils.
+# @description: Gathers the cloud name and zone into SYS_CLOUD_*, from cloud-init only.
 # @details:
-#   Name order: /run/cloud-init/cloud-id, v1.cloud_name in instance-data.json, cloud-init query
-#   (only when cloud-init is installed), then an installed hc-utils package, which means Hetzner.
+#   Name order: /run/cloud-init/cloud-id, v1.cloud_name in instance-data.json, then cloud-init
+#   query (only when cloud-init is installed). Without any of these, there is no cloud name.
 #   Zone: v1.availability_zone in instance-data.json, then cloud-init query.
 #   No metadata service is queried over the network.
 # @exitcode: 0 always.
@@ -498,9 +498,6 @@ pc_gather_cloud() {
         if [ -z "${SYS_CLOUD_ZONE}" ] && pc_has cloud-init; then
             SYS_CLOUD_ZONE="$(pc_cloud_value "$(pc_cloud_query v1.availability_zone)")"
         fi
-    elif [ -n "$(pc_rpm_version hc-utils)" ]; then
-        SYS_CLOUD_NAME="hetzner"
-        SYS_CLOUD_SOURCE="hc-utils"
     fi
     return 0
 }
@@ -765,11 +762,7 @@ pc_show_system() {
     edition="${SYS_EDITION_TEXT}"
     [ "${SYS_EDITION_WHY}" = "boots to a graphical desktop" ] && edition="${edition} (${SYS_EDITION_WHY})"
     cloud="${SYS_CLOUD_NAME:-none detected}"
-    if [ -n "${SYS_CLOUD_ZONE}" ]; then
-        cloud="${cloud} [${SYS_CLOUD_ZONE}]"
-    elif [ "${SYS_CLOUD_SOURCE}" = "hc-utils" ]; then
-        cloud="${cloud} [hc-utils]"
-    fi
+    [ -n "${SYS_CLOUD_ZONE}" ] && cloud="${cloud} [${SYS_CLOUD_ZONE}]"
     hw="${SYS_HW_VENDOR}${SYS_HW_VENDOR:+${SYS_HW_PRODUCT:+ }}${SYS_HW_PRODUCT}"
     [ -n "${hw}" ] || hw="unknown"
     case "${SYS_CI_STATE}" in
@@ -967,13 +960,13 @@ pc_nw_route_text() {
 # @stdout: the section with its check lines and Verdict, or nothing in JSON mode.
 # @exitcode: 0 if there is no blocker, 1 when there is no default route.
 pc_check_network() {
-    local route noroute pin file hetzner
+    local route noroute pin file cinote
     pc_section "Checking network"
     noroute="no"
     route="$(pc_nw_route_text)"
-    hetzner=""
-    [ "${SYS_CLOUD_NAME}" = "hetzner" ] && hetzner="
-Hetzner's metadata sets IPv4 by DHCP on its servers."
+    cinote=""
+    [ "${SYS_CI_STATE}" = "ran" ] && cinote="
+Cloud-init set up this network. Check your provider's docs before pinning the address."
     if [ "${SYS_NW_HAS_IP}" != "yes" ]; then
         pc_result warn "Default route" "cannot check, ip not found" "PodShift reads the default route and its addresses with ip, from the iproute package."
     elif [ -z "${SYS_NW_ROUTE_DEV}" ]; then
@@ -1000,7 +993,7 @@ After the install, check the network with podshift network examine." ;;
             pc_result ok "IPv4 address is set manually" ;;
         auto)
             pc_result warn "IPv4 address comes from DHCP" "" "The IP address may change on reboot, and PodShift's TSV_NW1 to TSV_NW8 follow it.
-After the install, podshift network examine shows how to pin it.${hetzner}" ;;
+After the install, podshift network examine shows how to pin it.${cinote}" ;;
         unknown)
             if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
                 pc_result info "IPv4 method" "cannot check, nmcli not found"
