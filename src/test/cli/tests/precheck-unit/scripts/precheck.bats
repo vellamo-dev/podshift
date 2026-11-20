@@ -238,7 +238,7 @@ run_check() {
     [[ "${output}" == *"Global IPv4      192.0.2.10"* ]]
     [[ "${output}" == *"✔ Default route [eth0 via 192.0.2.1]"* ]]
     [[ "${output}" == *"✔ NetworkManager is active"* ]]
-    [[ "${output}" == *"✔ IPv4 method is manual"* ]]
+    [[ "${output}" == *"✔ IPv4 address is set manually"* ]]
     [[ "${output}" == *"✔ IPv4 address on eth0 [192.0.2.10]"* ]]
     [[ "${output}" == *"✔ Connection name [cloud-init-eth0, PodShift's default]"* ]]
     [[ "${output}" == *"✔ Checking network                passed"* ]]
@@ -251,7 +251,9 @@ run_check() {
     echo "${output}"
     [ "${status}" -eq 1 ]
     [[ "${output}" == *"IPv4 method      auto (DHCP)"* ]]
-    [[ "${output}" == *"⚠ IPv4 method is manual [auto (DHCP)]"* ]]
+    [[ "${output}" == *"⚠ IPv4 address comes from DHCP"* ]]
+    [[ "${output}" != *"IPv4 method is manual"* ]]
+    [[ "${output}" == *"Checking network                warnings   IPv4 address comes from DHCP"* ]]
     [[ "${output}" == *"may change on reboot"* ]]
     [[ "${output}" == *"podshift network examine"* ]]
 }
@@ -265,7 +267,7 @@ run_check() {
     [[ "${output}" == *"Network backend  systemd-networkd (active)"* ]]
     [[ "${output}" == *"⚠ NetworkManager is active [no, only systemd-networkd is active]"* ]]
     [[ "${output}" == *"can clash"* ]]
-    [[ "${output}" == *"ℹ IPv4 method is manual [unknown, no active NetworkManager connection]"* ]]
+    [[ "${output}" == *"ℹ IPv4 method [unknown, no active NetworkManager connection]"* ]]
 }
 
 @test "Network: no backend active is a warning" {
@@ -319,6 +321,54 @@ run_check() {
     [[ "${output}" == *"✔ Checking network                passed"* ]]
 }
 
+@test "Network: cloud-init connection name with a space matches the default" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_NM_CONN="cloud-init eth0"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Connection       cloud-init eth0 [initializer cloud-init, device eth0]"* ]]
+    [[ "${output}" == *"✔ Connection name [cloud-init eth0, PodShift's default]"* ]]
+}
+
+@test "Network: cloud-init name with a space and the default file found" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    mkdir -p "${ROOT}/etc/NetworkManager/system-connections"
+    touch "${ROOT}/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection"
+    export STUB_NM_CONN="cloud-init eth0"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"✔ Connection name [cloud-init eth0, file cloud-init-eth0.nmconnection, PodShift's default]"* ]]
+}
+
+@test "Network: default file found with another connection name still matches" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    mkdir -p "${ROOT}/etc/NetworkManager/system-connections"
+    touch "${ROOT}/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection"
+    export STUB_NM_CONN="Wired connection 1"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"✔ Connection name [Wired connection 1, file cloud-init-eth0.nmconnection, PodShift's default]"* ]]
+    [[ "${output}" != *"ℹ Connection name"* ]]
+}
+
+@test "--json splits the cloud-init name with a space and reports the file" {
+    command -v jq >/dev/null || skip "jq not installed"
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    mkdir -p "${ROOT}/etc/NetworkManager/system-connections"
+    touch "${ROOT}/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection"
+    export STUB_NM_CONN="cloud-init eth0"
+    run env PATH="${HERE}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --json
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '.system.network_connection == "cloud-init eth0"
+        and .system.network_initializer == "cloud-init"
+        and .system.network_connection_device == "eth0"
+        and .system.network_default_conn_file == true' >/dev/null
+}
+
 @test "Network: NetworkManager initializer is split from the device" {
     precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
     export STUB_NM_CONN="NetworkManager-enp1s0"
@@ -338,7 +388,7 @@ run_check() {
     [ "${status}" -eq 0 ]
     [[ "${output}" == *"Connection       unknown (nmcli not found)"* ]]
     [[ "${output}" == *"IPv4 method      unknown"* ]]
-    [[ "${output}" == *"ℹ IPv4 method is manual [cannot check, nmcli not found]"* ]]
+    [[ "${output}" == *"ℹ IPv4 method [cannot check, nmcli not found]"* ]]
     [[ "${output}" == *"ℹ Connection name [cannot check, nmcli not found]"* ]]
 }
 
@@ -372,6 +422,7 @@ run_check() {
         and .system.default_route_gateway == "192.0.2.1"
         and .system.default_route_family == "ipv4"
         and .system.global_ipv4 == "192.0.2.10"
+        and .system.network_default_conn_file == false
         and ([.checks[] | select(.section == "Checking network")] | length) == 5' >/dev/null
 }
 

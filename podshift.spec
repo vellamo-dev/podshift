@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.21.0
+Version: 0.21.1
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,11 @@ wait
 
 
 %changelog
+* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.1
+- Tools: precheck accepts the cloud-init connection name with a space and says when the IPv4 address comes from DHCP
+- Tests: precheck-unit covers the connection name with a space, the default nmconnection file and the DHCP wording
+- Docs: precheck readme explains the connection name match and the DHCP check
+
 * Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.0
 - Tools: precheck reports the network setup and checks the route, NetworkManager, DHCP and IPv4
 - Tests: precheck-unit covers the network checks

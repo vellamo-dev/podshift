@@ -37,7 +37,7 @@ fi
 #   PRECHECK_ROOT, when set by the tests, becomes PC_ROOT and stands in for / when files are read.
 # @exitcode: 0 always.
 pc_init() {
-    PC_VERSION="0.2.0"
+    PC_VERSION="0.2.1"
     # Same as PODSHIFT_MIN_FEDORA in src/server/opt/podshift/conf/main.conf.
     PC_MIN_FEDORA=45
     # Podman 6 is planned for Fedora 45 (docs/design-choices.md, Fedora Server).
@@ -59,7 +59,11 @@ pc_init() {
     PC_PORTS="80 81 443 1022"
     # PodShift's default connection: PODSHIFT_NW_INITIALIZER-PODSHIFT_NW_DEVICE
     # in src/server/opt/podshift/assets/tpl/runtime.conf.
-    PC_NW_DEFAULT_CONN="cloud-init-eth0"
+    PC_NW_DEFAULT_INIT="cloud-init"
+    PC_NW_DEFAULT_DEV="eth0"
+    PC_NW_DEFAULT_CONN="${PC_NW_DEFAULT_INIT}-${PC_NW_DEFAULT_DEV}"
+    # NetworkManager keyfiles, the folder nw-config-ips reads.
+    PC_NW_CONN_DIR="/etc/NetworkManager/system-connections"
     # User and groups from PodShift's sysusers.d file.
     PC_USER_UID=300
     PC_DOCS="https://github.com/vellamo-dev/podshift/blob/main/docs"
@@ -512,9 +516,11 @@ pc_nw_ipv4() {
 # @description: Gathers the network facts into the SYS_NW_* variables, only reading.
 # @details:
 #   Mirrors PodShift's nw-backend, nw-connection, nw-mode and nw-device. The connection is the
-#   first active nmcli connection that is not lo. A name of the form <initializer>-<device>,
+#   first active nmcli connection that is not lo. A name of the form <initializer>-<device>
+#   or <initializer> <device> (cloud-init uses a space),
 #   with cloud-init, NetworkManager or systemd-networkd as the initializer, is split into its
 #   parts. Without an IPv4 default route, the IPv6 one is read, to tell IPv6 only from no route.
+#   It also notes whether PodShift's default nmconnection file exists, using only a -e test.
 #   A missing nmcli or ip leaves the matching facts empty or unknown.
 # @exitcode: 0 always.
 pc_gather_network() {
@@ -537,12 +543,14 @@ pc_gather_network() {
     fi
     for init in cloud-init NetworkManager systemd-networkd; do
         case "${SYS_NW_CONN}" in
-            "${init}"-?*)
+            "${init}"-?* | "${init}"\ ?*)
                 SYS_NW_INITIALIZER="${init}"
-                SYS_NW_CONN_DEVICE="${SYS_NW_CONN#"${init}"-}"
+                SYS_NW_CONN_DEVICE="${SYS_NW_CONN#"${init}"?}"
                 break ;;
         esac
     done
+    SYS_NW_CONN_FILE="no"
+    [ -e "$(pc_path "${PC_NW_CONN_DIR}/${PC_NW_DEFAULT_CONN}.nmconnection")" ] && SYS_NW_CONN_FILE="yes"
     SYS_NW_ROUTE_FAMILY="ipv4"
     route="$(pc_nw_route)"
     if [ -z "${route}" ]; then
@@ -757,16 +765,17 @@ pc_nw_route_text() {
     return 0
 }
 
-# @description: Runs the Checking network section: route, NetworkManager, IPv4 method, IPv4 and connection.
+# @description: Runs the Checking network section: route, NetworkManager, DHCP, IPv4 and connection.
 # @details:
 #   Follows podshift network check: no default route at all is a blocker, and DHCP is a warning.
 #   All checks are shown before the Verdict, so a blocker comes with the rest of the picture.
 #   The connection name is only a note: PodShift's default is PODSHIFT_NW_INITIALIZER and
-#   PODSHIFT_NW_DEVICE from runtime.conf, joined with a dash.
+#   PODSHIFT_NW_DEVICE from runtime.conf, joined with a dash. It also matches when the active
+#   name has a space instead, as cloud-init names it, or when the default nmconnection file exists.
 # @stdout: the section with its check lines and Verdict, or nothing in JSON mode.
 # @exitcode: 0 if there is no blocker, 1 when there is no default route.
 pc_check_network() {
-    local route noroute pin
+    local route noroute pin file
     pc_section "Checking network"
     noroute="no"
     route="$(pc_nw_route_text)"
@@ -793,19 +802,19 @@ After the install, check the network with podshift network examine." ;;
     esac
     case "${SYS_NW_METHOD}" in
         manual)
-            pc_result ok "IPv4 method is manual" ;;
+            pc_result ok "IPv4 address is set manually" ;;
         auto)
-            pc_result warn "IPv4 method is manual" "auto (DHCP)" "The IP address may change on reboot, and PodShift's TSV_NW1 to TSV_NW8 follow it.
+            pc_result warn "IPv4 address comes from DHCP" "" "The IP address may change on reboot, and PodShift's TSV_NW1 to TSV_NW8 follow it.
 After the install, podshift network examine shows how to pin it." ;;
         unknown)
             if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
-                pc_result info "IPv4 method is manual" "cannot check, nmcli not found"
+                pc_result info "IPv4 method" "cannot check, nmcli not found"
             else
-                pc_result info "IPv4 method is manual" "unknown, no active NetworkManager connection"
+                pc_result info "IPv4 method" "unknown, no active NetworkManager connection"
             fi
             ;;
         *)
-            pc_result info "IPv4 method is manual" "${SYS_NW_METHOD}" ;;
+            pc_result info "IPv4 method" "${SYS_NW_METHOD}" ;;
     esac
     if [ "${SYS_NW_HAS_IP}" != "yes" ]; then
         pc_result info "IPv4 address on the default device" "cannot check, ip not found"
@@ -818,7 +827,12 @@ After the install, podshift network examine shows how to pin it." ;;
 podshift network check also needs an IPv4 default route."
     fi
     pin="After the install, podshift network set can pin the right device."
-    if [ -z "${SYS_NW_CONN}" ]; then
+    file="${PC_NW_DEFAULT_CONN}.nmconnection"
+    if [ "${SYS_NW_CONN_FILE}" = "yes" ]; then
+        pc_result ok "Connection name" "${SYS_NW_CONN:+${SYS_NW_CONN}, }file ${file}, PodShift's default"
+    elif [ -n "${SYS_NW_CONN}" ] && { [ "${SYS_NW_CONN}" = "${PC_NW_DEFAULT_CONN}" ] || [ "${SYS_NW_CONN}" = "${PC_NW_DEFAULT_INIT} ${PC_NW_DEFAULT_DEV}" ]; }; then
+        pc_result ok "Connection name" "${SYS_NW_CONN}, PodShift's default"
+    elif [ -z "${SYS_NW_CONN}" ]; then
         if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
             pc_result info "Connection name" "cannot check, nmcli not found" "PodShift's default is ${PC_NW_DEFAULT_CONN}. Without it, PodShift falls back to the live addresses.
 ${pin}"
@@ -826,8 +840,6 @@ ${pin}"
             pc_result info "Connection name" "no active connection" "PodShift's default is ${PC_NW_DEFAULT_CONN}. Without it, PodShift falls back to the live addresses.
 ${pin}"
         fi
-    elif [ "${SYS_NW_CONN}" = "${PC_NW_DEFAULT_CONN}" ]; then
-        pc_result ok "Connection name" "${SYS_NW_CONN}, PodShift's default"
     else
         pc_result info "Connection name" "${SYS_NW_CONN}, PodShift's default is ${PC_NW_DEFAULT_CONN}" "PodShift falls back to the live addresses.
 ${pin}"
@@ -1185,6 +1197,7 @@ pc_print_json() {
     printf '    "network_connection": %s,\n' "$(pc_json_str "${SYS_NW_CONN}")"
     printf '    "network_initializer": %s,\n' "$(pc_json_str "${SYS_NW_INITIALIZER}")"
     printf '    "network_connection_device": %s,\n' "$(pc_json_str "${SYS_NW_CONN_DEVICE}")"
+    printf '    "network_default_conn_file": %s,\n' "$([ "${SYS_NW_CONN_FILE}" = "yes" ] && echo true || echo false)"
     printf '    "ipv4_method": %s,\n' "$(pc_json_str "${SYS_NW_METHOD}")"
     printf '    "default_route_device": %s,\n' "$(pc_json_str "${SYS_NW_ROUTE_DEV}")"
     printf '    "default_route_gateway": %s,\n' "$(pc_json_str "${SYS_NW_GATEWAY}")"

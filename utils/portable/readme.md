@@ -64,9 +64,9 @@ PodShift reads its addresses through NetworkManager, so this section looks at th
 
 - There's a default route. No default route at all is a blocker, as in `podshift network check`. With only an IPv6 default route, this check passes and the IPv4 check below warns.
 - NetworkManager is active. If only `systemd-networkd` is active, or neither is, it's a warning: the install enables and starts NetworkManager, and the two can clash when both manage the network.
-- The IPv4 method of the active connection is `manual`. DHCP (`auto`) is a warning, because the address may change on reboot. After the install, `podshift network examine` shows how to pin it. If the method can't be read, for example without `nmcli` or an active connection, it's a note.
+- The IPv4 address is set manually (IPv4 method `manual` on the active connection). If it comes from DHCP (`auto`), that is a warning, because the address may change on reboot. After the install, `podshift network examine` shows how to pin it. If the method can't be read, for example without `nmcli` or an active connection, it's a note.
 - The device of the default route has a global IPv4 address. None (IPv6 only) is a warning, because `TSV_NW1` to `TSV_NW8` are IPv4 addresses.
-- The connection name, as a note only. PodShift's default is `cloud-init-eth0` (`PODSHIFT_NW_INITIALIZER` and `PODSHIFT_NW_DEVICE`). With another name, PodShift falls back to the live addresses, and `podshift network set` can pin the right device after the install.
+- The connection name, as a note only. PodShift's default is `cloud-init-eth0` (`PODSHIFT_NW_INITIALIZER` and `PODSHIFT_NW_DEVICE`). It also matches when the active name is `cloud-init eth0` with a space, as cloud-init names it, or when `/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection` exists. PodShift finds its connection by that file name. With another name and no such file, PodShift falls back to the live addresses, and `podshift network set` can pin the right device after the install.
 
 If `ip` is missing, the route check is a warning. If `nmcli` is missing, the method and connection checks are notes.
 

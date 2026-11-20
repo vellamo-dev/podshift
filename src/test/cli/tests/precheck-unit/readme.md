@@ -2,7 +2,7 @@
 
 Runs the stubbed bats tests for the portable precheck, `utils/portable/precheck.sh`. It needs bats, but no VM, network or root.
 
-The tests point the script at a fake system with `PRECHECK_ROOT` (built by `scripts/precheck-make-root.sh`) and put fake `rpm`, `dnf`, `id`, `getenforce`, `systemctl`, `ss`, `curl`, `ip`, `nmcli` and `systemd-detect-virt` commands from `scripts/stubs/` first on `PATH`. They cover Fedora 45 Server and Workstation, Fedora 44, Debian, CoreOS, a read-only root, an installed PodShift, Podman older than 6, an old system Bash, no network, a `dnf` conflict, the clash warnings, the network checks (DHCP, `systemd-networkd` only, no backend, no default route, IPv6 only, another connection name, missing `nmcli` or `ip`), `--json`, Bash 3.2, plain output, a wrong option and a cut-off download.
+The tests point the script at a fake system with `PRECHECK_ROOT` (built by `scripts/precheck-make-root.sh`) and put fake `rpm`, `dnf`, `id`, `getenforce`, `systemctl`, `ss`, `curl`, `ip`, `nmcli` and `systemd-detect-virt` commands from `scripts/stubs/` first on `PATH`. They cover Fedora 45 Server and Workstation, Fedora 44, Debian, CoreOS, a read-only root, an installed PodShift, Podman older than 6, an old system Bash, no network, a `dnf` conflict, the clash warnings, the network checks (DHCP, `systemd-networkd` only, no backend, no default route, IPv6 only, another connection name, the cloud-init name with a space, the default `nmconnection` file, missing `nmcli` or `ip`), `--json`, Bash 3.2, plain output, a wrong option and a cut-off download.
 
 These are not the real `dnf5` or Fedora output. `precheck-vm-clean` runs the script in a real VM.
 
