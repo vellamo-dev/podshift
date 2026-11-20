@@ -1,0 +1,25 @@
+{
+  "action": "config-unset",
+  "name": "Config unset",
+  "description": "Removes one custom TSV_* key from the podshift user's tsv.conf, with the same name rules as podshift config --unset.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "key": { "type": "string", "minLength": 1, "maxLength": 128 }
+    },
+    "required": ["key"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "key": { "type": "string" },
+      "ok": { "type": "boolean" },
+      "error": { "type": "string", "enum": ["INVALID_NAME", "RESERVED_NAME", "NOT_SET"] },
+      "message": { "type": "string" }
+    },
+    "required": ["key", "ok"],
+    "additionalProperties": false
+  }
+}

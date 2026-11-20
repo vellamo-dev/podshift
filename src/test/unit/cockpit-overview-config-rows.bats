@@ -57,6 +57,40 @@ setup() {
     '
 }
 
+@test "TSV_ENV is editable only while it is unset" {
+    run cockpit-overview-config-rows '{}'
+    printf '%s' "${output}" | jq -e '.rows[0].editable == true'
+    run cockpit-overview-config-rows '{"tsv_env":""}'
+    printf '%s' "${output}" | jq -e '.rows[0].editable == true'
+    run cockpit-overview-config-rows '{"tsv_env":"dev"}'
+    printf '%s' "${output}" | jq -e '.rows[0].editable == false'
+}
+
+@test "NW rows are never editable and user rows are" {
+    run cockpit-overview-config-rows '{"tsv_env":"dev","tsv_nw1":"192.0.2.10","tsv_nw8":"192.0.2.80"}' '[{"id":"tsv_app","label":"TSV_APP","value":"ok"}]'
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '
+        [.rows[] | [.id, .editable]] == [["tsv_env",false],["tsv_nw1",false],["tsv_nw8",false],["tsv_app",true]]
+        and all(.rows[]; (keys | sort) == ["editable","id","label","value"])
+    '
+}
+
+@test "old user rows with a reserved prefix are not editable" {
+    run cockpit-overview-config-rows '{}' '[{"id":"tsv_nworder","label":"TSV_NWORDER","value":"1"},{"id":"tsv_env2","label":"TSV_ENV2","value":"x"},{"id":"tsv_new","label":"TSV_NEW","value":"y"}]'
+    printf '%s' "${output}" | jq -e '[.rows[] | [.label, .editable]] == [["TSV_ENV",true],["TSV_NWORDER",false],["TSV_ENV2",false],["TSV_NEW",true]]'
+}
+
+@test "envSuggestions lists the comma-separated tags without empty items" {
+    run cockpit-overview-config-rows '{}' '[]' 'development,dev,,test,'
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '.envSuggestions == ["development","dev","test"]'
+}
+
+@test "envSuggestions is empty without tags" {
+    run cockpit-overview-config-rows '{}'
+    printf '%s' "${output}" | jq -e '.envSuggestions == []'
+}
+
 @test "a non-object values argument fails" {
     run cockpit-overview-config-rows '[]'
     [ "${status}" -ne 0 ]

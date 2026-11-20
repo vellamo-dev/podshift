@@ -164,6 +164,6 @@ Run as root with `sudo podshift`:
 - `secret` - create, list, replace, and remove Podman secrets
 - `ssh` - turn the firewall ssh service (port 22) on or off
 - `selinux` - switch SELinux to enforcing
-- `update-self` - update PodShift itself
+- `update-self` - update PodShift itself, and the Cockpit UI when it is installed from a repository
 - `health-check` - check the server
 - `status-cockpit`, `status-firewall`, `status-user` - system service status

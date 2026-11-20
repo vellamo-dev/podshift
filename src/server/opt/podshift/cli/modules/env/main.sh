@@ -31,7 +31,9 @@ podshift-env() {
                 return 0
             fi
             value="${2}"
-            if ! [[ "${value}" =~ ^[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}$ ]]; then
+            # shellcheck source=../../../fn/utils/is-valid-env-tag.sh
+            declare -F is-valid-env-tag >/dev/null || source /opt/podshift/fn/utils/is-valid-env-tag.sh
+            if ! is-valid-env-tag "${value}"; then
                 echo "Invalid tag '${value}'. Use only a-z, A-Z, 0-9, _, ., -" >&2
                 return 1
             fi

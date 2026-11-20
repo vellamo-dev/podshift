@@ -1,0 +1,26 @@
+{
+  "action": "config-set",
+  "name": "Config set",
+  "description": "Adds or changes one custom TSV_* key in the podshift user's tsv.conf, with the same name, value and secret rules as podshift config.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "key": { "type": "string", "minLength": 1, "maxLength": 128 },
+      "value": { "type": "string", "maxLength": 4096 }
+    },
+    "required": ["key", "value"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "key": { "type": "string" },
+      "ok": { "type": "boolean" },
+      "error": { "type": "string", "enum": ["INVALID_NAME", "RESERVED_NAME", "SENSITIVE_NAME", "EMPTY_VALUE", "INVALID_VALUE", "SENSITIVE_VALUE", "RULES_UNAVAILABLE"] },
+      "message": { "type": "string" }
+    },
+    "required": ["key", "ok"],
+    "additionalProperties": false
+  }
+}

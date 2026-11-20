@@ -5,7 +5,7 @@
 # @category: entry
 # @title: Quick checks
 # @platforms: all
-# @needs: lint-cli-modules lint-help-files lint-pure-functions lint-bashdoc-description-length lint-bashdoc-required-tags lint-bashdoc-conditional-tags lint-bashdoc-tag-values lint-spec-scriptlets dev-cli-help unit-pure-functions unit-cli-selinux unit-post-selinux precheck-unit unit-health-check
+# @needs: lint-cli-modules lint-help-files lint-pure-functions lint-bashdoc-description-length lint-bashdoc-required-tags lint-bashdoc-conditional-tags lint-bashdoc-tag-values lint-spec-scriptlets dev-cli-help unit-pure-functions unit-cli-selinux unit-post-selinux precheck-unit unit-health-check unit-cli-config unit-cli-update-self
 # @description: Runs the source-only checks after a download.
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE

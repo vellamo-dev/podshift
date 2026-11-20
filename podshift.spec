@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.21.6
+Version: 0.22.0
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,19 @@ wait
 
 
 %changelog
+* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.22.0
+- CLI: podshift config --unset removes a custom TSV_* key
+- CLI: custom key names must be TSV_ plus A-Z, 0-9 or _; names starting with TSV_NW or TSV_ENV are reserved
+- CLI: secret names (PASSWORD, TOKEN, API_KEY and similar) and known token formats in values are refused; values must not be empty or contain quotes, control characters or a trailing backslash
+- Config: new tsv-rules.conf lists the secret words and value formats
+- Config: tsv.conf is read as data by read-tsv-conf-lines instead of being sourced, so nothing in it is run; only TSV_NAME=value lines are used
+- Config: saving or removing a key rewrites tsv.conf in canonical form and drops other lines, with a note
+- CLI: podshift config refuses TSV_ENV for set and --unset, root included; set it with podshift env --set, and PODSHIFT_SYSTEM_CONFIG_KEYS no longer lists TSV_ENV
+- CLI: podshift update-self also updates cockpit-podshift in the same transaction when it is installed and in an enabled repository, skips it with a note otherwise, and never installs it
+- Cockpit API: new config-set, config-unset and env-set actions; overview-config rows have an editable flag and the data lists suggested environment tags
+- Tests: unit tests for the config rules, new unit-cli-config suite in quick, Cockpit API cases for the new actions
+- Docs: config help covers --unset, the name rules and secrets; API docs list the new actions
+
 * Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.6
 - Health check: new Environment tag check warns when TSV_ENV is not set
 - Tests: unit tests cover the Environment tag check when TSV_ENV is set and when it is not

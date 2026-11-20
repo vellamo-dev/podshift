@@ -567,7 +567,7 @@ fi
 
 # --- dispatch ---
 list_out="$(cockpit-dispatch-action list)"
-if printf '%s' "${list_out}" | jq -e 'length == 18 and .[0].action == "ping" and .[0].function == "cockpit-module-ping" and .[0].realm == "podshift" and .[1].action == "capabilities" and .[1].function == "cockpit-module-capabilities" and .[1].realm == "root" and .[2].action == "overview-status" and .[2].function == "cockpit-module-overview-status" and .[2].realm == "root" and .[3].action == "overview-usage" and .[3].function == "cockpit-module-overview-usage" and .[3].realm == "podshift" and .[4].action == "overview-info" and .[4].function == "cockpit-module-overview-info" and .[4].realm == "podshift" and .[5].action == "overview-config" and .[5].function == "cockpit-module-overview-config" and .[5].realm == "podshift" and .[6].action == "health-check" and .[6].function == "cockpit-module-health-check" and .[6].realm == "root" and .[7].action == "networks-list" and .[7].function == "cockpit-module-networks-list" and .[7].realm == "podshift" and .[8].action == "images-list" and .[8].function == "cockpit-module-images-list" and .[8].realm == "podshift" and .[9].action == "volumes-list" and .[9].function == "cockpit-module-volumes-list" and .[9].realm == "podshift" and .[10].action == "containers-list" and .[10].function == "cockpit-module-containers-list" and .[10].realm == "podshift" and .[11].action == "inspect" and .[11].function == "cockpit-module-inspect" and .[11].realm == "podshift" and .[12].action == "secrets-list" and .[12].function == "cockpit-module-secrets-list" and .[12].realm == "podshift" and .[13].action == "services-list" and .[13].function == "cockpit-module-services-list" and .[13].realm == "podshift" and .[14].action == "service-view" and .[14].function == "cockpit-module-service-view" and .[14].realm == "podshift" and .[15].action == "service-logs" and .[15].function == "cockpit-module-service-logs" and .[15].realm == "root" and .[16].action == "quadlets-list" and .[16].function == "cockpit-module-quadlets-list" and .[16].realm == "podshift" and .[17].action == "quadlet-view" and .[17].function == "cockpit-module-quadlet-view" and .[17].realm == "podshift"' >/dev/null; then
+if printf '%s' "${list_out}" | jq -e 'length == 21 and .[0].action == "ping" and .[0].function == "cockpit-module-ping" and .[0].realm == "podshift" and .[1].action == "capabilities" and .[1].function == "cockpit-module-capabilities" and .[1].realm == "root" and .[2].action == "overview-status" and .[2].function == "cockpit-module-overview-status" and .[2].realm == "root" and .[3].action == "overview-usage" and .[3].function == "cockpit-module-overview-usage" and .[3].realm == "podshift" and .[4].action == "overview-info" and .[4].function == "cockpit-module-overview-info" and .[4].realm == "podshift" and .[5].action == "overview-config" and .[5].function == "cockpit-module-overview-config" and .[5].realm == "podshift" and .[6].action == "health-check" and .[6].function == "cockpit-module-health-check" and .[6].realm == "root" and .[7].action == "networks-list" and .[7].function == "cockpit-module-networks-list" and .[7].realm == "podshift" and .[8].action == "images-list" and .[8].function == "cockpit-module-images-list" and .[8].realm == "podshift" and .[9].action == "volumes-list" and .[9].function == "cockpit-module-volumes-list" and .[9].realm == "podshift" and .[10].action == "containers-list" and .[10].function == "cockpit-module-containers-list" and .[10].realm == "podshift" and .[11].action == "inspect" and .[11].function == "cockpit-module-inspect" and .[11].realm == "podshift" and .[12].action == "secrets-list" and .[12].function == "cockpit-module-secrets-list" and .[12].realm == "podshift" and .[13].action == "services-list" and .[13].function == "cockpit-module-services-list" and .[13].realm == "podshift" and .[14].action == "service-view" and .[14].function == "cockpit-module-service-view" and .[14].realm == "podshift" and .[15].action == "service-logs" and .[15].function == "cockpit-module-service-logs" and .[15].realm == "root" and .[16].action == "quadlets-list" and .[16].function == "cockpit-module-quadlets-list" and .[16].realm == "podshift" and .[17].action == "quadlet-view" and .[17].function == "cockpit-module-quadlet-view" and .[17].realm == "podshift" and .[18].action == "config-set" and .[18].function == "cockpit-module-config-set" and .[18].realm == "podshift" and .[19].action == "config-unset" and .[19].function == "cockpit-module-config-unset" and .[19].realm == "podshift" and .[20].action == "env-set" and .[20].function == "cockpit-module-env-set" and .[20].realm == "root"' >/dev/null; then
     ok "dispatch-lists-actions"
 else
     bad "dispatch-lists-actions" "${list_out}"
@@ -635,7 +635,7 @@ run_serve '{"apiVersion":1,"action":"capabilities","args":{}}'
 if expect_code "capabilities-lists-actions" "OK"; then
     if [[ "$(field '.status.message')" == "Action completed" && "$(field '.status.ok')" == "true" && "$(field '.request.action')" == "capabilities" && "$(field '.request.args | length')" == "0" ]]; then
         if printf '%s' "${LAST_OUT}" | jq -e '
-            (.data.actions | length) == 18
+            (.data.actions | length) == 21
             and .data.actions[0].action == "ping"
             and .data.actions[0].name == "Ping"
             and .data.actions[0].status == "active"
@@ -732,6 +732,15 @@ if expect_code "capabilities-lists-actions" "OK"; then
             and .data.actions[17].action == "quadlet-view"
             and .data.actions[17].name == "Quadlet view"
             and .data.actions[17].input.required == ["unit"]
+            and .data.actions[18].action == "config-set"
+            and .data.actions[18].name == "Config set"
+            and .data.actions[18].input.required == ["key","value"]
+            and .data.actions[19].action == "config-unset"
+            and .data.actions[19].name == "Config unset"
+            and .data.actions[19].input.required == ["key"]
+            and .data.actions[20].action == "env-set"
+            and .data.actions[20].name == "Environment tag set"
+            and .data.actions[20].input.required == ["value"]
         ' >/dev/null; then
             if grep -q 'action=capabilities code=OK duration_ms=' "${log}" && ! grep -q '{' "${log}"; then
                 ok "capabilities-lists-actions"
@@ -1134,6 +1143,10 @@ expect_row_contract() {
             and (
                 (keys | sort) == ["id","label","value"]
                 or (
+                    (keys | sort) == ["editable","id","label","value"]
+                    and (.editable | type) == "boolean"
+                )
+                or (
                     (keys | sort) == ["id","label","unit","value"]
                     and (.unit | type) == "string"
                     and (.unit | length) > 0
@@ -1152,7 +1165,7 @@ expect_row_contract() {
     fi
 }
 
-for cap_action in overview-status overview-usage overview-info overview-config health-check networks-list images-list volumes-list containers-list inspect secrets-list services-list service-view service-logs quadlets-list quadlet-view; do
+for cap_action in overview-status overview-usage overview-info overview-config health-check networks-list images-list volumes-list containers-list inspect secrets-list services-list service-view service-logs quadlets-list quadlet-view config-set config-unset env-set; do
     cap_file="${API}/modules/${cap_action}/capability.json"
     cap_raw="$(cat "${cap_file}")"
     cockpit-validate-capability "${cap_action}" "${cap_raw}"
@@ -1298,6 +1311,7 @@ cockpit-overview-config-load() {
     TSV_ENV=dev
     TSV_NW1=192.0.2.10
     TSV_NW3=192.0.2.30
+    PODSHIFT_ENV_TYPES=dev,,prod
     unset TSV_NW2 TSV_NW4 TSV_NW5 TSV_NW6 TSV_NW7 TSV_NW8
 }
 config_out="$(cockpit-module-overview-config)"
@@ -1306,6 +1320,8 @@ if printf '%s' "${config_out}" | jq -e '
     and .rows[0].value == "dev"
     and .rows[1].value == "192.0.2.10"
     and .rows[2].value == "192.0.2.30"
+    and [.rows[].editable] == [false,false,false]
+    and .envSuggestions == ["dev","prod"]
 ' >/dev/null; then
     expect_row_contract "overview-config-stubbed" "${config_out}"
 else
@@ -1314,6 +1330,7 @@ fi
 
 cockpit-overview-config-load() {
     unset TSV_ENV TSV_NW1 TSV_NW2 TSV_NW3 TSV_NW4 TSV_NW5 TSV_NW6 TSV_NW7 TSV_NW8
+    unset PODSHIFT_ENV_TYPES
 }
 cockpit-overview-config-tsv-text() { return 0; }
 config_out="$(cockpit-module-overview-config)"
@@ -1322,6 +1339,8 @@ if printf '%s' "${config_out}" | jq -e '
     and .rows[0].id == "tsv_env"
     and .rows[0].label == "TSV_ENV"
     and .rows[0].value == null
+    and .rows[0].editable == true
+    and .envSuggestions == []
 ' >/dev/null; then
     expect_row_contract "overview-config-no-nw" "${config_out}"
 else
@@ -1334,16 +1353,17 @@ cockpit-overview-config-load() {
     unset TSV_NW2 TSV_NW3 TSV_NW4 TSV_NW5 TSV_NW6 TSV_NW7 TSV_NW8
 }
 cockpit-overview-config-tsv-text() {
-    printf '# comment\nTSV_ENV=ignored\nTSV_ZED=z\nTSV_APP=ok\nTSV_bad=no\nTSV_EMPTY=\n'
+    printf '# comment\nTSV_ENV=ignored\nTSV_ZED=z\nTSV_APP=ok\nTSV_bad=no\nTSV_EMPTY=\nTSV_NWOLD=x\n'
 }
 config_out="$(cockpit-module-overview-config)"
 if printf '%s' "${config_out}" | jq -e '
-    (.rows | length) == 4
-    and [.rows[].id] == ["tsv_env","tsv_nw1","tsv_app","tsv_zed"]
+    (.rows | length) == 5
+    and [.rows[].id] == ["tsv_env","tsv_nw1","tsv_app","tsv_nwold","tsv_zed"]
     and .rows[0].value == "dev"
     and .rows[1].value == "192.0.2.10"
     and .rows[2].id == "tsv_app" and .rows[2].label == "TSV_APP" and .rows[2].value == "ok"
-    and .rows[3].id == "tsv_zed" and .rows[3].label == "TSV_ZED" and .rows[3].value == "z"
+    and .rows[4].id == "tsv_zed" and .rows[4].label == "TSV_ZED" and .rows[4].value == "z"
+    and [.rows[].editable] == [false,false,true,false,true]
 ' >/dev/null; then
     expect_row_contract "overview-config-user-keys" "${config_out}"
 else
@@ -2954,6 +2974,242 @@ if [[ "$(id -u)" -ne 0 ]]; then
     fi
 fi
 rm -rf "${work}/quadlet-view"
+
+
+# --- config-set, config-unset and env-set ---
+# The modules run in this process with real files in a temporary folder. The caller gates,
+# load-podshift-conf-main and sudo are stubbed; the real tsv-rules.conf is used.
+# shellcheck source=/dev/null
+source "${API}/modules/config-set/module.sh"
+# shellcheck source=/dev/null
+source "${API}/modules/config-unset/module.sh"
+# shellcheck source=/dev/null
+source "${API}/modules/env-set/module.sh"
+cfg_dir="${work}/config"
+mkdir -p "${cfg_dir}"
+cfg_tsv="${cfg_dir}/tsv.conf"
+cfg_runtime="${cfg_dir}/runtime.conf"
+cfg_rules="${PODSHIFT}/conf/tsv-rules.conf"
+cfg_set_contract="$(jq -c '.output' "${API}/modules/config-set/capability.json")"
+cfg_unset_contract="$(jq -c '.output' "${API}/modules/config-unset/capability.json")"
+env_set_contract="$(jq -c '.output' "${API}/modules/env-set/capability.json")"
+cfg_secret="Secrets don't belong in config. Use a Podman secret instead."
+require-podshift() { return 0; }
+require-admin() { return 0; }
+sudo() { "$@"; }
+load-podshift-conf-main() {
+    PODSHIFT_TSV_CONF="${cfg_tsv}"
+    PODSHIFT_TSV_RULES_CONF="${cfg_rules}"
+    PODSHIFT_RUNTIME_CONF="${cfg_runtime}"
+    PODSHIFT_RUNTIME_CONF_TEMPLATES="${PODSHIFT}/assets/tpl"
+}
+printf "# Custom TSV_* variables used by quadlets.\nTSV_KEEP='kept'\n" > "${cfg_tsv}"
+
+cfg_out="$(cockpit-module-config-set '{"key":"TSV_APP_DOMAIN","value":"example.com"}')"
+if [[ "${cfg_out}" == '{"key":"TSV_APP_DOMAIN","ok":true}' ]] \
+    && cockpit-validate-contract "${cfg_set_contract}" "${cfg_out}" \
+    && grep -qx "TSV_APP_DOMAIN='example.com'" "${cfg_tsv}" && grep -qx "TSV_KEEP='kept'" "${cfg_tsv}"; then
+    ok "config-set-saves"
+else
+    bad "config-set-saves" "${cfg_out} file $(tr '\n' ';' < "${cfg_tsv}")"
+fi
+
+cfg_out="$(cockpit-module-config-set '{"key":"TSV_APP_DOMAIN","value":"example.org"}')"
+if [[ "${cfg_out}" == '{"key":"TSV_APP_DOMAIN","ok":true}' ]] \
+    && [[ "$(grep -c '^TSV_APP_DOMAIN=' "${cfg_tsv}")" == "1" ]] && grep -qx "TSV_APP_DOMAIN='example.org'" "${cfg_tsv}"; then
+    ok "config-set-replaces"
+else
+    bad "config-set-replaces" "${cfg_out} file $(tr '\n' ';' < "${cfg_tsv}")"
+fi
+
+cfg_before="$(cat "${cfg_tsv}")"
+cfg_n=0
+for cfg_case in \
+    'INVALID_NAME|{"key":"TSV_app","value":"x"}' \
+    'INVALID_NAME|{"key":"TSV_A\nB","value":"x"}' \
+    'RESERVED_NAME|{"key":"TSV_NW1","value":"x"}' \
+    'RESERVED_NAME|{"key":"TSV_NWORDER","value":"x"}' \
+    'RESERVED_NAME|{"key":"TSV_ENV","value":"dev"}' \
+    'RESERVED_NAME|{"key":"TSV_ENV2","value":"x"}' \
+    'SENSITIVE_NAME|{"key":"TSV_DB_PASSWORD","value":"x"}' \
+    'SENSITIVE_NAME|{"key":"TSV_API_KEY","value":"x"}' \
+    'EMPTY_VALUE|{"key":"TSV_APP","value":""}' \
+    'INVALID_VALUE|{"key":"TSV_APP","value":"a\"b"}' \
+    'INVALID_VALUE|{"key":"TSV_APP","value":"ok\n"}' \
+    'INVALID_VALUE|{"key":"TSV_APP","value":"a\u0000b"}' \
+    'INVALID_VALUE|{"key":"TSV_APP","value":"end\\"}' \
+    'SENSITIVE_VALUE|{"key":"TSV_APP","value":"gh''p_abcdefghijABCDEFGHIJ0123456789abcdef"}' \
+    'SENSITIVE_VALUE|{"key":"TSV_APP","value":"AKIA''IOSFODNN7EXAMPLE"}'; do
+    cfg_n=$((cfg_n + 1))
+    cfg_want="${cfg_case%%|*}"
+    cfg_args="${cfg_case#*|}"
+    cfg_out="$(cockpit-module-config-set "${cfg_args}")"
+    if printf '%s' "${cfg_out}" | jq -e --arg want "${cfg_want}" '.ok == false and .error == $want and (.message | length) > 0' >/dev/null \
+        && cockpit-validate-contract "${cfg_set_contract}" "${cfg_out}" \
+        && [[ "${cfg_out}" != *ghp_* && "${cfg_out}" != *AKIA* ]] \
+        && [[ "$(cat "${cfg_tsv}")" == "${cfg_before}" ]]; then
+        ok "config-set-refused-${cfg_n}-${cfg_want}"
+    else
+        bad "config-set-refused-${cfg_n}-${cfg_want}" "${cfg_args}: ${cfg_out}"
+    fi
+done
+
+cfg_out="$(cockpit-module-config-set '{"key":"TSV_DB_PASSWORD","value":"x"}')"
+if printf '%s' "${cfg_out}" | jq -e --arg m "${cfg_secret}" '.message == $m' >/dev/null; then
+    ok "config-set-secret-message"
+else
+    bad "config-set-secret-message" "${cfg_out}"
+fi
+
+cfg_rules="${cfg_dir}/missing-rules.conf"
+cfg_out="$(cockpit-module-config-set '{"key":"TSV_NEW","value":"x"}')"
+cfg_rules="${PODSHIFT}/conf/tsv-rules.conf"
+if printf '%s' "${cfg_out}" | jq -e '.ok == false and .error == "RULES_UNAVAILABLE"' >/dev/null \
+    && cockpit-validate-contract "${cfg_set_contract}" "${cfg_out}" && ! grep -q '^TSV_NEW=' "${cfg_tsv}"; then
+    ok "config-set-rules-missing"
+else
+    bad "config-set-rules-missing" "${cfg_out}"
+fi
+
+cfg_out="$(cockpit-module-config-unset '{"key":"TSV_APP_DOMAIN"}')"
+if [[ "${cfg_out}" == '{"key":"TSV_APP_DOMAIN","ok":true}' ]] \
+    && cockpit-validate-contract "${cfg_unset_contract}" "${cfg_out}" \
+    && ! grep -q '^TSV_APP_DOMAIN=' "${cfg_tsv}" && grep -qx "TSV_KEEP='kept'" "${cfg_tsv}"; then
+    ok "config-unset-removes"
+else
+    bad "config-unset-removes" "${cfg_out} file $(tr '\n' ';' < "${cfg_tsv}")"
+fi
+
+cfg_out="$(cockpit-module-config-unset '{"key":"TSV_APP_DOMAIN"}')"
+if [[ "${cfg_out}" == '{"key":"TSV_APP_DOMAIN","ok":false,"error":"NOT_SET","message":"TSV_APP_DOMAIN is not set."}' ]] \
+    && cockpit-validate-contract "${cfg_unset_contract}" "${cfg_out}"; then
+    ok "config-unset-not-set"
+else
+    bad "config-unset-not-set" "${cfg_out}"
+fi
+
+printf "TSV_NW9='x'\nTSV_DB_PASSWORD='old'\n" >> "${cfg_tsv}"
+cfg_n=0
+for cfg_case in 'RESERVED_NAME|TSV_NW1' 'RESERVED_NAME|TSV_NW9' 'RESERVED_NAME|TSV_ENV' 'INVALID_NAME|tsv_keep' 'INVALID_NAME|TSV_K.*'; do
+    cfg_n=$((cfg_n + 1))
+    cfg_want="${cfg_case%%|*}"
+    cfg_key="${cfg_case#*|}"
+    cfg_out="$(cockpit-module-config-unset "$(jq -n -c --arg key "${cfg_key}" '{key: $key}')")"
+    if printf '%s' "${cfg_out}" | jq -e --arg want "${cfg_want}" '.ok == false and .error == $want' >/dev/null \
+        && cockpit-validate-contract "${cfg_unset_contract}" "${cfg_out}" \
+        && grep -q '^TSV_NW9=' "${cfg_tsv}" && grep -q '^TSV_KEEP=' "${cfg_tsv}"; then
+        ok "config-unset-refused-${cfg_n}-${cfg_want}"
+    else
+        bad "config-unset-refused-${cfg_n}-${cfg_want}" "${cfg_key}: ${cfg_out}"
+    fi
+done
+
+cfg_out="$(cockpit-module-config-unset '{"key":"TSV_DB_PASSWORD"}')"
+if [[ "${cfg_out}" == '{"key":"TSV_DB_PASSWORD","ok":true}' ]] && ! grep -q '^TSV_DB_PASSWORD=' "${cfg_tsv}"; then
+    ok "config-unset-old-secret-name"
+else
+    bad "config-unset-old-secret-name" "${cfg_out}"
+fi
+
+printf "# PodShift Runtime Configuration\nTSV_ENV=\nPODSHIFT_NW_DEVICE=\"eth0\"\n" > "${cfg_runtime}"
+cfg_out="$(cockpit-module-env-set '{"value":"bad tag"}')"
+if printf '%s' "${cfg_out}" | jq -e '.key == "TSV_ENV" and .ok == false and .error == "INVALID_TAG"' >/dev/null \
+    && cockpit-validate-contract "${env_set_contract}" "${cfg_out}" && grep -qx 'TSV_ENV=' "${cfg_runtime}"; then
+    ok "env-set-invalid-tag"
+else
+    bad "env-set-invalid-tag" "${cfg_out}"
+fi
+
+cfg_out="$(cockpit-module-env-set '{"value":"dev"}')"
+if [[ "${cfg_out}" == '{"key":"TSV_ENV","ok":true}' ]] \
+    && cockpit-validate-contract "${env_set_contract}" "${cfg_out}" \
+    && grep -qx "TSV_ENV='dev'" "${cfg_runtime}" && [[ "$(grep -c '^TSV_ENV=' "${cfg_runtime}")" == "1" ]] \
+    && grep -qx 'PODSHIFT_NW_DEVICE="eth0"' "${cfg_runtime}"; then
+    ok "env-set-sets-once"
+else
+    bad "env-set-sets-once" "${cfg_out} file $(tr '\n' ';' < "${cfg_runtime}")"
+fi
+
+cfg_out="$(cockpit-module-env-set '{"value":"prod"}')"
+if printf '%s' "${cfg_out}" | jq -e '.ok == false and .error == "ALREADY_SET" and (.message | test("sudo podshift env --set"))' >/dev/null \
+    && cockpit-validate-contract "${env_set_contract}" "${cfg_out}" && grep -qx "TSV_ENV='dev'" "${cfg_runtime}"; then
+    ok "env-set-refuses-second"
+else
+    bad "env-set-refuses-second" "${cfg_out} file $(tr '\n' ';' < "${cfg_runtime}")"
+fi
+
+if cockpit-validate-contract "${cfg_set_contract}" '{"key":"TSV_A","ok":false,"error":"OTHER"}' \
+    || cockpit-validate-contract "${cfg_set_contract}" '{"key":"TSV_A","ok":true,"value":"leak"}'; then
+    bad "config-set-output-contract" "an unknown code or extra field was accepted"
+else
+    ok "config-set-output-contract"
+fi
+unset -f require-podshift require-admin sudo load-podshift-conf-main
+rm -rf "${cfg_dir}"
+
+# Handler runs: bad arguments never reach the session, config-set and config-unset enter the
+# podshift session, and env-set runs in the root realm without it.
+cfg_n=0
+for cfg_body in \
+    '{"apiVersion":1,"action":"config-set","args":{"key":"TSV_APP"}}' \
+    '{"apiVersion":1,"action":"config-set","args":{"key":"TSV_APP","value":"x","extra":1}}' \
+    '{"apiVersion":1,"action":"config-set","args":{"key":"","value":"x"}}' \
+    '{"apiVersion":1,"action":"config-set","args":{"key":"TSV_APP","value":5}}' \
+    '{"apiVersion":1,"action":"config-unset","args":{}}' \
+    '{"apiVersion":1,"action":"env-set","args":{"value":"dev","force":true}}'; do
+    cfg_n=$((cfg_n + 1))
+    reset_mocks
+    MODE="emit"
+    EMIT='{"key":"TSV_APP","ok":true}'
+    run_serve "${cfg_body}"
+    if expect_code "config-handler-invalid-args-${cfg_n}" "INVALID_ARGS"; then
+        if [[ ! -s "${argv}" && "$(field '.request.args')" == "null" ]]; then
+            ok "config-handler-invalid-args-${cfg_n}"
+        else
+            bad "config-handler-invalid-args-${cfg_n}" "argv $(cat "${argv}")"
+        fi
+    fi
+done
+
+reset_mocks
+MODE="emit"
+EMIT='{"key":"TSV_APP","ok":true}'
+run_serve '{"apiVersion":1,"action":"config-set","args":{"key":"TSV_APP","value":"a $HOME b"}}'
+if expect_code "config-set-mock-session" "OK"; then
+    if [[ "$(field '.data.ok')" == "true" ]] && grep -q 'cockpit-run-in-session.sh config-set ' "${argv}" && grep -q 'TSV_APP' "${argv}" && ! grep -q 'TSV_APP' "${log}"; then
+        ok "config-set-mock-session"
+    else
+        bad "config-set-mock-session" "${LAST_OUT} argv $(cat "${argv}")"
+    fi
+fi
+
+reset_mocks
+MODE="emit"
+EMIT='{"key":"TSV_APP","ok":true}'
+run_serve '{"apiVersion":1,"action":"config-unset","args":{"key":"TSV_APP"}}'
+if expect_code "config-unset-mock-session" "OK"; then
+    if grep -q 'cockpit-run-in-session.sh config-unset ' "${argv}"; then
+        ok "config-unset-mock-session"
+    else
+        bad "config-unset-mock-session" "argv $(cat "${argv}")"
+    fi
+fi
+
+reset_mocks
+MODE="emit"
+EMIT='{"key":"TSV_APP","ok":true,"value":"leak"}'
+run_serve '{"apiVersion":1,"action":"config-set","args":{"key":"TSV_APP","value":"x"}}'
+expect_code "config-set-handler-output-contract" "INTERNAL" && [[ "$(field '.data')" == "null" ]] && ok "config-set-handler-output-contract"
+
+reset_mocks
+run_serve '{"apiVersion":1,"action":"env-set","args":{"value":"-bad"}}'
+if expect_code "env-set-root-realm" "OK"; then
+    if [[ ! -s "${argv}" && "$(field '.data.error')" == "INVALID_TAG" && "$(field '.data.key')" == "TSV_ENV" ]]; then
+        ok "env-set-root-realm"
+    else
+        bad "env-set-root-realm" "${LAST_OUT} argv $(cat "${argv}")"
+    fi
+fi
 
 
 echo "NOTE: ${pass} passed, ${fail} failed. Session success was mocked. Live systemd-run was only checked for a failed tunnel."

@@ -16,11 +16,20 @@ if [[ -z "${DIR_7B3E5A9C1D6F:-}" ]]; then
 fi
 
 # @description: Updates or adds a custom TSV_* key-value pair.
+# @details:
+#   The name and value must pass check-tsv-config-entry with the rules from tsv-rules.conf: the
+#   TSV_ name form, no reserved TSV_NW or TSV_ENV prefix, no secret word in the name, a value that
+#   is not empty and has no quotes, control characters or trailing backslash, and no known secret
+#   format. When the rules cannot be read, nothing is saved.
+#   The file is rebuilt with write-tsv-conf-lines: comments, blank lines and valid TSV_ lines are
+#   kept in canonical form, other lines are dropped with a note, and the new KEY='value' is
+#   appended. The values are then reloaded as data with load-podshift-conf-runtime.
 # @arg: $1 - configuration key (TSV_* and not reserved).
 # @arg: $2 - value.
+# @stderr: the reason on failure, and a note when invalid lines were dropped.
 # @exitcode: 0 on success, 1 on failure.
 update-tsv-conf() {
-    local key value conf_file quoted_value tmp_file
+    local key value conf_file tmp_file rules problem q esc
     # shellcheck source=./require-podshift.sh
     declare -F require-podshift >/dev/null || source "${DIR_7B3E5A9C1D6F}/require-podshift.sh"
     require-podshift || return 1
@@ -36,20 +45,16 @@ update-tsv-conf() {
     key="${1}"
     value="${2}"
 
-    # Custom keys must start with TSV_ and must not be reserved system keys.
-    if [[ "${key}" != TSV_* ]] || [[ ",${PODSHIFT_SYSTEM_CONFIG_KEYS}," == *",${key},"* ]]; then
-        echo "Invalid key '${key}'. Custom keys must start with TSV_ and not be reserved." >&2
+    # Custom keys and values follow the shared form and secret rules (tsv-rules.conf).
+    # shellcheck source=./read-tsv-config-rules.sh
+    declare -F read-tsv-config-rules >/dev/null || source "${DIR_7B3E5A9C1D6F}/read-tsv-config-rules.sh"
+    rules="$(read-tsv-config-rules)" || return 1
+    # shellcheck source=./check-tsv-config-entry.sh
+    declare -F check-tsv-config-entry >/dev/null || source "${DIR_7B3E5A9C1D6F}/check-tsv-config-entry.sh"
+    if ! problem="$(check-tsv-config-entry "${key}" "${value}" "${rules}")"; then
+        echo "${problem#*$'\t'}" >&2
         return 1
     fi
-
-    # Reject control characters (e.g. newlines) that would corrupt the config file.
-    if [[ "${value}" =~ [[:cntrl:]] ]]; then
-        echo "Value must not contain control characters." >&2
-        return 1
-    fi
-
-    # Single-quote the value so the config file can be sourced back safely.
-    quoted_value="'${value//\'/\'\\\'\'}'"
 
     # Create from the template when missing.
     if [ ! -r "${conf_file}" ]; then
@@ -57,10 +62,19 @@ update-tsv-conf() {
             || { echo "Failed to create ${conf_file} from template." >&2; return 1; }
     fi
 
-    # Rewrite the file: drop any existing KEY= line, then append KEY=<quoted value>.
+    # Rewrite the file from its valid lines without KEY, then append KEY='value' in the same
+    # canonical form. Lines that are not comments, blank or TSV_NAME=value are dropped.
+    # shellcheck source=./write-tsv-conf-lines.sh
+    declare -F write-tsv-conf-lines >/dev/null || source "${DIR_7B3E5A9C1D6F}/write-tsv-conf-lines.sh"
     tmp_file="$(mktemp)"
-    grep -v "^${key}=" "${conf_file}" > "${tmp_file}" 2>/dev/null || true
-    printf '%s=%s\n' "${key}" "${quoted_value}" >> "${tmp_file}"
+    write-tsv-conf-lines "${conf_file}" "${key}" > "${tmp_file}" || {
+        rm -f "${tmp_file}"
+        echo "Failed to read ${conf_file}" >&2
+        return 1
+    }
+    q="'"
+    esc="'\\''"
+    printf "%s='%s'\n" "${key}" "${value//"${q}"/${esc}}" >> "${tmp_file}"
     install -m 0644 "${tmp_file}" "${conf_file}" || {
         rm -f "${tmp_file}"
         echo "Failed to write ${conf_file}" >&2

@@ -5,24 +5,36 @@
 # @host-edit: no
 # @group: cli
 # @category: entry
-# @description: Gets, lists, or sets PodShift runtime configuration.
+# @description: Gets, lists, sets, or removes PodShift runtime configuration.
 # @run-as: any
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
 
-# @description: Gets, lists, or sets runtime configuration.
-# @arg: $@ - (none) list, <key> get, or <key> <value> set.
+if [[ -z "${DIR_6D9F9C6E360C:-}" ]]; then
+    DIR_6D9F9C6E360C="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    readonly DIR_6D9F9C6E360C
+fi
+
+# @description: Gets, lists, sets, or removes runtime configuration.
+# @details:
+#   Root may set the system keys in PODSHIFT_SYSTEM_CONFIG_KEYS. The podshift user may set and
+#   remove custom TSV_* keys; update-tsv-conf and remove-tsv-conf check the name, the reserved
+#   TSV_NW and TSV_ENV prefixes and the secret rules.
+#   TSV_ENV is refused for set and --unset, for every caller, root included: it is set with
+#   podshift env --set, which checks the tag and calls update-podshift-conf directly.
+# @arg: $@ - (none) list, <key> get, <key> <value> set, or --unset <key> remove.
+# @stderr: the reason on failure.
 # @exitcode: 0 on success, 1 on failure.
 podshift-config() {
-    local key value caller
+    local key value caller rc
 
     # shellcheck source=../../../fn/utils/is-admin.sh
-    source /opt/podshift/fn/utils/is-admin.sh
+    declare -F is-admin >/dev/null || source "${DIR_6D9F9C6E360C}/../../../fn/utils/is-admin.sh"
     # shellcheck source=../../../fn/utils/is-podshift.sh
-    source /opt/podshift/fn/utils/is-podshift.sh
+    declare -F is-podshift >/dev/null || source "${DIR_6D9F9C6E360C}/../../../fn/utils/is-podshift.sh"
     # shellcheck source=../../../fn/load-podshift-conf-main.sh
-    declare -F load-podshift-conf-main >/dev/null || source /opt/podshift/fn/load-podshift-conf-main.sh
+    declare -F load-podshift-conf-main >/dev/null || source "${DIR_6D9F9C6E360C}/../../../fn/load-podshift-conf-main.sh"
     load-podshift-conf-main
 
     if is-admin; then
@@ -31,6 +43,31 @@ podshift-config() {
         caller=podshift
     else
         caller=other
+    fi
+
+    if [[ "${1:-}" == "--unset" ]]; then
+        # Remove a custom TSV_* key: only the podshift user, only from tsv.conf.
+        if [[ "$#" -ne 2 ]]; then
+            echo "Usage: config --unset <key>" >&2
+            return 1
+        fi
+        key="${2}"
+        if [[ "${key}" == "TSV_ENV" ]]; then
+            echo "TSV_ENV is set with: sudo podshift env --set <tag>" >&2
+            return 1
+        fi
+        if [[ "${caller}" != "podshift" ]]; then
+            echo "Unauthorised. Only the podshift user may remove custom TSV_* keys." >&2
+            return 1
+        fi
+        # shellcheck source=../../../fn/utils/remove-tsv-conf.sh
+        declare -F remove-tsv-conf >/dev/null || source "${DIR_6D9F9C6E360C}/../../../fn/utils/remove-tsv-conf.sh"
+        remove-tsv-conf "${key}" && rc=0 || rc=$?
+        if [[ "${rc}" -ne 0 ]]; then
+            return 1
+        fi
+        echo "Removed ${key}."
+        return 0
     fi
 
     case "$#" in
@@ -51,6 +88,11 @@ podshift-config() {
             # Set a key: root may set system keys, the podshift user may set custom TSV_* keys.
             key="${1}"
             value="${2}"
+            # TSV_ENV goes through podshift env --set, which checks the tag.
+            if [[ "${key}" == "TSV_ENV" ]]; then
+                echo "TSV_ENV is set with: sudo podshift env --set <tag>" >&2
+                return 1
+            fi
             case "${caller}" in
                 root)
                     if [[ ",${PODSHIFT_SYSTEM_CONFIG_KEYS}," != *",${key},"* ]]; then
@@ -58,17 +100,15 @@ podshift-config() {
                         return 1
                     fi
                     # shellcheck source=../../../fn/utils/update-podshift-conf.sh
-                    declare -F update-podshift-conf >/dev/null || source /opt/podshift/fn/utils/update-podshift-conf.sh
+                    declare -F update-podshift-conf >/dev/null || source "${DIR_6D9F9C6E360C}/../../../fn/utils/update-podshift-conf.sh"
                     update-podshift-conf "${key}" "${value}"
                     ;;
                 podshift)
-                    if [[ "${key}" != TSV_* ]] || [[ ",${PODSHIFT_SYSTEM_CONFIG_KEYS}," == *",${key},"* ]]; then
-                        echo "Invalid key '${key}'. Custom keys must start with TSV_ and not be reserved." >&2
-                        return 1
-                    fi
+                    # update-tsv-conf checks the name, the reserved prefixes and the secret rules.
                     # shellcheck source=../../../fn/utils/update-tsv-conf.sh
-                    declare -F update-tsv-conf >/dev/null || source /opt/podshift/fn/utils/update-tsv-conf.sh
-                    update-tsv-conf "${key}" "${value}"
+                    declare -F update-tsv-conf >/dev/null || source "${DIR_6D9F9C6E360C}/../../../fn/utils/update-tsv-conf.sh"
+                    update-tsv-conf "${key}" "${value}" || return 1
+                    echo "Updated ${key}."
                     ;;
                 *)
                     echo "Unauthorised. Root or podshift user required." >&2
@@ -77,10 +117,12 @@ podshift-config() {
             esac
             ;;
         *)
-            echo "Usage: config [<key> [<value>]]" >&2
+            echo "Usage: config [<key> [<value>]] | config --unset <key>" >&2
             return 1
             ;;
     esac
 }
 
-podshift-config "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    podshift-config "$@"
+fi

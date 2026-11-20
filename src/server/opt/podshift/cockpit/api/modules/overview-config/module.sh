@@ -67,8 +67,9 @@ cockpit-overview-config-tsv-text() {
 # @details:
 #   Built-in values come from the runtime and network loaders. User keys come from
 #   tsv.conf, the file written by podshift config. TSV_ENV is always present; an
-#   unset or empty value is null. Unset TSV_NW* and empty user keys are omitted.
-# @stdout: one JSON object with a rows array.
+#   unset or empty value is null. Unset TSV_NW* and empty user keys are omitted. Each row has an
+#   editable flag, and envSuggestions lists PODSHIFT_ENV_TYPES from main.conf.
+# @stdout: one JSON object with a rows array and an envSuggestions array.
 # @exitcode: 0 when the rows were written, 1 otherwise.
 cockpit-module-overview-config() {
     local values var text i user_rows
@@ -91,5 +92,5 @@ cockpit-module-overview-config() {
         _overview_config_put "tsv_nw${i}" "${text}" || return 1
     done
     user_rows="$(cockpit-overview-config-user-rows "$(cockpit-overview-config-tsv-text)")" || user_rows="[]"
-    cockpit-overview-config-rows "${values}" "${user_rows}"
+    cockpit-overview-config-rows "${values}" "${user_rows}" "${PODSHIFT_ENV_TYPES:-}"
 }

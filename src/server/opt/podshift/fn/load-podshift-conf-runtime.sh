@@ -5,7 +5,7 @@
 # @host-edit: no
 # @group: runtime
 # @category: helper
-# @description: Loads (sources and exports) the PodShift runtime configuration.
+# @description: Loads and exports the PodShift runtime configuration (tsv.conf as data, then runtime.conf).
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
@@ -15,7 +15,11 @@ if [[ -z "${DIR_3188B5479489:-}" ]]; then
     readonly DIR_3188B5479489
 fi
 
-# @description: Loads (sources and exports) the PodShift runtime configuration.
+# @description: Loads and exports the PodShift runtime configuration (tsv.conf as data, then runtime.conf).
+# @details:
+#   The custom TSV_* values in tsv.conf, which the podshift user can write, are read as data with
+#   read-tsv-conf-lines: only TSV_NAME=value lines are set, and nothing in the file is run.
+#   runtime.conf, which is owned by root, is sourced last, so its values win.
 # @exitcode: 0 on success, 1 if PODSHIFT_RUNTIME_CONF is not defined.
 load-podshift-conf-runtime() {
     local path_r_cnf_file
@@ -27,12 +31,11 @@ load-podshift-conf-runtime() {
         echo "Error: PODSHIFT_RUNTIME_CONF is not defined." >&2
         return 1
     fi
-    # Custom (CD manager) TSV_* variables first.
+    # Custom (CD manager) TSV_* variables first, read as data and never sourced.
     if [ -n "${PODSHIFT_TSV_CONF:-}" ] && [ -f "${PODSHIFT_TSV_CONF}" ]; then
-        set -a
-        # shellcheck source=../../home/podshift/.config/podshift/tsv.conf
-        source "${PODSHIFT_TSV_CONF}"
-        set +a
+        # shellcheck source=./utils/read-tsv-conf-lines.sh
+        declare -F read-tsv-conf-lines >/dev/null || source "${DIR_3188B5479489}/utils/read-tsv-conf-lines.sh"
+        read-tsv-conf-lines "${PODSHIFT_TSV_CONF}" || true
     fi
 
     # System runtime variables last (they win).

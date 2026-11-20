@@ -1,7 +1,7 @@
 {
   "action": "overview-config",
   "name": "Overview config",
-  "description": "Lists TSV_ENV (always), any set TSV_NW1 to TSV_NW8 values, and user-defined TSV_* keys.",
+  "description": "Lists TSV_ENV (always), any set TSV_NW1 to TSV_NW8 values, and user-defined TSV_* keys, with editable flags and suggested environment tags.",
   "status": "active",
   "input": {
     "type": "object",
@@ -18,14 +18,19 @@
           "properties": {
             "id": { "type": "string" },
             "label": { "type": "string" },
-            "value": {}
+            "value": {},
+            "editable": { "type": "boolean" }
           },
-          "required": ["id", "label", "value"],
+          "required": ["id", "label", "value", "editable"],
           "additionalProperties": false
         }
+      },
+      "envSuggestions": {
+        "type": "array",
+        "items": { "type": "string" }
       }
     },
-    "required": ["rows"],
+    "required": ["rows", "envSuggestions"],
     "additionalProperties": false
   }
 }

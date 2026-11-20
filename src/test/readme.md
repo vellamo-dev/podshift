@@ -83,8 +83,8 @@ The tests never need these. They are GUIs that make it easier to see what the te
 
 ## What runs where
 
-- Anywhere: `lint-*`, `dev-cli-help` and `quick`. `release-version-check` too, with curl, jq and network. `dev-cli-help-show-all` needs `glow`; `dev-cli-help-show` does not. `quick` also runs `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check` and `precheck-unit`, so bats is still required for a full pass.
-- Need bats: `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check` and `precheck-unit` (they check bats themselves and exit 3 if it is missing).
+- Anywhere: `lint-*`, `dev-cli-help` and `quick`. `release-version-check` too, with curl, jq and network. `dev-cli-help-show-all` needs `glow`; `dev-cli-help-show` does not. `quick` also runs `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check`, `unit-cli-config`, `unit-cli-update-self` and `precheck-unit`, so bats is still required for a full pass.
+- Need bats: `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check`, `unit-cli-config`, `unit-cli-update-self` and `precheck-unit` (they check bats themselves and exit 3 if it is missing).
 - Need the dev host: anything whose Needs include `host-check` (`build-*`, `install-*`, `postinstall-*`, `bundle-*`, `precheck-vm-clean`, `host-container-start`, `hello`). On a Mac that is Apple container and Lima; on Fedora the packages and desktop mark in [What you need](#what-you-need). Other Linux is unsupported and exits 3.
 
 Before full tests, run `./test host-check`, then `./test host-container-start`. The `Fix:` lines cover this machine's host tools only: not bats, and not an installed test VM (`postinstall-*` need that). For one test, `./test --help <test>` prints its Platforms and Needs.
@@ -116,6 +116,8 @@ Test names put the area first and the action last.
 | `unit-` | `unit-cli-selinux` | Runs stubbed bats tests for `podshift selinux enforce`. Needs bats-core, but no VM or root. |
 | `unit-` | `unit-post-selinux` | Runs stubbed bats tests for the post `enforce-selinux` step. Needs bats-core, but no VM or root. |
 | `unit-` | `unit-health-check` | Runs stubbed bats tests for health-check scripts. Needs bats-core, but no VM or root. |
+| `unit-` | `unit-cli-config` | Runs stubbed bats tests for `podshift config` set and `--unset`, and for reading and writing `tsv.conf`. Needs bats-core, but no VM or root. |
+| `unit-` | `unit-cli-update-self` | Runs stubbed bats tests for `podshift update-self`, with rpm, dnf and sudo stubbed. Needs bats-core, but no VM or root. |
 | `precheck-` | `precheck-unit`, `precheck-vm-clean` | Test the portable precheck, `utils/portable/precheck.sh`. `precheck-unit` runs stubbed bats tests with a fake system and needs bats, but no VM. `precheck-vm-clean` runs the script in a fresh installer VM and expects Ready or Ready with warnings. It is the first real check of the `dnf5` output and of the Podman that Fedora offers. Settings: `TST_PRECHECK_AS_ROOT`, `TST_PRECHECK_MODE`. |
 | `dev-` | `dev-cli-help`, `dev-cli-help-show`, `dev-cli-help-show-all` | Run PodShift code on this computer, with no build or install. The `-show` tests print the help for a person to read. |
 | `hello` | `hello` | Prints a greeting, to check that the test runner works. |

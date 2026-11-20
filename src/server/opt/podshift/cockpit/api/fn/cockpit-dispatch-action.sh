@@ -178,6 +178,30 @@ cockpit-dispatch-action() {
         --arg realm podshift \
         '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
     collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/config-set" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action config-set \
+        --arg function cockpit-module-config-set \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/config-unset" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action config-unset \
+        --arg function cockpit-module-config-unset \
+        --arg directory "${directory}" \
+        --arg realm podshift \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
+    directory="$(CDPATH='' cd -P -- "${DIR_B6B2B07AEA96}/../modules/env-set" && pwd -P)" || return 1
+    line="$(jq -n -c \
+        --arg action env-set \
+        --arg function cockpit-module-env-set \
+        --arg directory "${directory}" \
+        --arg realm root \
+        '{action:$action, function:$function, directory:$directory, realm:$realm}')" || return 1
+    collected="${collected}${line}"$'\n'
     if [[ "${mode}" == "list" ]]; then
         printf '%s' "${collected}" | jq -c -s '.'
         return

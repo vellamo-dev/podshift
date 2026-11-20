@@ -24,7 +24,7 @@ One JSON object on stdin:
 {"apiVersion":1,"action":"ping","args":{}}
 ```
 
-`apiVersion` must be the number `1`. `action` must be a known name. `args` must be an object. Unknown fields are rejected. The registered actions are `ping`, `capabilities`, `overview-status`, `overview-usage`, `overview-info`, `overview-config`, `health-check`, `networks-list`, `images-list`, `volumes-list`, `containers-list`, `inspect`, `secrets-list`, `services-list`, `service-view`, `service-logs`, `quadlets-list` and `quadlet-view`. All take `args` as `{}` except `inspect`, which takes `{"kind": ..., "ref": ...}`, `service-view`, which takes `{"unit": ..., "mode": ...}`, and `service-logs` and `quadlet-view`, which take `{"unit": ...}`.
+`apiVersion` must be the number `1`. `action` must be a known name. `args` must be an object. Unknown fields are rejected. The registered actions are `ping`, `capabilities`, `overview-status`, `overview-usage`, `overview-info`, `overview-config`, `health-check`, `networks-list`, `images-list`, `volumes-list`, `containers-list`, `inspect`, `secrets-list`, `services-list`, `service-view`, `service-logs`, `quadlets-list`, `quadlet-view`, `config-set`, `config-unset` and `env-set`. All take `args` as `{}` except `inspect`, which takes `{"kind": ..., "ref": ...}`, `service-view`, which takes `{"unit": ..., "mode": ...}`, `service-logs` and `quadlet-view`, which take `{"unit": ...}`, `config-set`, which takes `{"key": ..., "value": ...}`, `config-unset`, which takes `{"key": ...}`, and `env-set`, which takes `{"value": ...}`.
 
 ## Response
 
@@ -137,6 +137,12 @@ Overview info runs in the `podshift` realm. It lists the OS (`PRETTY_NAME` from 
 Overview config runs in the `podshift` realm. It lists `TSV_ENV` from the runtime configuration (always present; `null` when unset or empty), then any of `TSV_NW1` to `TSV_NW8` that are set, as derived by `load-podshift-conf-nw`, then any user-defined `TSV_*` keys from `/home/podshift/.config/podshift/tsv.conf` (the file written by `podshift config`) that have a value. User rows use the exact key as the label, a lowercase id, and are sorted by key. Built-in names repeated in that file are not listed twice. Unset or empty `TSV_NW*` and user keys are omitted. A missing or unreadable file leaves only the built-in rows that are present. TSV keys have no secret mark in PodShift, so every accepted user key with a value is included.
 
 The output contract for all four Overview actions is an object with a `rows` array. Each item has `id`, `label` and `value`. `value` may be a string or `null`. Overview status rows may also include an optional `unit` string. The contract checker accepts only a single `type` name, so `value` is left untyped in `capability.json`; the tests check that each value is a string or `null`.
+
+Each `overview-config` row also has `editable`, a boolean for the UI: `TSV_ENV` is `true` only while it is unset (the UI sets it once with `env-set`), `TSV_NW1` to `TSV_NW8` are always `false`, and user rows are `true` unless their name starts with `TSV_NW` or `TSV_ENV` (a key saved before those prefixes were reserved). `data.envSuggestions` lists the suggested tags from `PODSHIFT_ENV_TYPES` in `main.conf`, in order. For example:
+
+```json
+{"rows":[{"id":"tsv_env","label":"TSV_ENV","value":null,"editable":true},{"id":"tsv_nw1","label":"TSV_NW1","value":"192.0.2.10","editable":false},{"id":"tsv_app_domain","label":"TSV_APP_DOMAIN","value":"example.com","editable":true}],"envSuggestions":["development","dev","test","tst","snapshot","snap","staging","stg","production","prd","latest"]}
+```
 
 ### Health check
 
@@ -311,6 +317,23 @@ Quadlet view runs in the `podshift` realm, so the files are read as the podshift
 - `{unit, found: true, quadlet: true, name, path, kind, text}` otherwise. `name` is the file name, `path` the full path, `kind` the type without the dot and `text` the file as is.
 
 When `text` would be over 131072 bytes, it is left out and `data` has `tooLarge: true` and `size` instead. Quadlet files name secrets (`Secret=`) but never hold their values. The path check is in `cockpit-quadlet-view-path` and the result in `cockpit-quadlet-view-result`, both pure helpers with bats tests. If `list-units` or `show` fails, the action fails.
+
+### Config set
+
+Config set runs in the `podshift` realm and takes `{"key": ..., "value": ...}`. `key` is a string of 1 to 128 characters and `value` a string of up to 4096 characters; other checks give a result, not `INVALID_ARGS`. It applies the same rules as `podshift config <key> <value>`: `check-tsv-config-entry` with the rules from `/opt/podshift/conf/tsv-rules.conf`, then `update-tsv-conf` writes `/home/podshift/.config/podshift/tsv.conf`. A key or value with a control character is refused, because it is checked as one `\x01` character (`cockpit-config-arg`). `data` is one of:
+
+- `{"key":"TSV_APP","ok":true}` when the key was saved.
+- `{"key":"TSV_APP","ok":false,"error":"<code>","message":"<text>"}` when it was refused. The codes are `INVALID_NAME`, `RESERVED_NAME` (starts with `TSV_NW` or `TSV_ENV`), `SENSITIVE_NAME`, `EMPTY_VALUE`, `INVALID_VALUE` (quotes, control characters or a trailing backslash), `SENSITIVE_VALUE` and `RULES_UNAVAILABLE` (the rules file cannot be read, so nothing is saved). For `SENSITIVE_NAME` and `SENSITIVE_VALUE` the message is `Secrets don't belong in config. Use a Podman secret instead.` The value is never echoed in `data`.
+
+A write failure fails the action (`INTERNAL`).
+
+### Config unset
+
+Config unset runs in the `podshift` realm and takes `{"key": ...}`. It applies the same rules as `podshift config --unset <key>`: `check-tsv-config-name`, then `remove-tsv-conf` removes every `KEY=` line from `tsv.conf`. Both writes rebuild the file from its comments, blank lines and valid `TSV_NAME=value` lines, so any other line is dropped. The secret rules are not checked, so a key saved before them can be removed. `data` is `{"key":"TSV_APP","ok":true}`, or `ok: false` with `error` `INVALID_NAME`, `RESERVED_NAME` or `NOT_SET` and a `message`. Running Quadlets are not changed.
+
+### Environment tag set
+
+Environment tag set (`env-set`) runs in the `root` realm, because only root may write `/var/lib/podshift/runtime.conf`, and takes `{"value": ...}`. The tag is checked with `is-valid-env-tag`, the same rule as `podshift env --set` (`^[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}$`). The current value is read with `load-podshift-conf-runtime`, as `podshift env` shows it. When `TSV_ENV` is already set, nothing is written, so the UI can set the tag only once; root can still change it with `sudo podshift env --set <tag>`. `update-podshift-conf` writes the file. `data` is `{"key":"TSV_ENV","ok":true}`, or `ok: false` with `error` `INVALID_TAG` or `ALREADY_SET` and a `message`.
 
 ## Journal
 

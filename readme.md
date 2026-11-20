@@ -90,7 +90,7 @@ PodShift takes a different path. The same Quadlet files run on bare metal, on a 
 
 ## Main Features
 
-- **Rootless Podman Server:** one RPM install turns a Fedora server into one that runs containers without root, under a dedicated user.
+- **Rootless Podman Server:** one RPM install turns a Fedora server into one that runs containers without `root`, under a dedicated user.
 - **Built-in Hardening:** the server is hardened during install, with no extra steps.
 - **Drop-In Quadlets:** drop container, network and volume files into a folder, and PodShift checks them and installs them as services that start at boot.
 - **Server Health Check:** `podshift health-check` checks the whole server and gives a fix for each problem.

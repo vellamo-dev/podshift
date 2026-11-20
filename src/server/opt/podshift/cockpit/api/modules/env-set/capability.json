@@ -1,0 +1,25 @@
+{
+  "action": "env-set",
+  "name": "Environment tag set",
+  "description": "Sets the environment tag TSV_ENV once, while it is unset, with the same tag rule as podshift env --set.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "value": { "type": "string", "maxLength": 256 }
+    },
+    "required": ["value"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "key": { "type": "string", "const": "TSV_ENV" },
+      "ok": { "type": "boolean" },
+      "error": { "type": "string", "enum": ["INVALID_TAG", "ALREADY_SET"] },
+      "message": { "type": "string" }
+    },
+    "required": ["key", "ok"],
+    "additionalProperties": false
+  }
+}

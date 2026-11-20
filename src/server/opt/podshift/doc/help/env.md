@@ -1,7 +1,7 @@
 # env
 Shows or sets the environment tag of this server, `TSV_ENV`, for example `dev` or `prod`.
 
-The tag is kept in `/var/lib/podshift/runtime.conf`. Only root may set it.
+The tag is kept in `/var/lib/podshift/runtime.conf`. Only root may set it. `podshift config` refuses `TSV_ENV`, so this is the only way to set it.
 
 ## Usage:
 
