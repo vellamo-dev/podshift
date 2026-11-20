@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.21.1
+Version: 0.21.3
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,18 @@ wait
 
 
 %changelog
+* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.3
+- Tools: precheck shows the hardware, the cloud-init state and a hint about user data
+- Tools: precheck reads the cloud name from cloud-init's local files first
+- Tests: precheck-unit covers the hardware, the cloud-init states, the cloud name sources and the user data hint
+- Docs: precheck readme explains the hardware, cloud and cloud-init facts
+
+* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.2
+- Tools: precheck reads the edition from the identity package, shows the cloud and fixes the login user count
+- Tools: precheck adds a Hetzner line to the DHCP warning and fixes the skipped check count
+- Tests: precheck-unit covers the edition, the cloud, the Hetzner DHCP line and the counts
+- Docs: precheck readme explains the edition and cloud facts
+
 * Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.1
 - Tools: precheck accepts the cloud-init connection name with a space and says when the IPv4 address comes from DHCP
 - Tests: precheck-unit covers the connection name with a space, the default nmconnection file and the DHCP wording

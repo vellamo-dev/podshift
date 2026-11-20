@@ -12,12 +12,38 @@ setup() {
     SCRIPT="${REPO}/utils/portable/precheck.sh"
     source "${HERE}/precheck-make-root.sh"
     ROOT="${BATS_TEST_TMPDIR}/root"
-    unset STUB_UID STUB_RPM STUB_DNF_PODMAN STUB_DNF_PODSHIFT STUB_DNF_INSTALL STUB_SELINUX STUB_TARGET STUB_DOCKER STUB_PORTS STUB_NET STUB_BASH_VERSION STUB_ROUTE STUB_ROUTE6 STUB_IPV4 STUB_IPV6 STUB_NM_CONN STUB_NM_METHOD STUB_NM_ACTIVE STUB_NETWORKD_ACTIVE SUDO_USER
+    unset STUB_UID STUB_RPM STUB_DNF_PODMAN STUB_DNF_PODSHIFT STUB_DNF_INSTALL STUB_SELINUX STUB_TARGET STUB_DOCKER STUB_PORTS STUB_NET STUB_BASH_VERSION STUB_ROUTE STUB_ROUTE6 STUB_IPV4 STUB_IPV6 STUB_NM_CONN STUB_NM_METHOD STUB_NM_ACTIVE STUB_NETWORKD_ACTIVE STUB_RPM_IDENTITY STUB_CLOUD_NAME STUB_CLOUD_ZONE STUB_CLOUD_FAIL SUDO_USER
     export STUB_USER=ivor
 }
 
 run_check() {
     run env PATH="${HERE}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --plain "$@"
+}
+
+# Fake DMI: dmi <vendor> <product>.
+dmi() {
+    mkdir -p "${ROOT}/sys/class/dmi/id"
+    printf '%s\n' "$1" >"${ROOT}/sys/class/dmi/id/sys_vendor"
+    printf '%s\n' "$2" >"${ROOT}/sys/class/dmi/id/product_name"
+}
+
+# Fake cloud-init layout of a Hetzner server where cloud-init ran with user data.
+hetzner_layout() {
+    mkdir -p "${ROOT}/etc/cloud" "${ROOT}/run/cloud-init" "${ROOT}/var/lib/cloud/instance"
+    printf 'hetzner\n' >"${ROOT}/run/cloud-init/cloud-id"
+    : >"${ROOT}/run/cloud-init/enabled"
+    printf '{\n "ds": {\n  "meta_data": {\n   "availability-zone": "hel1-dc2"\n  }\n },\n "v1": {\n  "_beta_keys": [\n   "subplatform"\n  ],\n  "availability_zone": "hel1-dc2",\n  "cloud_name": "hetzner",\n  "region": "eu-central"\n }\n}\n' >"${ROOT}/run/cloud-init/instance-data.json"
+    : >"${ROOT}/var/lib/cloud/instance/boot-finished"
+    printf '#cloud-config\n' >"${ROOT}/var/lib/cloud/instance/user-data.txt"
+    dmi Hetzner vServer
+}
+
+# Runs the check with the stubs but without the cloud-init stub.
+run_without_cloud_init() {
+    mkdir -p "${BATS_TEST_TMPDIR}/stubs"
+    cp "${HERE}"/stubs/* "${BATS_TEST_TMPDIR}/stubs/"
+    rm -f "${BATS_TEST_TMPDIR}/stubs/cloud-init"
+    run env PATH="${BATS_TEST_TMPDIR}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" "$@"
 }
 
 @test "Fedora 45 server, not root: Ready, dry run skipped" {
@@ -56,7 +82,7 @@ run_check() {
     run_check
     echo "${output}"
     [ "${status}" -eq 1 ]
-    [[ "${output}" == *"⚠ Edition [desktop, VARIANT_ID=workstation]"* ]]
+    [[ "${output}" == *"⚠ Edition [workstation, desktop edition]"* ]]
     [[ "${output}" == *"multi-purpose desktop machine"* ]]
     [[ "${output}" == *"Result: Ready with warnings (exit 1)"* ]]
 }
@@ -256,6 +282,7 @@ run_check() {
     [[ "${output}" == *"Checking network                warnings   IPv4 address comes from DHCP"* ]]
     [[ "${output}" == *"may change on reboot"* ]]
     [[ "${output}" == *"podshift network examine"* ]]
+    [[ "${output}" != *"Hetzner's metadata"* ]]
 }
 
 @test "Network: only systemd-networkd active is a warning" {
@@ -424,6 +451,285 @@ run_check() {
         and .system.global_ipv4 == "192.0.2.10"
         and .system.network_default_conn_file == false
         and ([.checks[] | select(.section == "Checking network")] | length) == 5' >/dev/null
+}
+
+@test "Edition: basic identity package shows none, no VARIANT_ID needed" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    export STUB_RPM_IDENTITY=basic
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Edition          none (basic identity)"* ]]
+    [[ "${output}" == *"✔ Edition [none (basic identity)]"* ]]
+    [[ "${output}" == *"Cloud            none detected"* ]]
+}
+
+@test "Edition: workstation identity package is a desktop warning" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    export STUB_RPM_IDENTITY=workstation
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"Edition          workstation"* ]]
+    [[ "${output}" == *"⚠ Edition [workstation, desktop edition]"* ]]
+}
+
+@test "Edition: identity package wins over VARIANT_ID" {
+    precheck-make-root "${ROOT}" fedora 45 workstation "Fedora Linux"
+    export STUB_RPM_IDENTITY=server
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"✔ Edition [server]"* ]]
+}
+
+@test "Edition: no identity package and no VARIANT_ID shows not set" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Edition          not set"* ]]
+    [[ "${output}" == *"✔ Edition [not set]"* ]]
+}
+
+@test "Cloud: cloud-init names Hetzner with its zone" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    export STUB_CLOUD_NAME=hetzner STUB_CLOUD_ZONE=hel1-dc2
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Virtualisation   kvm"*"Cloud            hetzner [hel1-dc2]"* ]]
+}
+
+@test "Cloud: cloud-init without a zone shows the name only" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    export STUB_CLOUD_NAME=aws
+    run_check
+    [[ "${output}" == *"Cloud            aws"$'\n'* ]]
+}
+
+@test "Cloud: failing cloud-init falls back to hc-utils" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    export STUB_CLOUD_FAIL=1 STUB_RPM="hc-utils=0.0.9-1.fc44"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Cloud            hetzner [hc-utils]"* ]]
+}
+
+@test "Cloud: no cloud-init and no hc-utils shows none detected, no crash" {
+    if [ -x /usr/bin/cloud-init ] || [ -x /bin/cloud-init ]; then skip "a real cloud-init is on PATH"; fi
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    mkdir -p "${BATS_TEST_TMPDIR}/stubs"
+    cp "${HERE}"/stubs/* "${BATS_TEST_TMPDIR}/stubs/"
+    rm -f "${BATS_TEST_TMPDIR}/stubs/cloud-init"
+    run env PATH="${BATS_TEST_TMPDIR}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --plain
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Cloud            none detected"* ]]
+}
+
+@test "Cloud: no cloud-init but hc-utils installed means Hetzner" {
+    if [ -x /usr/bin/cloud-init ] || [ -x /bin/cloud-init ]; then skip "a real cloud-init is on PATH"; fi
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    mkdir -p "${BATS_TEST_TMPDIR}/stubs"
+    cp "${HERE}"/stubs/* "${BATS_TEST_TMPDIR}/stubs/"
+    rm -f "${BATS_TEST_TMPDIR}/stubs/cloud-init"
+    run env PATH="${BATS_TEST_TMPDIR}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" STUB_RPM="hc-utils=0.0.9-1.fc44" bash "${SCRIPT}" --plain
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Cloud            hetzner [hc-utils]"* ]]
+}
+
+@test "Network: DHCP on Hetzner adds the metadata line" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    export STUB_CLOUD_NAME=hetzner STUB_CLOUD_ZONE=hel1-dc2 STUB_NM_METHOD=auto
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"⚠ IPv4 address comes from DHCP"* ]]
+    [[ "${output}" == *"podshift network examine shows how to pin it."$'\n'"            Hetzner's metadata sets IPv4 by DHCP on its servers."* ]]
+}
+
+@test "Login users: 0, 1 and 2 are counted with the right plural" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    run_check
+    [[ "${output}" == *"✔ One person uses this machine [1 login user: ivor]"* ]]
+    printf 'root:x:0:0:root:/root:/bin/bash\nnobody:x:65534:65534:Nobody:/:/usr/sbin/nologin\n' >"${ROOT}/etc/passwd"
+    run_check
+    echo "${output}"
+    [[ "${output}" == *"✔ One person uses this machine [0 login users]"* ]]
+    printf 'ivor:x:1000:1000:Ivor:/home/ivor:/bin/bash\nanna:x:1001:1001:Anna:/home/anna:/bin/bash\n' >>"${ROOT}/etc/passwd"
+    run_check
+    [[ "${output}" == *"⚠ One person uses this machine [2 login users: ivor anna]"* ]]
+}
+
+@test "Skipped checks: 1 check, 2 checks" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    run_check
+    [[ "${output}" == *"2 checks skipped. Run with sudo for the full check."* ]]
+    export STUB_UID=0 SUDO_USER=ghost
+    run_check
+    echo "${output}"
+    [[ "${output}" == *"○ SSH key for ghost [home folder not found]"* ]]
+    [[ "${output}" == *"1 check skipped. Run with sudo for the full check."* ]]
+}
+
+@test "--json has the edition and cloud keys" {
+    command -v jq >/dev/null || skip "jq not installed"
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    export STUB_RPM_IDENTITY=basic STUB_CLOUD_NAME=hetzner STUB_CLOUD_ZONE=hel1-dc2
+    run env PATH="${HERE}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --json
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '.system.edition == "unknown"
+        and .system.edition_name == "basic"
+        and .system.edition_source == "identity-package"
+        and .system.cloud_name == "hetzner"
+        and .system.cloud_zone == "hel1-dc2"
+        and .system.cloud_source == "cloud-init"' >/dev/null
+}
+
+@test "--json edition from os-release, cloud from hc-utils" {
+    command -v jq >/dev/null || skip "jq not installed"
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_CLOUD_FAIL=1 STUB_RPM="hc-utils=0.0.9-1.fc44"
+    run env PATH="${HERE}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --json
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '.system.edition == "server"
+        and .system.edition_name == "server"
+        and .system.edition_source == "os-release"
+        and .system.cloud_name == "hetzner"
+        and .system.cloud_zone == ""
+        and .system.cloud_source == "hc-utils"' >/dev/null
+}
+
+@test "Cloud-init: Hetzner layout, cloud-id, ran, user data hint does not change the result" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    hetzner_layout
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Virtualisation   kvm"$'\n'"        Hardware         Hetzner vServer"$'\n'"        Cloud            hetzner [hel1-dc2]"$'\n'"        Cloud-init       ran, user data present"* ]]
+    [[ "${output}" == *"ℹ Cloud-init user data [present]"$'\n'"            This server has cloud-init user data, which runs again when the server is rebuilt."* ]]
+    [[ "${output}" == *"✔ Checking security and clashes   passed"* ]]
+    [[ "${output}" == *"Result: Ready (exit 0)"* ]]
+}
+
+@test "Cloud-init: workstation layout, not installed, Intel NUC, no hint" {
+    if [ -x /usr/bin/cloud-init ] || [ -x /bin/cloud-init ]; then skip "a real cloud-init is on PATH"; fi
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    dmi "Intel(R) Client Systems" "NUC12WSHi5"
+    run_without_cloud_init --plain
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Hardware         Intel(R) Client Systems NUC12WSHi5"* ]]
+    [[ "${output}" == *"Cloud            none detected"* ]]
+    [[ "${output}" == *"Cloud-init       not installed"* ]]
+    [[ "${output}" != *"Cloud-init user data"* ]]
+}
+
+@test "Cloud-init: cloud-init.disabled in /etc/cloud shows disabled" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    hetzner_layout
+    touch "${ROOT}/etc/cloud/cloud-init.disabled"
+    run_check
+    [[ "${output}" == *"Cloud-init       disabled, user data present"* ]]
+}
+
+@test "Cloud-init: /run/cloud-init/disabled shows disabled" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    mkdir -p "${ROOT}/run/cloud-init"
+    touch "${ROOT}/run/cloud-init/disabled"
+    run_check
+    echo "${output}"
+    [[ "${output}" == *"Cloud-init       disabled"$'\n'* ]]
+}
+
+@test "Cloud-init: enabled but boot not finished shows not run yet" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    mkdir -p "${ROOT}/run/cloud-init"
+    touch "${ROOT}/run/cloud-init/enabled"
+    run_check
+    echo "${output}"
+    [[ "${output}" == *"Cloud-init       enabled, not run yet"$'\n'* ]]
+}
+
+@test "Cloud-init: installed without markers, empty user data gives no hint" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    mkdir -p "${ROOT}/var/lib/cloud/instance"
+    : >"${ROOT}/var/lib/cloud/instance/user-data.txt"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Cloud-init       installed, not enabled"$'\n'* ]]
+    [[ "${output}" != *"Cloud-init user data"* ]]
+}
+
+@test "Hardware: firmware placeholders are skipped" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    dmi "To Be Filled By O.E.M." "Default string"
+    run_check
+    [[ "${output}" == *"Hardware         unknown"* ]]
+    dmi "  ASRock  " "System Product Name"
+    run_check
+    echo "${output}"
+    [[ "${output}" == *"Hardware         ASRock"$'\n'* ]]
+    dmi "System manufacturer" "X570 AORUS"
+    run_check
+    [[ "${output}" == *"Hardware         X570 AORUS"$'\n'* ]]
+}
+
+@test "Hardware: no DMI files shows unknown" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    run_check
+    [[ "${output}" == *"Hardware         unknown"* ]]
+}
+
+@test "Cloud: cloud-id beats cloud-init query" {
+    command -v jq >/dev/null || skip "jq not installed"
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    hetzner_layout
+    rm -f "${ROOT}/run/cloud-init/instance-data.json"
+    export STUB_CLOUD_NAME=aws STUB_CLOUD_ZONE=eu-west-1a
+    run env PATH="${HERE}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --json
+    echo "${output}"
+    printf '%s' "${output}" | jq -e '.system.cloud_name == "hetzner" and .system.cloud_source == "cloud-id"' >/dev/null
+}
+
+@test "Cloud: instance-data.json beats cloud-init query when there is no cloud-id" {
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    hetzner_layout
+    rm -f "${ROOT}/run/cloud-init/cloud-id"
+    export STUB_CLOUD_NAME=aws STUB_CLOUD_ZONE=eu-west-1a
+    run_check
+    echo "${output}"
+    [[ "${output}" == *"Cloud            hetzner [hel1-dc2]"* ]]
+}
+
+@test "--json has the hardware and cloud-init keys" {
+    command -v jq >/dev/null || skip "jq not installed"
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    hetzner_layout
+    run env PATH="${HERE}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --json
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '.system.hardware_vendor == "Hetzner"
+        and .system.hardware_product == "vServer"
+        and .system.cloud_name == "hetzner"
+        and .system.cloud_zone == "hel1-dc2"
+        and .system.cloud_source == "cloud-id"
+        and .system.cloud_init_state == "ran"
+        and .system.cloud_init_user_data == true
+        and ([.checks[] | select(.name == "Cloud-init user data" and .status == "info")] | length) == 1' >/dev/null
+}
+
+@test "--json cloud-init not installed has user data false" {
+    command -v jq >/dev/null || skip "jq not installed"
+    if [ -x /usr/bin/cloud-init ] || [ -x /bin/cloud-init ]; then skip "a real cloud-init is on PATH"; fi
+    precheck-make-root "${ROOT}" fedora 45 "" "Fedora Linux"
+    run_without_cloud_init --json
+    printf '%s' "${output}" | jq -e '.system.cloud_init_state == "not_installed" and .system.cloud_init_user_data == false and .system.hardware_vendor == ""' >/dev/null
 }
 
 @test "--json is valid JSON with the result" {

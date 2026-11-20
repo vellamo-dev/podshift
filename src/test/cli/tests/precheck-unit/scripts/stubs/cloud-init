@@ -1,0 +1,11 @@
+#!/bin/sh
+# Fake cloud-init query. STUB_CLOUD_NAME and STUB_CLOUD_ZONE are the answers, empty gives null.
+# STUB_CLOUD_FAIL=1 makes the query fail, as without access to the instance data.
+[ "${STUB_CLOUD_FAIL:-0}" = "1" ] && { echo "cloud-init: error" >&2; exit 1; }
+for last; do :; done
+case "${last}" in
+    v1.cloud_name) echo "${STUB_CLOUD_NAME:-null}" ;;
+    v1.availability_zone) echo "${STUB_CLOUD_ZONE:-null}" ;;
+    *) exit 1 ;;
+esac
+exit 0

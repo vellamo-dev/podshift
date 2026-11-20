@@ -37,7 +37,7 @@ fi
 #   PRECHECK_ROOT, when set by the tests, becomes PC_ROOT and stands in for / when files are read.
 # @exitcode: 0 always.
 pc_init() {
-    PC_VERSION="0.2.1"
+    PC_VERSION="0.2.3"
     # Same as PODSHIFT_MIN_FEDORA in src/server/opt/podshift/conf/main.conf.
     PC_MIN_FEDORA=45
     # Podman 6 is planned for Fedora 45 (docs/design-choices.md, Fedora Server).
@@ -394,11 +394,170 @@ pc_rpm_version() {
     rpm -q --qf '%{VERSION}-%{RELEASE}\n' "$1" 2>/dev/null | grep -v 'not installed' | head -n 1
 }
 
+# @description: Prints the edition named by the installed fedora-release-identity-* package.
+# @details:
+#   Fedora installs exactly one identity package, for example fedora-release-identity-basic on
+#   cloud images or fedora-release-identity-workstation on Workstation. Only rpm is asked.
+# @stdout: the part after fedora-release-identity-, for example basic or workstation, or nothing.
+# @exitcode: 0 always.
+pc_identity_edition() {
+    local name
+    pc_has rpm || return 0
+    name="$(rpm -qa --qf '%{NAME}\n' 'fedora-release-identity-*' 2>/dev/null | head -n 1)"
+    case "${name}" in
+        fedora-release-identity-?*) printf '%s' "${name#fedora-release-identity-}" ;;
+    esac
+    return 0
+}
+
+# @description: Prints one value from cloud-init query, with a time limit and no input.
+# @details:
+#   Only called when cloud-init is on PATH, so a missing command never starts a
+#   command-not-found prompt. cloud-init reads its local instance data and makes no network call.
+# @arg: $1 - the key, for example v1.cloud_name.
+# @stdout: the value, or nothing when the query fails or gives null.
+# @exitcode: 0 always.
+pc_cloud_query() {
+    local value
+    value="$(pc_run 10 cloud-init query "$1" </dev/null 2>/dev/null | head -n 1)"
+    case "${value}" in
+        null | None | none | unknown) value="" ;;
+    esac
+    printf '%s' "${value}"
+}
+
+# @description: Prints one string value from the v1 block of cloud-init's instance-data.json.
+# @details:
+#   Reads /run/cloud-init/instance-data.json (0644) under PC_ROOT with awk, no jq. cloud-init
+#   writes it one key per line, so only lines directly inside "v1" count, by counting the
+#   brackets. A null, a number or a missing key gives nothing.
+# @arg: $1 - the key inside v1, for example cloud_name.
+# @stdout: the value, or nothing.
+# @exitcode: 0 always.
+pc_instance_data_v1() {
+    local file
+    file="$(pc_path /run/cloud-init/instance-data.json)"
+    [ -r "${file}" ] || return 0
+    awk -v key="$1" '
+        !inv { if ($0 ~ /"v1"[[:space:]]*:[[:space:]]*\{[[:space:]]*$/) { inv = 1; depth = 1 }; next }
+        {
+            if (depth == 1 && match($0, "^[[:space:]]*\"" key "\"[[:space:]]*:[[:space:]]*\"[^\"]*\"")) {
+                s = substr($0, RSTART, RLENGTH)
+                sub(/^[^:]*:[[:space:]]*"/, "", s)
+                sub(/"$/, "", s)
+                print s
+                exit
+            }
+            line = $0; o = gsub(/[[{]/, "", line)
+            line = $0; c = gsub(/[]}]/, "", line)
+            depth += o - c
+            if (depth <= 0) exit
+        }' "${file}" 2>/dev/null
+}
+
+# @description: Prints a cloud name or zone, or nothing for an empty, none, unknown or null value.
+# @arg: $1 - the value.
+# @stdout: the value without spaces at either end, or nothing.
+# @exitcode: 0 always.
+pc_cloud_value() {
+    local v
+    v="$(printf '%s' "$1" | head -n 1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    case "${v}" in
+        null | None | none | unknown) v="" ;;
+    esac
+    printf '%s' "${v}"
+}
+
+# @description: Gathers the cloud name and zone into SYS_CLOUD_*, from local cloud-init files or hc-utils.
+# @details:
+#   Name order: /run/cloud-init/cloud-id, v1.cloud_name in instance-data.json, cloud-init query
+#   (only when cloud-init is installed), then an installed hc-utils package, which means Hetzner.
+#   Zone: v1.availability_zone in instance-data.json, then cloud-init query.
+#   No metadata service is queried over the network.
+# @exitcode: 0 always.
+pc_gather_cloud() {
+    local file
+    SYS_CLOUD_NAME=""
+    SYS_CLOUD_ZONE=""
+    SYS_CLOUD_SOURCE="none"
+    file="$(pc_path /run/cloud-init/cloud-id)"
+    if [ -r "${file}" ]; then
+        SYS_CLOUD_NAME="$(pc_cloud_value "$(cat "${file}" 2>/dev/null)")"
+        [ -n "${SYS_CLOUD_NAME}" ] && SYS_CLOUD_SOURCE="cloud-id"
+    fi
+    if [ -z "${SYS_CLOUD_NAME}" ]; then
+        SYS_CLOUD_NAME="$(pc_cloud_value "$(pc_instance_data_v1 cloud_name)")"
+        [ -n "${SYS_CLOUD_NAME}" ] && SYS_CLOUD_SOURCE="instance-data"
+    fi
+    if [ -z "${SYS_CLOUD_NAME}" ] && pc_has cloud-init; then
+        SYS_CLOUD_NAME="$(pc_cloud_value "$(pc_cloud_query v1.cloud_name)")"
+        [ -n "${SYS_CLOUD_NAME}" ] && SYS_CLOUD_SOURCE="cloud-init"
+    fi
+    if [ -n "${SYS_CLOUD_NAME}" ]; then
+        SYS_CLOUD_ZONE="$(pc_cloud_value "$(pc_instance_data_v1 availability_zone)")"
+        if [ -z "${SYS_CLOUD_ZONE}" ] && pc_has cloud-init; then
+            SYS_CLOUD_ZONE="$(pc_cloud_value "$(pc_cloud_query v1.availability_zone)")"
+        fi
+    elif [ -n "$(pc_rpm_version hc-utils)" ]; then
+        SYS_CLOUD_NAME="hetzner"
+        SYS_CLOUD_SOURCE="hc-utils"
+    fi
+    return 0
+}
+
+# @description: Gathers the cloud-init state and whether user data exists into SYS_CI_*, without reading it.
+# @details:
+#   Installed means the cloud-init command, /etc/cloud or /run/cloud-init exists. Then, in order:
+#   disabled (/etc/cloud/cloud-init.disabled or /run/cloud-init/disabled), ran (boot-finished in
+#   /var/lib/cloud/instance), enabled (/run/cloud-init/enabled), otherwise installed.
+#   User data is a size test on /var/lib/cloud/instance/user-data.txt. When the folder cannot
+#   be searched, it is unknown.
+# @exitcode: 0 always.
+pc_gather_cloud_init() {
+    local inst
+    inst="$(pc_path /var/lib/cloud/instance)"
+    if ! pc_has cloud-init && [ ! -d "$(pc_path /etc/cloud)" ] && [ ! -d "$(pc_path /run/cloud-init)" ]; then
+        SYS_CI_STATE="not_installed"
+    elif [ -e "$(pc_path /etc/cloud/cloud-init.disabled)" ] || [ -e "$(pc_path /run/cloud-init/disabled)" ]; then
+        SYS_CI_STATE="disabled"
+    elif [ -e "${inst}/boot-finished" ]; then
+        SYS_CI_STATE="ran"
+    elif [ -e "$(pc_path /run/cloud-init/enabled)" ]; then
+        SYS_CI_STATE="enabled"
+    else
+        SYS_CI_STATE="installed"
+    fi
+    if [ -s "${inst}/user-data.txt" ]; then
+        SYS_CI_USER_DATA="true"
+    elif [ -e "${inst}/user-data.txt" ] || [ ! -d "${inst}" ] || [ -x "${inst}" ]; then
+        SYS_CI_USER_DATA="false"
+    else
+        SYS_CI_USER_DATA="unknown"
+    fi
+    return 0
+}
+
+# @description: Prints one DMI value from /sys/class/dmi/id, skipping firmware placeholders.
+# @arg: $1 - the file name, for example sys_vendor or product_name.
+# @stdout: the value without spaces at either end, or nothing.
+# @exitcode: 0 always.
+pc_dmi() {
+    local v low
+    v="$(head -n 1 "$(pc_path "/sys/class/dmi/id/$1")" 2>/dev/null | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    low="$(printf '%s' "${v}" | tr 'A-Z' 'a-z')"
+    case "${low}" in
+        "to be filled by o.e.m." | "default string" | "system manufacturer" | "system product name" | "not specified" | "not applicable" | "o.e.m." | "oem" | "none")
+            v="" ;;
+    esac
+    printf '%s' "${v}"
+}
+
 # @description: Gathers all system facts into the SYS_* variables.
 # @details:
 #   Covers the OS, edition, install type, kernel, architecture, both Bash versions, CPUs,
-#   memory, disk, virtualisation, hostname, IP addresses, the network, SELinux, root, /usr,
-#   the installed PodShift and Podman versions and whether the PodShift Copr repo is enabled.
+#   memory, disk, virtualisation, hardware, the cloud and cloud-init, hostname, IP addresses,
+#   the network, SELinux, root, /usr, the installed PodShift and Podman versions and whether
+#   the PodShift Copr repo is enabled.
 # @exitcode: 0 always.
 pc_gather() {
     local uid
@@ -449,22 +608,37 @@ pc_gather() {
     if [ -z "${SYS_PODMAN_VERSION}" ] && pc_has podman; then
         SYS_PODMAN_VERSION="$(podman --version 2>/dev/null | awk '{ print $NF }')"
     fi
-    # Edition from VARIANT_ID, then the boot target.
+    # Edition from the fedora-release-identity-* package, then VARIANT_ID, then the boot target.
+    SYS_EDITION_NAME="$(pc_identity_edition)"
+    SYS_EDITION_SOURCE="identity-package"
+    if [ -z "${SYS_EDITION_NAME}" ]; then
+        SYS_EDITION_NAME="${SYS_OS_VARIANT_ID}"
+        SYS_EDITION_SOURCE="os-release"
+    fi
+    [ -n "${SYS_EDITION_NAME}" ] || SYS_EDITION_SOURCE="none"
+    case "${SYS_EDITION_NAME}" in
+        basic) SYS_EDITION_TEXT="none (basic identity)" ;;
+        "") SYS_EDITION_TEXT="not set" ;;
+        *) SYS_EDITION_TEXT="${SYS_EDITION_NAME}" ;;
+    esac
     SYS_EDITION="unknown"
     SYS_EDITION_WHY=""
-    case "${SYS_OS_VARIANT_ID}" in
+    case "${SYS_EDITION_NAME}" in
         server | cloud | container | iot | coreos)
-            SYS_EDITION="server"; SYS_EDITION_WHY="VARIANT_ID=${SYS_OS_VARIANT_ID}" ;;
+            SYS_EDITION="server" ;;
         workstation | kde | budgie | cinnamon | cosmic | i3 | lxde | lxqt | mate | miracle | sway | xfce | silverblue | kinoite | sericea | onyx)
-            SYS_EDITION="desktop"; SYS_EDITION_WHY="VARIANT_ID=${SYS_OS_VARIANT_ID}" ;;
+            SYS_EDITION="desktop"; SYS_EDITION_WHY="desktop edition" ;;
     esac
     SYS_DEFAULT_TARGET=""
     pc_has systemctl && SYS_DEFAULT_TARGET="$(systemctl get-default 2>/dev/null)"
     if [ "${SYS_EDITION}" != "desktop" ] && [ "${SYS_DEFAULT_TARGET}" = "graphical.target" ]; then
         SYS_EDITION="desktop"
-        SYS_EDITION_WHY="${SYS_EDITION_WHY:+${SYS_EDITION_WHY}, }boots to a graphical desktop"
+        SYS_EDITION_WHY="boots to a graphical desktop"
     fi
-    [ "${SYS_EDITION}" = "unknown" ] && [ -n "${SYS_OS_VARIANT_ID}" ] && SYS_EDITION_WHY="VARIANT_ID=${SYS_OS_VARIANT_ID}"
+    pc_gather_cloud
+    pc_gather_cloud_init
+    SYS_HW_VENDOR="$(pc_dmi sys_vendor)"
+    SYS_HW_PRODUCT="$(pc_dmi product_name)"
     # Install type: same rule as is-install-type-desktop (the flag file exists).
     if [ -e "$(pc_path "${PC_DESKTOP_FLAG}")" ]; then SYS_INSTALL_TYPE="desktop"; else SYS_INSTALL_TYPE="server"; fi
     if [ -f "$(pc_path "${PC_COPR_REPO_FILE}")" ] && grep -q '^enabled *= *1' "$(pc_path "${PC_COPR_REPO_FILE}")" 2>/dev/null; then
@@ -580,7 +754,7 @@ pc_fact() {
 # @stdout: the System header and one line per fact, or nothing in JSON mode.
 # @exitcode: 0 always.
 pc_show_system() {
-    local who edition itype nwb conn method ipv4
+    local who edition itype nwb conn method ipv4 cloud hw ci
     if [ "${PC_MODE}" = "interactive" ]; then
         pc_say '\n\033[1;35m▶\033[0m \033[1;36m%s\033[0m\n' "System"
     else
@@ -588,8 +762,23 @@ pc_show_system() {
     fi
     pc_say '\n    Facts:\n'
     if [ "${SYS_IS_ROOT}" = "yes" ]; then who="root"; else who="${SYS_USER:-unknown} (not root, some checks are skipped)"; fi
-    edition="${SYS_EDITION}"
-    [ -n "${SYS_EDITION_WHY}" ] && edition="${edition} (${SYS_EDITION_WHY})"
+    edition="${SYS_EDITION_TEXT}"
+    [ "${SYS_EDITION_WHY}" = "boots to a graphical desktop" ] && edition="${edition} (${SYS_EDITION_WHY})"
+    cloud="${SYS_CLOUD_NAME:-none detected}"
+    if [ -n "${SYS_CLOUD_ZONE}" ]; then
+        cloud="${cloud} [${SYS_CLOUD_ZONE}]"
+    elif [ "${SYS_CLOUD_SOURCE}" = "hc-utils" ]; then
+        cloud="${cloud} [hc-utils]"
+    fi
+    hw="${SYS_HW_VENDOR}${SYS_HW_VENDOR:+${SYS_HW_PRODUCT:+ }}${SYS_HW_PRODUCT}"
+    [ -n "${hw}" ] || hw="unknown"
+    case "${SYS_CI_STATE}" in
+        not_installed) ci="not installed" ;;
+        enabled) ci="enabled, not run yet" ;;
+        installed) ci="installed, not enabled" ;;
+        *) ci="${SYS_CI_STATE}" ;;
+    esac
+    [ "${SYS_CI_USER_DATA}" = "true" ] && ci="${ci}, user data present"
     itype="${SYS_INSTALL_TYPE}"
     if [ "${SYS_INSTALL_TYPE}" = "desktop" ]; then itype="desktop (${PC_DESKTOP_FLAG} exists)"; else itype="server (no ${PC_DESKTOP_FLAG})"; fi
     case "${SYS_NW_BACKEND}" in
@@ -622,6 +811,9 @@ pc_show_system() {
     pc_fact "Memory" "${SYS_MEMORY}"
     pc_fact "Disk free" "${SYS_DISK}"
     pc_fact "Virtualisation" "${SYS_VIRT}"
+    pc_fact "Hardware" "${hw}"
+    pc_fact "Cloud" "${cloud}"
+    pc_fact "Cloud-init" "${ci}"
     pc_fact "Hostname" "${SYS_HOSTNAME:-unknown}"
     pc_fact "IP addresses" "${SYS_IPS}"
     pc_fact "Network backend" "${nwb}"
@@ -710,12 +902,12 @@ Why Fedora: ${PC_DOCS}/design-choices.md#fedora-server"
     if [ "${SYS_INSTALL_TYPE}" = "desktop" ]; then
         pc_result ok "Install type" "desktop install, ${PC_DESKTOP_FLAG} exists" "PodShift leaves the firewall, fail2ban and SSH login rules as they are."
     elif [ "${SYS_EDITION}" = "desktop" ]; then
-        pc_result warn "Edition" "desktop, ${SYS_EDITION_WHY}" "This looks like a multi-purpose desktop machine. A server install hardens the whole machine:
+        pc_result warn "Edition" "${SYS_EDITION_TEXT}, ${SYS_EDITION_WHY}" "This looks like a multi-purpose desktop machine. A server install hardens the whole machine:
 it enables firewalld and fail2ban, sets SSH to key-only login, and opens ports 80, 81, 443, 1022 and 9090.
 A dedicated server or VM is recommended. To try PodShift on this computer, create ${PC_DESKTOP_FLAG}
 before you install, and the firewall, fail2ban and SSH login rules stay as they are."
     else
-        pc_result ok "Edition" "${SYS_EDITION}${SYS_EDITION_WHY:+, ${SYS_EDITION_WHY}}"
+        pc_result ok "Edition" "${SYS_EDITION_TEXT}"
     fi
     pc_section_end
 }
@@ -775,10 +967,13 @@ pc_nw_route_text() {
 # @stdout: the section with its check lines and Verdict, or nothing in JSON mode.
 # @exitcode: 0 if there is no blocker, 1 when there is no default route.
 pc_check_network() {
-    local route noroute pin file
+    local route noroute pin file hetzner
     pc_section "Checking network"
     noroute="no"
     route="$(pc_nw_route_text)"
+    hetzner=""
+    [ "${SYS_CLOUD_NAME}" = "hetzner" ] && hetzner="
+Hetzner's metadata sets IPv4 by DHCP on its servers."
     if [ "${SYS_NW_HAS_IP}" != "yes" ]; then
         pc_result warn "Default route" "cannot check, ip not found" "PodShift reads the default route and its addresses with ip, from the iproute package."
     elif [ -z "${SYS_NW_ROUTE_DEV}" ]; then
@@ -805,7 +1000,7 @@ After the install, check the network with podshift network examine." ;;
             pc_result ok "IPv4 address is set manually" ;;
         auto)
             pc_result warn "IPv4 address comes from DHCP" "" "The IP address may change on reboot, and PodShift's TSV_NW1 to TSV_NW8 follow it.
-After the install, podshift network examine shows how to pin it." ;;
+After the install, podshift network examine shows how to pin it.${hetzner}" ;;
         unknown)
             if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
                 pc_result info "IPv4 method" "cannot check, nmcli not found"
@@ -1042,7 +1237,11 @@ After installing, sudo podshift selinux enforce prints the steps to turn it back
     if [ "${n}" -gt 1 ]; then
         pc_result warn "One person uses this machine" "${n} login users: ${users% }" "Several people log in here, so it looks like a shared machine. A dedicated server or VM is recommended."
     else
-        pc_result ok "One person uses this machine" "${n} login user${users:+: ${users% }}"
+        if [ "${n}" -eq 1 ]; then
+            pc_result ok "One person uses this machine" "1 login user: ${users% }"
+        else
+            pc_result ok "One person uses this machine" "0 login users"
+        fi
     fi
     who="$(awk -F: -v id="${PC_USER_UID}" '$3 == id && $1 != "podshift" { print $1 }' "$(pc_path /etc/passwd)" 2>/dev/null | head -n 1)"
     if [ -n "${who}" ]; then
@@ -1062,6 +1261,9 @@ After installing, sudo podshift selinux enforce prints the steps to turn it back
             pc_result warn "SSH key for ${user}" "no ${home}/.ssh/authorized_keys" "A server install sets SSH to key-only login. Add your SSH key before you install,
 or password logins over SSH stop working."
         fi
+    fi
+    if [ "${SYS_CI_USER_DATA}" = "true" ]; then
+        pc_result info "Cloud-init user data" "present" "This server has cloud-init user data, which runs again when the server is rebuilt."
     fi
     pc_section_end
 }
@@ -1161,7 +1363,11 @@ pc_summary() {
     fi
     pc_say '        %s\n' "${msg}"
     if [ "${PC_SKIPPED}" -gt 0 ] && [ "${rc}" != "2" ] && [ "${rc}" != "3" ]; then
-        pc_say '        %s check(s) skipped. Run with sudo for the full check.\n' "${PC_SKIPPED}"
+        if [ "${PC_SKIPPED}" -eq 1 ]; then
+            pc_say '        1 check skipped. Run with sudo for the full check.\n'
+        else
+            pc_say '        %s checks skipped. Run with sudo for the full check.\n' "${PC_SKIPPED}"
+        fi
     fi
 }
 
@@ -1170,7 +1376,12 @@ pc_summary() {
 # @stdout: the JSON document.
 # @exitcode: 0 always.
 pc_print_json() {
-    local rc i sep
+    local rc i sep ud
+    # Bash 3.2 cannot parse a case inside $( ), so the JSON value is set here.
+    case "${SYS_CI_USER_DATA}" in
+        true | false) ud="${SYS_CI_USER_DATA}" ;;
+        *) ud="null" ;;
+    esac
     rc="$1"
     printf '{\n  "tool": "podshift-precheck",\n  "version": %s,\n' "$(pc_json_str "${PC_VERSION}")"
     printf '  "result": %s,\n  "exit_code": %s,\n  "as_root": %s,\n  "skipped": %s,\n' \
@@ -1182,6 +1393,8 @@ pc_print_json() {
     printf '    "os_version": %s,\n' "$(pc_json_str "${SYS_OS_VERSION}")"
     printf '    "os_variant_id": %s,\n' "$(pc_json_str "${SYS_OS_VARIANT_ID}")"
     printf '    "edition": %s,\n' "$(pc_json_str "${SYS_EDITION}")"
+    printf '    "edition_name": %s,\n' "$(pc_json_str "${SYS_EDITION_NAME}")"
+    printf '    "edition_source": %s,\n' "$(pc_json_str "${SYS_EDITION_SOURCE}")"
     printf '    "install_type": %s,\n' "$(pc_json_str "${SYS_INSTALL_TYPE}")"
     printf '    "kernel": %s,\n' "$(pc_json_str "${SYS_KERNEL}")"
     printf '    "arch": %s,\n' "$(pc_json_str "${SYS_ARCH}")"
@@ -1191,6 +1404,13 @@ pc_print_json() {
     printf '    "memory": %s,\n' "$(pc_json_str "${SYS_MEMORY}")"
     printf '    "disk_free": %s,\n' "$(pc_json_str "${SYS_DISK}")"
     printf '    "virtualisation": %s,\n' "$(pc_json_str "${SYS_VIRT}")"
+    printf '    "hardware_vendor": %s,\n' "$(pc_json_str "${SYS_HW_VENDOR}")"
+    printf '    "hardware_product": %s,\n' "$(pc_json_str "${SYS_HW_PRODUCT}")"
+    printf '    "cloud_name": %s,\n' "$(pc_json_str "${SYS_CLOUD_NAME}")"
+    printf '    "cloud_zone": %s,\n' "$(pc_json_str "${SYS_CLOUD_ZONE}")"
+    printf '    "cloud_source": %s,\n' "$(pc_json_str "${SYS_CLOUD_SOURCE}")"
+    printf '    "cloud_init_state": %s,\n' "$(pc_json_str "${SYS_CI_STATE}")"
+    printf '    "cloud_init_user_data": %s,\n' "${ud}"
     printf '    "hostname": %s,\n' "$(pc_json_str "${SYS_HOSTNAME}")"
     printf '    "ip_addresses": %s,\n' "$(pc_json_str "${SYS_IPS}")"
     printf '    "network_backend": %s,\n' "$(pc_json_str "${SYS_NW_BACKEND}")"

@@ -46,7 +46,15 @@ If you'd rather read the script first, download it and run `bash precheck.sh`.
 
 ## What it checks
 
-**System facts** (shown first, no pass or fail): OS, edition, install type, kernel, architecture, Bash, CPUs, memory, free disk on `/`, `/var` and `/home`, virtualisation, hostname, IP addresses, the network (backend, active connection, IPv4 method, default route and global IPv4 on its device), SELinux, whether `/usr` is writable, who it runs as, the installed PodShift and Podman versions, and whether the PodShift Copr repo is enabled.
+**System facts** (shown first, no pass or fail): OS, edition, install type, kernel, architecture, Bash, CPUs, memory, free disk on `/`, `/var` and `/home`, virtualisation, hardware, cloud, cloud-init, hostname, IP addresses, the network (backend, active connection, IPv4 method, default route and global IPv4 on its device), SELinux, whether `/usr` is writable, who it runs as, the installed PodShift and Podman versions, and whether the PodShift Copr repo is enabled.
+
+The edition comes from the installed `fedora-release-identity-*` package, for example `workstation` or `server`. Cloud images have the `basic` identity, shown as `none (basic identity)`. Without `rpm` or the package, it falls back to `VARIANT_ID` in `/etc/os-release`, and without that it shows `not set`.
+
+The hardware is the vendor and product name from `/sys/class/dmi/id` (`sys_vendor` and `product_name`), for example `Hetzner vServer`. Firmware placeholders such as `To Be Filled By O.E.M.` or `Default string` are left out, and with nothing left it shows `unknown`.
+
+The cloud name comes from `/run/cloud-init/cloud-id`, then from `v1.cloud_name` in `/run/cloud-init/instance-data.json`, then from `cloud-init query`. The zone comes from `v1.availability_zone`, shown in brackets, for example `hetzner [hel1-dc2]`. `cloud-init` is only run when it is installed, with a time limit. Without an answer from any of these, an installed `hc-utils` package shows `hetzner [hc-utils]`. Otherwise it shows `none detected`. The check never asks a metadata service over the network.
+
+Cloud-init shows its state from local files only: `not installed` (no `cloud-init` command, `/etc/cloud` or `/run/cloud-init`), `disabled` (`/etc/cloud/cloud-init.disabled` or `/run/cloud-init/disabled`), `ran` (`/var/lib/cloud/instance/boot-finished`), `enabled, not run yet` (`/run/cloud-init/enabled`) or `installed, not enabled`. When `/var/lib/cloud/instance/user-data.txt` is not empty, it adds `user data present`. The user data itself is never read.
 
 **Checking OS**
 
@@ -64,7 +72,7 @@ PodShift reads its addresses through NetworkManager, so this section looks at th
 
 - There's a default route. No default route at all is a blocker, as in `podshift network check`. With only an IPv6 default route, this check passes and the IPv4 check below warns.
 - NetworkManager is active. If only `systemd-networkd` is active, or neither is, it's a warning: the install enables and starts NetworkManager, and the two can clash when both manage the network.
-- The IPv4 address is set manually (IPv4 method `manual` on the active connection). If it comes from DHCP (`auto`), that is a warning, because the address may change on reboot. After the install, `podshift network examine` shows how to pin it. If the method can't be read, for example without `nmcli` or an active connection, it's a note.
+- The IPv4 address is set manually (IPv4 method `manual` on the active connection). If it comes from DHCP (`auto`), that is a warning, because the address may change on reboot. After the install, `podshift network examine` shows how to pin it. On Hetzner, the warning adds that Hetzner's metadata sets IPv4 by DHCP on its servers. If the method can't be read, for example without `nmcli` or an active connection, it's a note.
 - The device of the default route has a global IPv4 address. None (IPv6 only) is a warning, because `TSV_NW1` to `TSV_NW8` are IPv4 addresses.
 - The connection name, as a note only. PodShift's default is `cloud-init-eth0` (`PODSHIFT_NW_INITIALIZER` and `PODSHIFT_NW_DEVICE`). It also matches when the active name is `cloud-init eth0` with a space, as cloud-init names it, or when `/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection` exists. PodShift finds its connection by that file name. With another name and no such file, PodShift falls back to the live addresses, and `podshift network set` can pin the right device after the install.
 
@@ -88,6 +96,7 @@ If `ip` is missing, the route check is a warning. If `nmcli` is missing, the met
 - Only one person logs in to the machine.
 - UID 300 is free for the `podshift` user.
 - For a server install: your user has an SSH key in `~/.ssh/authorized_keys`, because SSH becomes key-only.
+- A note, not a warning, when cloud-init user data is present: it runs again when the server is rebuilt.
 
 ## Read-only
 
@@ -101,7 +110,7 @@ When PodShift changes, keep these in sync at the top of the script (`pc_init`): 
 
 ## Testing
 
-For tests only, the environment variable `PRECHECK_ROOT` points the script at a folder that stands in for `/` when it reads files such as `/etc/os-release`, `/etc/passwd`, `/proc/meminfo`, `/proc/mounts`, `/run/ostree-booted` and `/etc/podshift-desktop`. Together with stub commands on `PATH` (`rpm`, `dnf`, `id`, `getenforce`, `systemctl`, `ss`, `curl`, `ip`, `nmcli`), this lets the checks run for any system without a VM:
+For tests only, the environment variable `PRECHECK_ROOT` points the script at a folder that stands in for `/` when it reads files such as `/etc/os-release`, `/etc/passwd`, `/proc/meminfo`, `/proc/mounts`, `/run/ostree-booted`, `/etc/podshift-desktop`, `/sys/class/dmi/id` and the cloud-init files in `/etc/cloud`, `/run/cloud-init` and `/var/lib/cloud/instance`. Together with stub commands on `PATH` (`rpm`, `dnf`, `id`, `getenforce`, `systemctl`, `ss`, `curl`, `ip`, `nmcli`, `cloud-init`), this lets the checks run for any system without a VM:
 
 ```bash
 PATH="src/test/cli/tests/precheck-unit/scripts/stubs:/usr/bin:/bin" PRECHECK_ROOT=/tmp/fake-fedora-45 bash utils/portable/precheck.sh --plain

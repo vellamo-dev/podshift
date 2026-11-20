@@ -1,5 +1,10 @@
 #!/bin/sh
 # rpm -q [--qf fmt] name: versions come from STUB_RPM="name=ver name=ver".
+# rpm -qa ... 'fedora-release-identity-*': STUB_RPM_IDENTITY, for example basic, empty for none.
+if [ "$1" = "-qa" ]; then
+    [ -n "${STUB_RPM_IDENTITY:-}" ] && echo "fedora-release-identity-${STUB_RPM_IDENTITY}"
+    exit 0
+fi
 for last; do :; done
 for pair in ${STUB_RPM:-}; do
     if [ "${pair%%=*}" = "${last}" ]; then echo "${pair#*=}"; exit 0; fi
