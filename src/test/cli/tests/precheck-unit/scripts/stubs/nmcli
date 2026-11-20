@@ -1,0 +1,10 @@
+#!/bin/sh
+# Fake nmcli. STUB_NM_CONN is the active connection, empty for none. STUB_NM_METHOD is its ipv4.method.
+case " $* " in
+    *" NAME "*)
+        c="${STUB_NM_CONN-cloud-init-eth0}"
+        [ -n "${c}" ] && echo "${c}"
+        echo lo ;;
+    *" ipv4.method "*) echo "ipv4.method:${STUB_NM_METHOD:-manual}" ;;
+esac
+exit 0

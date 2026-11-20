@@ -1,2 +1,19 @@
 #!/bin/sh
-echo "2: eth0    inet 192.0.2.10/24 brd 192.0.2.255 scope global eth0"
+# Fake ip. STUB_ROUTE and STUB_ROUTE6 are the default routes, empty for none.
+# STUB_IPV4 is the global IPv4 of eth0, empty for none. STUB_IPV6 adds a global IPv6.
+v4="${STUB_IPV4-192.0.2.10/24}"
+case " $* " in
+    *" route "*)
+        case " $* " in
+            *" -6 "*) r="${STUB_ROUTE6:-}" ;;
+            *) r="${STUB_ROUTE-default via 192.0.2.1 dev eth0 proto static metric 100}" ;;
+        esac
+        [ -n "${r}" ] && echo "${r}" ;;
+    *" addr "*)
+        [ -n "${v4}" ] && echo "2: eth0    inet ${v4} brd 192.0.2.255 scope global eth0"
+        case " $* " in
+            *" -4 "*) ;;
+            *) [ -n "${STUB_IPV6:-}" ] && echo "2: eth0    inet6 ${STUB_IPV6} scope global" ;;
+        esac ;;
+esac
+exit 0

@@ -12,7 +12,7 @@ setup() {
     SCRIPT="${REPO}/utils/portable/precheck.sh"
     source "${HERE}/precheck-make-root.sh"
     ROOT="${BATS_TEST_TMPDIR}/root"
-    unset STUB_UID STUB_RPM STUB_DNF_PODMAN STUB_DNF_PODSHIFT STUB_DNF_INSTALL STUB_SELINUX STUB_TARGET STUB_DOCKER STUB_PORTS STUB_NET STUB_BASH_VERSION SUDO_USER
+    unset STUB_UID STUB_RPM STUB_DNF_PODMAN STUB_DNF_PODSHIFT STUB_DNF_INSTALL STUB_SELINUX STUB_TARGET STUB_DOCKER STUB_PORTS STUB_NET STUB_BASH_VERSION STUB_ROUTE STUB_ROUTE6 STUB_IPV4 STUB_IPV6 STUB_NM_CONN STUB_NM_METHOD STUB_NM_ACTIVE STUB_NETWORKD_ACTIVE SUDO_USER
     export STUB_USER=ivor
 }
 
@@ -224,6 +224,155 @@ run_check() {
     [ "${status}" -eq 1 ]
     [[ "${output}" == *"⚠ SELinux is not enforcing [disabled]"* ]]
     [[ "${output}" == *"sudo podshift selinux enforce prints the steps"* ]]
+}
+
+@test "Network: NetworkManager, manual, route, IPv4 and default connection all pass" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Network backend  NetworkManager (active)"* ]]
+    [[ "${output}" == *"Connection       cloud-init-eth0 [initializer cloud-init, device eth0]"* ]]
+    [[ "${output}" == *"IPv4 method      manual"* ]]
+    [[ "${output}" == *"Default route    eth0 via 192.0.2.1"* ]]
+    [[ "${output}" == *"Global IPv4      192.0.2.10"* ]]
+    [[ "${output}" == *"✔ Default route [eth0 via 192.0.2.1]"* ]]
+    [[ "${output}" == *"✔ NetworkManager is active"* ]]
+    [[ "${output}" == *"✔ IPv4 method is manual"* ]]
+    [[ "${output}" == *"✔ IPv4 address on eth0 [192.0.2.10]"* ]]
+    [[ "${output}" == *"✔ Connection name [cloud-init-eth0, PodShift's default]"* ]]
+    [[ "${output}" == *"✔ Checking network                passed"* ]]
+}
+
+@test "Network: DHCP is a warning with the examine hint" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_NM_METHOD=auto
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"IPv4 method      auto (DHCP)"* ]]
+    [[ "${output}" == *"⚠ IPv4 method is manual [auto (DHCP)]"* ]]
+    [[ "${output}" == *"may change on reboot"* ]]
+    [[ "${output}" == *"podshift network examine"* ]]
+}
+
+@test "Network: only systemd-networkd active is a warning" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_NM_ACTIVE=0 STUB_NETWORKD_ACTIVE=1 STUB_NM_CONN=""
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"Network backend  systemd-networkd (active)"* ]]
+    [[ "${output}" == *"⚠ NetworkManager is active [no, only systemd-networkd is active]"* ]]
+    [[ "${output}" == *"can clash"* ]]
+    [[ "${output}" == *"ℹ IPv4 method is manual [unknown, no active NetworkManager connection]"* ]]
+}
+
+@test "Network: no backend active is a warning" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_NM_ACTIVE=0 STUB_NM_CONN=""
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"Network backend  none"* ]]
+    [[ "${output}" == *"⚠ NetworkManager is active [no, neither NetworkManager nor systemd-networkd is active]"* ]]
+    [[ "${output}" == *"ℹ Connection name [no active connection]"* ]]
+}
+
+@test "Network: no default route is a blocker and stops the checks" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_ROUTE=""
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 2 ]
+    [[ "${output}" == *"Default route    none"* ]]
+    [[ "${output}" == *"✘ Default route [none found]"* ]]
+    [[ "${output}" == *"ℹ IPv4 address on the default device [cannot check, no default route]"* ]]
+    [[ "${output}" == *"Checking network                blocked    Default route"* ]]
+    [[ "${output}" == *"Checking packages               not run"* ]]
+    [[ "${output}" == *"Result: Not possible (exit 2)"* ]]
+}
+
+@test "Network: IPv6 only is a warning, not a blocker" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_ROUTE="" STUB_ROUTE6="default via fe80::1 dev eth0 proto ra metric 100" STUB_IPV4="" STUB_IPV6="2001:db8::10/64"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"Default route    eth0 via fe80::1 (IPv6 only)"* ]]
+    [[ "${output}" == *"Global IPv4      none"* ]]
+    [[ "${output}" == *"✔ Default route [eth0 via fe80::1 (IPv6 only)]"* ]]
+    [[ "${output}" == *"⚠ IPv4 address on eth0 [none, IPv6 only]"* ]]
+    [[ "${output}" == *"TSV_NW1 to TSV_NW8 hold IPv4 addresses"* ]]
+}
+
+@test "Network: another connection name is a note only" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_NM_CONN="Wired connection 1"
+    run_check
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Connection       Wired connection 1"* ]]
+    [[ "${output}" != *"Wired connection 1 [initializer"* ]]
+    [[ "${output}" == *"ℹ Connection name [Wired connection 1, PodShift's default is cloud-init-eth0]"* ]]
+    [[ "${output}" == *"podshift network set can pin the right device"* ]]
+    [[ "${output}" == *"✔ Checking network                passed"* ]]
+}
+
+@test "Network: NetworkManager initializer is split from the device" {
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_NM_CONN="NetworkManager-enp1s0"
+    run_check
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Connection       NetworkManager-enp1s0 [initializer NetworkManager, device enp1s0]"* ]]
+}
+
+@test "Network: missing nmcli degrades to notes, no crash" {
+    if [ -x /usr/bin/nmcli ] || [ -x /bin/nmcli ]; then skip "a real nmcli is on PATH"; fi
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    mkdir -p "${BATS_TEST_TMPDIR}/stubs"
+    cp "${HERE}"/stubs/* "${BATS_TEST_TMPDIR}/stubs/"
+    rm -f "${BATS_TEST_TMPDIR}/stubs/nmcli"
+    run env PATH="${BATS_TEST_TMPDIR}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --plain
+    echo "${output}"
+    [ "${status}" -eq 0 ]
+    [[ "${output}" == *"Connection       unknown (nmcli not found)"* ]]
+    [[ "${output}" == *"IPv4 method      unknown"* ]]
+    [[ "${output}" == *"ℹ IPv4 method is manual [cannot check, nmcli not found]"* ]]
+    [[ "${output}" == *"ℹ Connection name [cannot check, nmcli not found]"* ]]
+}
+
+@test "Network: missing ip is a warning, no crash" {
+    if [ -x /usr/bin/ip ] || [ -x /bin/ip ]; then skip "a real ip is on PATH"; fi
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    mkdir -p "${BATS_TEST_TMPDIR}/stubs"
+    cp "${HERE}"/stubs/* "${BATS_TEST_TMPDIR}/stubs/"
+    rm -f "${BATS_TEST_TMPDIR}/stubs/ip"
+    run env PATH="${BATS_TEST_TMPDIR}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --plain
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    [[ "${output}" == *"Default route    unknown (ip not found)"* ]]
+    [[ "${output}" == *"⚠ Default route [cannot check, ip not found]"* ]]
+    [[ "${output}" == *"ℹ IPv4 address on the default device [cannot check, ip not found]"* ]]
+}
+
+@test "--json has the network facts" {
+    command -v jq >/dev/null || skip "jq not installed"
+    precheck-make-root "${ROOT}" fedora 45 server "Fedora Linux"
+    export STUB_NM_METHOD=auto
+    run env PATH="${HERE}/stubs:/usr/bin:/bin" PRECHECK_ROOT="${ROOT}" bash "${SCRIPT}" --json
+    echo "${output}"
+    [ "${status}" -eq 1 ]
+    printf '%s' "${output}" | jq -e '.system.network_backend == "NetworkManager"
+        and .system.network_connection == "cloud-init-eth0"
+        and .system.network_initializer == "cloud-init"
+        and .system.network_connection_device == "eth0"
+        and .system.ipv4_method == "auto"
+        and .system.default_route_device == "eth0"
+        and .system.default_route_gateway == "192.0.2.1"
+        and .system.default_route_family == "ipv4"
+        and .system.global_ipv4 == "192.0.2.10"
+        and ([.checks[] | select(.section == "Checking network")] | length) == 5' >/dev/null
 }
 
 @test "--json is valid JSON with the result" {

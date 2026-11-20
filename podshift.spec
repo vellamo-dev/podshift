@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.20.0
+Version: 0.21.0
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -62,6 +62,11 @@ wait
 
 
 %changelog
+* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.0
+- Tools: precheck reports the network setup and checks the route, NetworkManager, DHCP and IPv4
+- Tests: precheck-unit covers the network checks
+- Docs: precheck readme lists the network checks
+
 * Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.20.0
 - Install: first server install switches SELinux from permissive to enforcing
 - Tools: precheck says the install switches SELinux on servers

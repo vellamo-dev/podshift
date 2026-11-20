@@ -37,7 +37,7 @@ fi
 #   PRECHECK_ROOT, when set by the tests, becomes PC_ROOT and stands in for / when files are read.
 # @exitcode: 0 always.
 pc_init() {
-    PC_VERSION="0.1.0"
+    PC_VERSION="0.2.0"
     # Same as PODSHIFT_MIN_FEDORA in src/server/opt/podshift/conf/main.conf.
     PC_MIN_FEDORA=45
     # Podman 6 is planned for Fedora 45 (docs/design-choices.md, Fedora Server).
@@ -57,6 +57,9 @@ pc_init() {
     PC_DESKTOP_FLAG="/etc/podshift-desktop"
     # Ports PodShift opens (src/server/etc/firewalld/services/podshift.xml).
     PC_PORTS="80 81 443 1022"
+    # PodShift's default connection: PODSHIFT_NW_INITIALIZER-PODSHIFT_NW_DEVICE
+    # in src/server/opt/podshift/assets/tpl/runtime.conf.
+    PC_NW_DEFAULT_CONN="cloud-init-eth0"
     # User and groups from PodShift's sysusers.d file.
     PC_USER_UID=300
     PC_DOCS="https://github.com/vellamo-dev/podshift/blob/main/docs"
@@ -80,7 +83,7 @@ pc_init() {
     PC_S_STATUS=()
     PC_S_PROBLEM=()
     PC_CUR=-1
-    PC_SECTIONS_PLANNED="Checking OS|Checking PodShift|Checking packages|Checking security and clashes"
+    PC_SECTIONS_PLANNED="Checking OS|Checking PodShift|Checking network|Checking packages|Checking security and clashes"
     PC_SKIPPED=0
     PC_INSTALLED="no"
 }
@@ -390,8 +393,8 @@ pc_rpm_version() {
 # @description: Gathers all system facts into the SYS_* variables.
 # @details:
 #   Covers the OS, edition, install type, kernel, architecture, both Bash versions, CPUs,
-#   memory, disk, virtualisation, hostname, IP addresses, SELinux, root, /usr, the installed
-#   PodShift and Podman versions and whether the PodShift Copr repo is enabled.
+#   memory, disk, virtualisation, hostname, IP addresses, the network, SELinux, root, /usr,
+#   the installed PodShift and Podman versions and whether the PodShift Copr repo is enabled.
 # @exitcode: 0 always.
 pc_gather() {
     local uid
@@ -426,6 +429,7 @@ pc_gather() {
     fi
     SYS_HOSTNAME="$(uname -n 2>/dev/null)"
     SYS_IPS="$(pc_get_ips)"
+    pc_gather_network
     if pc_has getenforce; then
         SYS_SELINUX="$(getenforce 2>/dev/null | tr 'A-Z' 'a-z')"
     elif [ -r "$(pc_path /sys/fs/selinux/enforce)" ]; then
@@ -466,6 +470,93 @@ pc_gather() {
     fi
 }
 
+# @description: Prints the network backend, the same way as PodShift's nw-backend.
+# @stdout: NetworkManager, systemd-networkd, none, or unknown when systemctl is missing.
+# @exitcode: 0 always.
+pc_nw_backend() {
+    if ! pc_has systemctl; then
+        printf 'unknown'
+    elif systemctl is-active --quiet NetworkManager 2>/dev/null; then
+        printf 'NetworkManager'
+    elif systemctl is-active --quiet systemd-networkd 2>/dev/null; then
+        printf 'systemd-networkd'
+    else
+        printf 'none'
+    fi
+}
+
+# @description: Prints the device and gateway of the first default route, IPv4 or with -6 IPv6.
+# @details:
+#   Reads ip route show default and picks the words after dev and via, so a route without a
+#   gateway still gives its device. PodShift's nw-device and nw-gateway read the same IPv4 route.
+# @arg: $1 - optional -6 for the IPv6 default route.
+# @stdout: the device and the gateway separated by a space, the device alone, or nothing.
+# @exitcode: 0 always.
+pc_nw_route() {
+    pc_has ip || return 0
+    # shellcheck disable=SC2086
+    pc_run 10 ip ${1:-} route show default 2>/dev/null \
+        | awk 'NR == 1 { d = ""; g = ""; for (i = 1; i < NF; i++) { if ($i == "dev") d = $(i + 1); if ($i == "via") g = $(i + 1) } if (d != "") print d (g != "" ? " " g : ""); exit }'
+}
+
+# @description: Prints the global IPv4 addresses of one device.
+# @arg: $1 - the device, for example eth0.
+# @stdout: the addresses, comma separated, or nothing.
+# @exitcode: 0 always.
+pc_nw_ipv4() {
+    [ -n "$1" ] && pc_has ip || return 0
+    pc_run 10 ip -4 -o addr show scope global dev "$1" 2>/dev/null \
+        | awk '$3 == "inet" { sub(/\/.*/, "", $4); printf "%s%s", (n++ ? ", " : ""), $4 }'
+}
+
+# @description: Gathers the network facts into the SYS_NW_* variables, only reading.
+# @details:
+#   Mirrors PodShift's nw-backend, nw-connection, nw-mode and nw-device. The connection is the
+#   first active nmcli connection that is not lo. A name of the form <initializer>-<device>,
+#   with cloud-init, NetworkManager or systemd-networkd as the initializer, is split into its
+#   parts. Without an IPv4 default route, the IPv6 one is read, to tell IPv6 only from no route.
+#   A missing nmcli or ip leaves the matching facts empty or unknown.
+# @exitcode: 0 always.
+pc_gather_network() {
+    local route init
+    SYS_NW_BACKEND="$(pc_nw_backend)"
+    SYS_NW_HAS_NMCLI="no"
+    pc_has nmcli && SYS_NW_HAS_NMCLI="yes"
+    SYS_NW_HAS_IP="no"
+    pc_has ip && SYS_NW_HAS_IP="yes"
+    SYS_NW_CONN=""
+    SYS_NW_INITIALIZER=""
+    SYS_NW_CONN_DEVICE=""
+    SYS_NW_METHOD="unknown"
+    if [ "${SYS_NW_HAS_NMCLI}" = "yes" ]; then
+        SYS_NW_CONN="$(pc_run 15 nmcli -t -f NAME connection show --active 2>/dev/null | grep -v '^lo$' | head -n 1)"
+        if [ -n "${SYS_NW_CONN}" ]; then
+            SYS_NW_METHOD="$(pc_run 15 nmcli -t -f ipv4.method connection show "${SYS_NW_CONN}" 2>/dev/null | head -n 1 | cut -d: -f2-)"
+            [ -n "${SYS_NW_METHOD}" ] || SYS_NW_METHOD="unknown"
+        fi
+    fi
+    for init in cloud-init NetworkManager systemd-networkd; do
+        case "${SYS_NW_CONN}" in
+            "${init}"-?*)
+                SYS_NW_INITIALIZER="${init}"
+                SYS_NW_CONN_DEVICE="${SYS_NW_CONN#"${init}"-}"
+                break ;;
+        esac
+    done
+    SYS_NW_ROUTE_FAMILY="ipv4"
+    route="$(pc_nw_route)"
+    if [ -z "${route}" ]; then
+        route="$(pc_nw_route -6)"
+        SYS_NW_ROUTE_FAMILY="ipv6"
+    fi
+    [ -n "${route}" ] || SYS_NW_ROUTE_FAMILY=""
+    SYS_NW_ROUTE_DEV="${route%% *}"
+    SYS_NW_GATEWAY=""
+    [ "${route}" != "${SYS_NW_ROUTE_DEV}" ] && SYS_NW_GATEWAY="${route#* }"
+    SYS_NW_IPV4="$(pc_nw_ipv4 "${SYS_NW_ROUTE_DEV}")"
+    return 0
+}
+
 # ---------- phase 2: show ----------
 
 # @description: Prints one line of the System block.
@@ -481,7 +572,7 @@ pc_fact() {
 # @stdout: the System header and one line per fact, or nothing in JSON mode.
 # @exitcode: 0 always.
 pc_show_system() {
-    local who edition itype
+    local who edition itype nwb conn method ipv4
     if [ "${PC_MODE}" = "interactive" ]; then
         pc_say '\n\033[1;35m▶\033[0m \033[1;36m%s\033[0m\n' "System"
     else
@@ -493,6 +584,26 @@ pc_show_system() {
     [ -n "${SYS_EDITION_WHY}" ] && edition="${edition} (${SYS_EDITION_WHY})"
     itype="${SYS_INSTALL_TYPE}"
     if [ "${SYS_INSTALL_TYPE}" = "desktop" ]; then itype="desktop (${PC_DESKTOP_FLAG} exists)"; else itype="server (no ${PC_DESKTOP_FLAG})"; fi
+    case "${SYS_NW_BACKEND}" in
+        NetworkManager | systemd-networkd) nwb="${SYS_NW_BACKEND} (active)" ;;
+        unknown) nwb="unknown (systemctl not found)" ;;
+        *) nwb="${SYS_NW_BACKEND}" ;;
+    esac
+    if [ -n "${SYS_NW_INITIALIZER}" ]; then
+        conn="${SYS_NW_CONN} [initializer ${SYS_NW_INITIALIZER}, device ${SYS_NW_CONN_DEVICE}]"
+    elif [ -n "${SYS_NW_CONN}" ]; then
+        conn="${SYS_NW_CONN}"
+    elif [ "${SYS_NW_HAS_NMCLI}" = "yes" ]; then
+        conn="none"
+    else
+        conn="unknown (nmcli not found)"
+    fi
+    case "${SYS_NW_METHOD}" in
+        auto) method="auto (DHCP)" ;;
+        *) method="${SYS_NW_METHOD}" ;;
+    esac
+    ipv4="${SYS_NW_IPV4:-none}"
+    [ "${SYS_NW_HAS_IP}" = "yes" ] || ipv4="unknown (ip not found)"
     pc_fact "OS" "${SYS_OS_NAME}"
     pc_fact "Edition" "${edition}"
     pc_fact "Install type" "${itype}"
@@ -505,6 +616,11 @@ pc_show_system() {
     pc_fact "Virtualisation" "${SYS_VIRT}"
     pc_fact "Hostname" "${SYS_HOSTNAME:-unknown}"
     pc_fact "IP addresses" "${SYS_IPS}"
+    pc_fact "Network backend" "${nwb}"
+    pc_fact "Connection" "${conn}"
+    pc_fact "IPv4 method" "${method}"
+    pc_fact "Default route" "$(pc_nw_route_text)"
+    pc_fact "Global IPv4" "${ipv4}"
     pc_fact "SELinux" "${SYS_SELINUX}"
     pc_fact "/usr" "${SYS_USR_STATE}"
     pc_fact "Running as" "${who}"
@@ -624,6 +740,100 @@ pc_check_podshift() {
     pc_result info "Health of this install" "run: sudo podshift health-check"
     pc_section_end
     return 1
+}
+
+# @description: Prints the default route for the System block and the network check.
+# @stdout: for example eth0 via 192.0.2.1, eth0 via fe80::1 (IPv6 only), none, or unknown when ip is missing.
+# @exitcode: 0 always.
+pc_nw_route_text() {
+    if [ "${SYS_NW_HAS_IP}" != "yes" ]; then
+        printf 'unknown (ip not found)'
+    elif [ -z "${SYS_NW_ROUTE_DEV}" ]; then
+        printf 'none'
+    else
+        printf '%s%s' "${SYS_NW_ROUTE_DEV}" "${SYS_NW_GATEWAY:+ via ${SYS_NW_GATEWAY}}"
+        [ "${SYS_NW_ROUTE_FAMILY}" = "ipv6" ] && printf ' (IPv6 only)'
+    fi
+    return 0
+}
+
+# @description: Runs the Checking network section: route, NetworkManager, IPv4 method, IPv4 and connection.
+# @details:
+#   Follows podshift network check: no default route at all is a blocker, and DHCP is a warning.
+#   All checks are shown before the Verdict, so a blocker comes with the rest of the picture.
+#   The connection name is only a note: PodShift's default is PODSHIFT_NW_INITIALIZER and
+#   PODSHIFT_NW_DEVICE from runtime.conf, joined with a dash.
+# @stdout: the section with its check lines and Verdict, or nothing in JSON mode.
+# @exitcode: 0 if there is no blocker, 1 when there is no default route.
+pc_check_network() {
+    local route noroute pin
+    pc_section "Checking network"
+    noroute="no"
+    route="$(pc_nw_route_text)"
+    if [ "${SYS_NW_HAS_IP}" != "yes" ]; then
+        pc_result warn "Default route" "cannot check, ip not found" "PodShift reads the default route and its addresses with ip, from the iproute package."
+    elif [ -z "${SYS_NW_ROUTE_DEV}" ]; then
+        noroute="yes"
+        pc_result block "Default route" "none found" "The machine may have no path to the internet, so dnf cannot download PodShift.
+podshift network check treats this as a failure. Fix the network first."
+    else
+        pc_result ok "Default route" "${route}"
+    fi
+    case "${SYS_NW_BACKEND}" in
+        NetworkManager)
+            pc_result ok "NetworkManager is active" ;;
+        systemd-networkd)
+            pc_result warn "NetworkManager is active" "no, only systemd-networkd is active" "PodShift reads its IP addresses with nmcli, and the install enables and starts NetworkManager.
+NetworkManager and systemd-networkd can clash when both manage the network." ;;
+        none)
+            pc_result warn "NetworkManager is active" "no, neither NetworkManager nor systemd-networkd is active" "PodShift reads its IP addresses with nmcli, and the install enables and starts NetworkManager.
+After the install, check the network with podshift network examine." ;;
+        *)
+            pc_result warn "NetworkManager is active" "cannot check, systemctl not found" ;;
+    esac
+    case "${SYS_NW_METHOD}" in
+        manual)
+            pc_result ok "IPv4 method is manual" ;;
+        auto)
+            pc_result warn "IPv4 method is manual" "auto (DHCP)" "The IP address may change on reboot, and PodShift's TSV_NW1 to TSV_NW8 follow it.
+After the install, podshift network examine shows how to pin it." ;;
+        unknown)
+            if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
+                pc_result info "IPv4 method is manual" "cannot check, nmcli not found"
+            else
+                pc_result info "IPv4 method is manual" "unknown, no active NetworkManager connection"
+            fi
+            ;;
+        *)
+            pc_result info "IPv4 method is manual" "${SYS_NW_METHOD}" ;;
+    esac
+    if [ "${SYS_NW_HAS_IP}" != "yes" ]; then
+        pc_result info "IPv4 address on the default device" "cannot check, ip not found"
+    elif [ -z "${SYS_NW_ROUTE_DEV}" ]; then
+        pc_result info "IPv4 address on the default device" "cannot check, no default route"
+    elif [ -n "${SYS_NW_IPV4}" ]; then
+        pc_result ok "IPv4 address on ${SYS_NW_ROUTE_DEV}" "${SYS_NW_IPV4}"
+    else
+        pc_result warn "IPv4 address on ${SYS_NW_ROUTE_DEV}" "none, IPv6 only" "PodShift's TSV_NW1 to TSV_NW8 hold IPv4 addresses, so it finds none to use here.
+podshift network check also needs an IPv4 default route."
+    fi
+    pin="After the install, podshift network set can pin the right device."
+    if [ -z "${SYS_NW_CONN}" ]; then
+        if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
+            pc_result info "Connection name" "cannot check, nmcli not found" "PodShift's default is ${PC_NW_DEFAULT_CONN}. Without it, PodShift falls back to the live addresses.
+${pin}"
+        else
+            pc_result info "Connection name" "no active connection" "PodShift's default is ${PC_NW_DEFAULT_CONN}. Without it, PodShift falls back to the live addresses.
+${pin}"
+        fi
+    elif [ "${SYS_NW_CONN}" = "${PC_NW_DEFAULT_CONN}" ]; then
+        pc_result ok "Connection name" "${SYS_NW_CONN}, PodShift's default"
+    else
+        pc_result info "Connection name" "${SYS_NW_CONN}, PodShift's default is ${PC_NW_DEFAULT_CONN}" "PodShift falls back to the live addresses.
+${pin}"
+    fi
+    pc_section_end
+    [ "${noroute}" = "no" ]
 }
 
 # @description: Prints the HTTP status code a URL answers with.
@@ -971,6 +1181,15 @@ pc_print_json() {
     printf '    "virtualisation": %s,\n' "$(pc_json_str "${SYS_VIRT}")"
     printf '    "hostname": %s,\n' "$(pc_json_str "${SYS_HOSTNAME}")"
     printf '    "ip_addresses": %s,\n' "$(pc_json_str "${SYS_IPS}")"
+    printf '    "network_backend": %s,\n' "$(pc_json_str "${SYS_NW_BACKEND}")"
+    printf '    "network_connection": %s,\n' "$(pc_json_str "${SYS_NW_CONN}")"
+    printf '    "network_initializer": %s,\n' "$(pc_json_str "${SYS_NW_INITIALIZER}")"
+    printf '    "network_connection_device": %s,\n' "$(pc_json_str "${SYS_NW_CONN_DEVICE}")"
+    printf '    "ipv4_method": %s,\n' "$(pc_json_str "${SYS_NW_METHOD}")"
+    printf '    "default_route_device": %s,\n' "$(pc_json_str "${SYS_NW_ROUTE_DEV}")"
+    printf '    "default_route_gateway": %s,\n' "$(pc_json_str "${SYS_NW_GATEWAY}")"
+    printf '    "default_route_family": %s,\n' "$(pc_json_str "${SYS_NW_ROUTE_FAMILY}")"
+    printf '    "global_ipv4": %s,\n' "$(pc_json_str "${SYS_NW_IPV4}")"
     printf '    "selinux": %s,\n' "$(pc_json_str "${SYS_SELINUX}")"
     printf '    "usr": %s,\n' "$(pc_json_str "${SYS_USR_STATE}")"
     printf '    "podshift_version": %s,\n' "$(pc_json_str "${SYS_PODSHIFT_VERSION}")"
@@ -1047,7 +1266,7 @@ main() {
     pc_say 'PodShift precheck %s\n' "${PC_VERSION}"
     pc_show_system
     if pc_check_os && pc_check_podshift; then
-        pc_check_packages && pc_check_clashes
+        pc_check_network && pc_check_packages && pc_check_clashes
     fi
     rc="$(pc_result_code)"
     pc_summary "${rc}"
