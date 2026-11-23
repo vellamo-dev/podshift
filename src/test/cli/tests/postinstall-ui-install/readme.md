@@ -15,7 +15,7 @@ If `postinstall-ui-dev-mount` has bind-mounted the dev build at `/usr/local/shar
 
 ## Examples
 
-```sh
+```bash
 ./test ui-rpm-build postinstall-ui-install   # build the RPM, then install it in the VM
 ./test postinstall-ui-install                # install the RPM that is already built
 ```

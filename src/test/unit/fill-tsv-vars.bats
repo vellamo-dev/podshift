@@ -65,6 +65,7 @@ setup() {
 
 # Only TSV_ vars are touched; other vars and %-specifiers stay.
 @test "other variables and specifiers are untouched, even if set" {
+    local tsv_x
     printf 'A=${OTHER}\nB=$TSV_X\nC=%%h/%%n\nD=${TSV_X}\nE=${tsv_x}\n' > "${Q}"
     TSV_X=v
     OTHER=no
@@ -110,6 +111,7 @@ setup() {
 
 # No-op files keep their mtime (no needless rewrite).
 @test "a file with nothing to fill is not rewritten" {
+    local before
     printf 'A=${TSV_UNKNOWN}\n' > "${Q}"
     touch -t 200001010000 "${Q}"
     before="$(ls -l "${Q}")"

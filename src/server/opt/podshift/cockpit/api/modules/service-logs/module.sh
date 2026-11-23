@@ -15,44 +15,6 @@ if [[ -z "${DIR_02E57747DD81:-}" ]]; then
     readonly DIR_02E57747DD81
 fi
 
-# shellcheck source=../../fn/services/cockpit-services-args.sh
-declare -F cockpit-services-args >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-args.sh"
-# shellcheck source=../../fn/services/cockpit-services-loaded.sh
-declare -F cockpit-services-loaded >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-loaded.sh"
-# shellcheck source=../../fn/services/cockpit-services-log-entries.sh
-declare -F cockpit-services-log-entries >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-log-entries.sh"
-# shellcheck source=../../fn/services/cockpit-services-journal-error.sh
-declare -F cockpit-services-journal-error >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-journal-error.sh"
-# shellcheck source=../../fn/services/cockpit-services-journal-matches.sh
-declare -F cockpit-services-journal-matches >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-journal-matches.sh"
-
-# @description: Prints the UID of the podshift user.
-# @stdout: the UID, from id -u podshift.
-# @exitcode: the id exit code.
-cockpit-service-logs-uid() {
-    id -u podshift 2>/dev/null
-}
-
-# @description: Runs systemctl --user against the podshift user manager, from the root realm.
-# @arg: $1 - the podshift UID.
-# @arg: $@ - further systemctl arguments.
-# @stdout: systemctl stdout.
-# @exitcode: the systemctl exit code.
-cockpit-service-logs-systemctl() {
-    local uid
-    uid="${1}"
-    shift
-    systemctl --machine="${uid}@.host" --user "$@"
-}
-
-# @description: Runs journalctl as root, so the system journal with the user's entries is readable.
-# @arg: $@ - journalctl arguments.
-# @stdout: journalctl stdout.
-# @exitcode: the journalctl exit code.
-cockpit-service-logs-journalctl() {
-    journalctl "$@"
-}
-
 # @description: Prints the last 100 journal entries of one loaded user service of the podshift user.
 # @details:
 #   Runs in the root realm, because the podshift user cannot read the journal on Fedora. The unit
@@ -73,6 +35,22 @@ cockpit-service-logs-journalctl() {
 cockpit-module-service-logs() {
     local parsed unit uid raw out err_file err_text reason max result bytes
     local -a matches
+    # shellcheck source=../../fn/services/cockpit-services-args.sh
+    declare -F cockpit-services-args >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-args.sh"
+    # shellcheck source=./fn/cockpit-service-logs-uid.sh
+    declare -F cockpit-service-logs-uid >/dev/null || source "${DIR_02E57747DD81}/fn/cockpit-service-logs-uid.sh"
+    # shellcheck source=./fn/cockpit-service-logs-systemctl.sh
+    declare -F cockpit-service-logs-systemctl >/dev/null || source "${DIR_02E57747DD81}/fn/cockpit-service-logs-systemctl.sh"
+    # shellcheck source=../../fn/services/cockpit-services-loaded.sh
+    declare -F cockpit-services-loaded >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-loaded.sh"
+    # shellcheck source=../../fn/services/cockpit-services-journal-matches.sh
+    declare -F cockpit-services-journal-matches >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-journal-matches.sh"
+    # shellcheck source=./fn/cockpit-service-logs-journalctl.sh
+    declare -F cockpit-service-logs-journalctl >/dev/null || source "${DIR_02E57747DD81}/fn/cockpit-service-logs-journalctl.sh"
+    # shellcheck source=../../fn/services/cockpit-services-journal-error.sh
+    declare -F cockpit-services-journal-error >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-journal-error.sh"
+    # shellcheck source=../../fn/services/cockpit-services-log-entries.sh
+    declare -F cockpit-services-log-entries >/dev/null || source "${DIR_02E57747DD81}/../../fn/services/cockpit-services-log-entries.sh"
     parsed="$(cockpit-services-args "${1-}" no)" || return 1
     unit="${parsed%%$'\t'*}"
     uid="$(cockpit-service-logs-uid)" || return 1

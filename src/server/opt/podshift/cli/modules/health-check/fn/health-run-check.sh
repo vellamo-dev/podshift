@@ -11,12 +11,15 @@
 # @author: Vellamo.fyi
 
 # @description: Runs one check in its realm, for that check only.
+# @details:
+#   The check gets 10 seconds. In the podshift session the transient unit has its own name, so on a
+#   timeout that unit is stopped too; otherwise the check could keep running as a stray user unit.
 # @arg: $1 - route: direct (as the caller) or podshift-session (inside the podshift user's session).
 # @arg: $2 - path to the check script.
 # @stdout: the check's output line.
 # @exitcode: the check's exit code; 124 on timeout.
 health-run-check() {
-    local route script
+    local route script unit rc
     local -a limit
     route="${1}"
     script="${2}"
@@ -27,8 +30,15 @@ health-run-check() {
             "${limit[@]}" bash "${script}" 2>/dev/null </dev/null
             ;;
         podshift-session)
-            "${limit[@]}" systemd-run --machine=podshift@.host --user --wait --pipe --quiet --collect \
-                bash "${script}" 2>/dev/null </dev/null
+            # $$ is set on Bash 3.2, BASHPID is not.
+            unit="podshift-health-$$-${RANDOM}"
+            "${limit[@]}" systemd-run --unit="${unit}" --machine=podshift@.host --user --wait --pipe --quiet --collect \
+                bash "${script}" 2>/dev/null </dev/null && rc=0 || rc=$?
+            if [[ "${rc}" -eq 124 ]]; then
+                # timeout stopped only the systemd-run client; stop the unit as well.
+                timeout 2 systemctl --machine=podshift@.host --user stop "${unit}.service" >/dev/null 2>&1 || true
+            fi
+            return "${rc}"
             ;;
     esac
 }

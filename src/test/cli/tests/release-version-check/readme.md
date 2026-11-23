@@ -25,7 +25,7 @@ The other settings are in [tests.conf](../../shared/conf/tests.conf).
 
 ## Examples
 
-```sh
+```bash
 ./test release-version-check                                     # both packages
 TST_RELEASE_PACKAGES=podshift ./test release-version-check       # podshift only
 TST_RELEASE_PACKAGES=cockpit-podshift ./test release-version-check   # PodShift UI only

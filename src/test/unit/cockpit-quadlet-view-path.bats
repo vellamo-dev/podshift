@@ -20,6 +20,7 @@ setup() {
 }
 
 @test "every Quadlet kind of services-list is known" {
+    local kind
     for kind in container pod kube network volume image build; do
         run cockpit-quadlet-view-path "${QDIR}/a.${kind}" "${QDIR}"
         [ "${status}" -eq 0 ]

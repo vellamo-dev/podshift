@@ -21,7 +21,7 @@ The test creates a new VM through its `@needs`, so it replaces the current insta
 
 ## Examples
 
-```sh
+```bash
 ./test --plain precheck-vm-clean
 TST_PRECHECK_AS_ROOT=false ./test --plain precheck-vm-clean
 TST_PRECHECK_MODE=json ./test --plain precheck-vm-clean

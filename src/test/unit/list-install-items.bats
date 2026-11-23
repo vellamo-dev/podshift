@@ -36,15 +36,16 @@ make-item() {
     [ -z "${output}" ]
 }
 
-# Install order by type: network, volume, image, container.
-@test "files go by type: network, volume, image, container" {
+# Install order by type: network, volume, image, pod, container.
+@test "files go by type: network, volume, image, pod, container" {
     make-item a.container 202601010100
+    make-item e.pod 202601010050
     make-item b.image 202601010200
     make-item c.volume 202601010300
     make-item d.network 202601010400
     run list-install-items "${S}"
     [ "${status}" -eq 0 ]
-    [ "${output}" = "${S}/d.network"$'\n'"${S}/c.volume"$'\n'"${S}/b.image"$'\n'"${S}/a.container" ]
+    [ "${output}" = "${S}/d.network"$'\n'"${S}/c.volume"$'\n'"${S}/b.image"$'\n'"${S}/e.pod"$'\n'"${S}/a.container" ]
 }
 
 # Within a type, the oldest file installs first.

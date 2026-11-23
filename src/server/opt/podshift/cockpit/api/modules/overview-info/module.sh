@@ -15,82 +15,6 @@ if [[ -z "${DIR_E6A30C49D1F2:-}" ]]; then
     readonly DIR_E6A30C49D1F2
 fi
 
-# shellcheck source=../../fn/overview/cockpit-overview-os-name.sh
-declare -F cockpit-overview-os-name >/dev/null || source "${DIR_E6A30C49D1F2}/../../fn/overview/cockpit-overview-os-name.sh"
-# shellcheck source=../../fn/overview/cockpit-overview-info-rows.sh
-declare -F cockpit-overview-info-rows >/dev/null || source "${DIR_E6A30C49D1F2}/../../fn/overview/cockpit-overview-info-rows.sh"
-
-# @description: Prints the contents of /etc/os-release, if it can be read.
-# @stdout: os-release text, or nothing.
-# @exitcode: 0 always.
-cockpit-overview-info-os-release() {
-    cat /etc/os-release 2>/dev/null || true
-}
-
-# @description: Prints the installed Podman version.
-# @stdout: a version string, or nothing when Podman is missing.
-# @exitcode: 0 always.
-cockpit-overview-info-podman-version() {
-    local version
-    version="$(podman version --format '{{.Client.Version}}' 2>/dev/null || true)"
-    if [[ -z "${version}" ]]; then
-        version="$(rpm -q --qf '%{VERSION}' podman 2>/dev/null || true)"
-    fi
-    case "${version}" in
-        ''|*is\ not\ installed*)
-            return 0
-            ;;
-    esac
-    printf '%s\n' "${version}"
-}
-
-# @description: Prints the installed PodShift version.
-# @stdout: a version string, or nothing when it cannot be read.
-# @exitcode: 0 always.
-cockpit-overview-info-podshift-version() {
-    local version
-    # shellcheck source=../../../../fn/common/get-podshift-version.sh
-    declare -F get-podshift-version >/dev/null || source "${DIR_E6A30C49D1F2}/../../../../fn/common/get-podshift-version.sh"
-    version="$(get-podshift-version 2>/dev/null || true)"
-    [[ -n "${version}" ]] || return 0
-    printf '%s\n' "${version}"
-}
-
-# @description: Prints the installed Fail2Ban version.
-# @stdout: a version string, or nothing when Fail2Ban is missing.
-# @exitcode: 0 always.
-cockpit-overview-info-fail2ban-version() {
-    local version
-    version="$(rpm -q --qf '%{VERSION}' fail2ban 2>/dev/null || true)"
-    if [[ -z "${version}" || "${version}" == *"is not installed"* ]]; then
-        version="$(fail2ban-client version 2>/dev/null || true)"
-    fi
-    case "${version}" in
-        ''|*is\ not\ installed*)
-            return 0
-            ;;
-    esac
-    version="${version#Fail2Ban }"
-    version="${version#Fail2Ban v}"
-    version="${version#v}"
-    printf '%s\n' "${version}"
-}
-
-# @description: Prints the install type, desktop or server.
-# @details:
-#   Runs the check in a subshell, so the main configuration it loads stays out of this module.
-# @stdout: desktop or server.
-# @exitcode: 0 always.
-cockpit-overview-info-install-type() {
-    # shellcheck source=../../../../fn/utils/is-install-type-desktop.sh
-    declare -F is-install-type-desktop >/dev/null || source "${DIR_E6A30C49D1F2}/../../../../fn/utils/is-install-type-desktop.sh"
-    if (is-install-type-desktop); then
-        printf 'desktop\n'
-    else
-        printf 'server\n'
-    fi
-}
-
 # @description: Lists the OS, Podman, PodShift and Fail2Ban versions and the install type.
 # @details:
 #   The OS name comes from PRETTY_NAME in /etc/os-release. A missing package or file
@@ -99,6 +23,20 @@ cockpit-overview-info-install-type() {
 # @exitcode: 0 when the rows were written, 1 otherwise.
 cockpit-module-overview-info() {
     local values text
+    # shellcheck source=./fn/cockpit-overview-info-os-release.sh
+    declare -F cockpit-overview-info-os-release >/dev/null || source "${DIR_E6A30C49D1F2}/fn/cockpit-overview-info-os-release.sh"
+    # shellcheck source=../../fn/overview/cockpit-overview-os-name.sh
+    declare -F cockpit-overview-os-name >/dev/null || source "${DIR_E6A30C49D1F2}/../../fn/overview/cockpit-overview-os-name.sh"
+    # shellcheck source=./fn/cockpit-overview-info-podman-version.sh
+    declare -F cockpit-overview-info-podman-version >/dev/null || source "${DIR_E6A30C49D1F2}/fn/cockpit-overview-info-podman-version.sh"
+    # shellcheck source=./fn/cockpit-overview-info-podshift-version.sh
+    declare -F cockpit-overview-info-podshift-version >/dev/null || source "${DIR_E6A30C49D1F2}/fn/cockpit-overview-info-podshift-version.sh"
+    # shellcheck source=./fn/cockpit-overview-info-fail2ban-version.sh
+    declare -F cockpit-overview-info-fail2ban-version >/dev/null || source "${DIR_E6A30C49D1F2}/fn/cockpit-overview-info-fail2ban-version.sh"
+    # shellcheck source=./fn/cockpit-overview-info-install-type.sh
+    declare -F cockpit-overview-info-install-type >/dev/null || source "${DIR_E6A30C49D1F2}/fn/cockpit-overview-info-install-type.sh"
+    # shellcheck source=../../fn/overview/cockpit-overview-info-rows.sh
+    declare -F cockpit-overview-info-rows >/dev/null || source "${DIR_E6A30C49D1F2}/../../fn/overview/cockpit-overview-info-rows.sh"
     values="{}"
     _overview_info_put() {
         local id text

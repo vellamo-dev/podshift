@@ -1,11 +1,12 @@
 Name: podshift
-Version: 0.22.0
+Version: 0.26.0
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
 License: AGPL-3.0-or-later
 URL: https://github.com/vellamo-dev/podshift
-Requires: NetworkManager firewalld cockpit podman openssh-server policycoreutils-python-utils cockpit-selinux cockpit-podman cockpit-files pcp python3-pcp tree nano fail2ban shadow-utils unzip less glow jq
+Requires: podman NetworkManager firewalld openssh-server shadow-utils policycoreutils-python-utils fail2ban jq unzip
+Requires: cockpit cockpit-podman cockpit-selinux cockpit-files pcp python3-pcp tree nano less glow
 BuildArch: noarch
 BuildRequires: systemd-rpm-macros
 %global branch stable
@@ -62,130 +63,45 @@ wait
 
 
 %changelog
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.22.0
-- CLI: podshift config --unset removes a custom TSV_* key
-- CLI: custom key names must be TSV_ plus A-Z, 0-9 or _; names starting with TSV_NW or TSV_ENV are reserved
-- CLI: secret names (PASSWORD, TOKEN, API_KEY and similar) and known token formats in values are refused; values must not be empty or contain quotes, control characters or a trailing backslash
-- Config: new tsv-rules.conf lists the secret words and value formats
-- Config: tsv.conf is read as data by read-tsv-conf-lines instead of being sourced, so nothing in it is run; only TSV_NAME=value lines are used
-- Config: saving or removing a key rewrites tsv.conf in canonical form and drops other lines, with a note
-- CLI: podshift config refuses TSV_ENV for set and --unset, root included; set it with podshift env --set, and PODSHIFT_SYSTEM_CONFIG_KEYS no longer lists TSV_ENV
-- CLI: podshift update-self also updates cockpit-podshift in the same transaction when it is installed and in an enabled repository, skips it with a note otherwise, and never installs it
-- Cockpit API: new config-set, config-unset and env-set actions; overview-config rows have an editable flag and the data lists suggested environment tags
-- Tests: unit tests for the config rules, new unit-cli-config suite in quick, Cockpit API cases for the new actions
-- Docs: config help covers --unset, the name rules and secrets; API docs list the new actions
+* Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.26.0
+- Code improvements: Cockpit API args go on stdin, static module dispatch, faster lists with one systemctl call
+- Code improvements: drop bundle size and file count limits, health check timeouts stop their unit
+- Fixes: no double removal of a quadlet, drop-process skips vanished files and has no fallbacks, help pages
+- Syntax fixes: local variables, one function per file, bashdoc tags
+- Docs and tests: lint-local-variables, new bats tests, readme updates
+- Pods: .pod files and Pod= keys are refused, alone and in bundles, until pod support lands (see the roadmap)
+- Login shells: helpers and PODSHIFT_*/TSV_* variables load only for root, podshift and wheel members
+- podshift secret prints Saved, Replaced or Removed secret <name> instead of the Podman ID
+- One function per file: user service start, step printers and Cockpit module helpers split
+- Requires split into two lines; the portable precheck is smaller with the same output
+- Cockpit: the containers list skips CPU and memory when its 8 second budget runs short
+- CLI: podshift <command> --help shows that command's help instead of running it
+- CLI: podshift secret refuses names starting with -, so --help or a typo no longer saves a secret
+- CLI: shortcuts such as update and containers refuse arguments instead of ignoring them
+- CLI: podshift --help nw and --help hc show the network and health-check pages, like nw --help
+- Packaging: /home/podshift is owned by podshift with mode 0700, so bash history and hcl work
+- Tests: Cockpit API cases split into per-area files; a Mac stat stub no longer makes a drop case flaky
+- Refactor: podshift network is split into one function per file, with new bats tests; behaviour unchanged
+- Drop: a file whose time is in the future gets the time now instead of waiting until the clock catches up
+- CLI: podshift nw check tests the hosts in PODSHIFT_REGISTRIES, the same as the registries health check
+- CLI: help pages shown with glow always wrap at 80 columns, also on the first call before glow has a config
 
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.6
-- Health check: new Environment tag check warns when TSV_ENV is not set
-- Tests: unit tests cover the Environment tag check when TSV_ENV is set and when it is not
+* Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.25.3
+- Cockpit API: quadlet-install-log shows systemd and Podman lines only for units PodShift started or removed
+- Cockpit API: a unit counts when a "queued start of <unit>" line or a podshift-qdl-remove line names it
+- Cockpit API: quadlet-install-log leaves out the user manager start, libpod scopes and the example units
+- Removal: remove-item logs "stopping <unit>" for each unit, so the install log also shows the units of an app
+- Cockpit API: containers-list, volumes-list and networks-list add quadlet {name, app} for installed Quadlet items
+- Cockpit API: name is the installed Quadlet file and app its bundle; the UI uses it to offer Uninstall
 
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.5
-- Docs: readme has short PodShift CLI and PodShift UI sections (also in Finnish)
+* Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.25.2
+- Cockpit API: fix containers-list and volumes-list failing with "Argument list too long" when there are many containers
+- Cockpit API: large Podman, request and response JSON now reaches jq through files, not as one command-line argument
+- Cockpit API: covers the list helpers, inspect, contract checks, health-check groups and the response envelope
+- Tests: containers-list and volumes-list are checked with over 1 MB of Podman JSON
 
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.4
-- Tools: precheck no longer has Hetzner-specific checks; the cloud name comes only from cloud-init, and the DHCP warning gives a generic cloud-init note
-- Tests: precheck-unit drops the Hetzner checks and covers the cloud-init DHCP note
-- Docs: precheck readme drops the Hetzner wording
-
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.3
-- Tools: precheck shows the hardware, the cloud-init state and a hint about user data
-- Tools: precheck reads the cloud name from cloud-init's local files first
-- Tests: precheck-unit covers the hardware, the cloud-init states, the cloud name sources and the user data hint
-- Docs: precheck readme explains the hardware, cloud and cloud-init facts
-
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.2
-- Tools: precheck reads the edition from the identity package, shows the cloud and fixes the login user count
-- Tools: precheck adds a Hetzner line to the DHCP warning and fixes the skipped check count
-- Tests: precheck-unit covers the edition, the cloud, the Hetzner DHCP line and the counts
-- Docs: precheck readme explains the edition and cloud facts
-
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.1
-- Tools: precheck accepts the cloud-init connection name with a space and says when the IPv4 address comes from DHCP
-- Tests: precheck-unit covers the connection name with a space, the default nmconnection file and the DHCP wording
-- Docs: precheck readme explains the connection name match and the DHCP check
-
-* Fri Nov 20 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.21.0
-- Tools: precheck reports the network setup and checks the route, NetworkManager, DHCP and IPv4
-- Tests: precheck-unit covers the network checks
-- Docs: precheck readme lists the network checks
-
-* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.20.0
-- Install: first server install switches SELinux from permissive to enforcing
-- Tools: precheck says the install switches SELinux on servers
-- Docs: usage says a first server install switches SELinux
-- Tests: lint-spec-scriptlets checks the spec calls its install scripts
-
-* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.19.0
-- CLI: podshift selinux enforce switches SELinux to enforcing
-- Tools: precheck SELinux warning wording fixed and points to the new command
-- Docs: usage mentions podshift selinux enforce
-
-* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.18.1
-- Docs: Quick Start shows each command in its own copyable block
-- Docs: Quick Start explains what the precheck does
-
-* Thu Nov 19 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.18.0
-- Tools: utils/portable/precheck.sh, a single-file pre-install check
-- Tests: precheck-unit and precheck-vm-clean test the portable precheck
-- Docs: precheck in usage, Quick Start and utils/portable in readme project structure
-- Tools: precheck documented with bashdoc and checked by the bashdoc lints
-
-* Tue Nov 17 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.17.0
-- Tests: builder containers are stopped after use (build-container-stop)
-- Tests: install-vm-stop stops the installer VM without removing it
-- Tests: install-vm-create split from install-vm-start, which now starts the existing VM
-
-* Tue Nov 17 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.2
-- Docs: small footprint noted in readme and design choices
-
-* Mon Nov 16 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.1
-- Illustrations updated
-
-* Mon Nov 16 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.16.0
-- Cockpit API: overview info reports the install type (desktop or server)
-- Docs: readme intro and "How Your Code Gets to the Server" rewritten for beginners
-- Docs: From Push to Production explains PodShift's and Podman's roles
-
-* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.4
-- Tests: release-version-check compares the stable branch with Copr builds
-- Docs: design choices explain the test suite
-- Docs: design choices explain the own test runner, the extra lint tests and the guiding idea
-- Docs: agents.md starts with Purpose first
-
-* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.3
-- Documentation: Finnish readme (readme.fi.md)
-
-* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.2
-- Documentation: security policy (security.md)
-
-* Sat Nov 14 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.1
-- Documentation: PodShift never installs PodShift UI itself
-
-* Fri Nov 13 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.15.0
-- PodShift UI listed in Cockpit Applications as an optional add-on
-- Cockpit API modules for the overview, health, resources, services and Quadlets
-- Environment tag (TSV_ENV) is empty until set with podshift env
-- Documentation for the PodShift UI
-
-* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.14.0
-- Cockpit API improvements
-- Documentation improvements
-
-* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.13.0
-- Cockpit API improvements
-
-* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.12.0
-- Cockpit API tests
-
-* Wed Nov 11 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.10.0
-- Cockpit API improvements
-
-* Tue Nov 10 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.9.1
-- RPM improvements
-- Initial version of Cockpit API
-- Automated Quadlet install
-- PodShift CLI
-
-* Mon Jun 15 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.1.0
-- First alpha version
-- Rootless Podman
+* Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.25.1
+- Cockpit API: quadlet-install-log also shows systemd lines of the podshift user's Quadlet units, such as a failed start
+- Cockpit API: quadlet-install-log also shows the Podman container events of those units
+- Cockpit API: quadlet-install-log leaves out podshift-* and run-* units, health checks, unit-less lines and image pulls
+- Cockpit API: quadlet-install-log reads the last 2000 matching journal lines and returns the newest 100 kept entries

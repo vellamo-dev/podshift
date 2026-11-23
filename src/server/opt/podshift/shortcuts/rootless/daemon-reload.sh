@@ -11,8 +11,12 @@
 # @author: Vellamo.fyi
 
 # @description: Reloads the podshift user's systemd manager configuration.
-# @exitcode: 0 on success, 1 if not the podshift user.
+# @arg: $@ - none; any argument is refused.
+# @exitcode: 0 on success, 1 if given an argument or not the podshift user.
 rootless-daemon-reload() {
+    # shellcheck source=../../fn/utils/require-no-args.sh
+    declare -F require-no-args >/dev/null || source /opt/podshift/fn/utils/require-no-args.sh
+    require-no-args daemon-reload "$@" || return 1
     # shellcheck source=../../fn/utils/require-podshift.sh
     declare -F require-podshift >/dev/null || source /opt/podshift/fn/utils/require-podshift.sh
     require-podshift || return 1
@@ -22,4 +26,4 @@ rootless-daemon-reload() {
     systemctl --user daemon-reload
 }
 
-rootless-daemon-reload
+rootless-daemon-reload "$@"

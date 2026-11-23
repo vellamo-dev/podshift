@@ -27,10 +27,12 @@ podshift-rpm-do-preun() {
     local rpm_dir action
     action="${1}"
     rpm_dir="${2}"
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PR-0PR"
-    # shellcheck source=../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${rpm_dir}/../fn/utils/print-step.sh"
+    # shellcheck source=../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${rpm_dir}/../fn/utils/print-step-header.sh"
+    # shellcheck source=../fn/utils/print-step-skip.sh
+    declare -F print-step-skip >/dev/null || source "${rpm_dir}/../fn/utils/print-step-skip.sh"
 
     print-step-header "${step_tag}" "Preparing system (preun)..."
     echo -e "\tUninstall type: ${action}"

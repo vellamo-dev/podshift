@@ -23,7 +23,7 @@ Normal use through the drop folder doesn't cause it.
 
 ## Podman networks stay after an app is removed
 
-**What happens:** when a bundle install fails, PodShift removes the partly installed app with `podman quadlet rm --force --recursive <app>`. The Podman networks that the app's `.network` files created are not removed. They stay in Podman's store. The same happens when an app is removed by hand with `podman quadlet rm`.
+**What happens:** when a bundle install fails, PodShift removes the partly installed app with `podman quadlet rm --force --recursive <app>`. The Podman networks that the app's `.network` files created are not removed. They stay in Podman's store. The same happens when an app is removed by hand with `podman quadlet rm`. `podshift quadlet rm` removes them.
 
 **Why:** the Quadlet generator turns each `.network` file into a oneshot unit that runs `podman network create`. `NetworkDeleteOnStop` defaults to false, so the generator adds no cleanup. `podman quadlet rm` removes the files and the units, but not the network object.
 
@@ -32,13 +32,15 @@ Normal use through the drop folder doesn't cause it.
 - A bundle install fails and the bundle had a `.network` file (seen in the v0.0.15 tests on Fedora).
 - Someone runs `podman quadlet rm` on an app that has a `.network` file.
 
-A normal install, or a replace that works, doesn't cause it.
+A normal install, or a removal with `podshift quadlet rm`, doesn't cause it.
 
-**How to spot it:** as the podshift user, `podman network ls` shows a network with no matching `.network` file in `~/.config/containers/systemd/`. The default name is `systemd-<file name without .network>`, unless the file sets `NetworkName=`. Not verified: this default name pattern was not checked on Fedora.
+**How to spot it:** as the podshift user, `podman network ls` shows a network with no matching `.network` file in `~/.config/containers/systemd/`. Since 0.24.0 every `.network` file dropped into PodShift sets `NetworkName=` to its base name, so the network has the name of the file. An older file without `NetworkName=` gets the default name `systemd-<file name without .network>` (not verified on Fedora).
 
 **What to do:** check that nothing uses the network, then remove it as the podshift user with `podman network rm <name>`.
 
-**Possible fix later (option B):** in `remove-app`, read the app's `.network` files before `podman quadlet rm`. Take the name from `NetworkName=`, or use the default name. After `podman quadlet rm`, run `podman network rm <name>` without `--force`, log the result, and keep the return code 0 as it is now. Not verified: it needs a Fedora check of the default name, and of whether `podman network rm` refuses a network that is still in use. Without that refusal, a network shared between apps could be removed by mistake.
+**Done in 0.24.0 for removals:** `podshift quadlet rm` (and the `quadlet-remove` Cockpit action) runs `podman network rm <name>` without `--force` after `podman quadlet rm`, and refuses the removal first while a container that is not part of the item uses the network. Not verified on Fedora: that `podman network rm` refuses a network still in use.
+
+**Possible fix later (option B), for a failed bundle install:** in `remove-app`, read the app's `.network` files before `podman quadlet rm`. Take the name from `NetworkName=`, or use the default name. After `podman quadlet rm`, run `podman network rm <name>` without `--force`, log the result, and keep the return code 0 as it is now. Not verified: it needs a Fedora check of the default name, and of whether `podman network rm` refuses a network that is still in use. Without that refusal, a network shared between apps could be removed by mistake.
 
 **Rejected option A:** add `NetworkDeleteOnStop=true` to the `.network` files at staging. It changes how the app behaves on every stop and restart, and it could break a network that several apps share.
 
@@ -74,7 +76,7 @@ A normal install, or a replace that works, doesn't cause it.
 
 **What to do:** create `~/.bash_profile` with the portable Homebrew setup, so the login bash also gets the Homebrew PATH:
 
-```sh
+```bash
 if command -v brew >/dev/null 2>&1; then
     eval "$(brew shellenv)"
 fi

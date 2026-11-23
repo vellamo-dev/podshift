@@ -84,7 +84,7 @@ Run from the project folder:
 
 - `./test` lists all tests and options.
 - `./test --help <test>` shows one test: its Platforms and Needs. That wins over any doc.
-- Quick check after a change: `./test --plain lint-cli-modules lint-pure-functions lint-help-files lint-bashdoc-description-length`
+- Quick check after a change: `./test --plain lint-cli-modules lint-pure-functions lint-local-variables lint-help-files lint-bashdoc-description-length`
 - Cockpit handler: `./test --plain unit-cockpit-api`
 - Build the RPM only (needs the dev host): `./test --plain build-rpm`
 - Full check (needs the dev host: build, install in a test VM, validate): `./test --plain bundle-build-install-validate`

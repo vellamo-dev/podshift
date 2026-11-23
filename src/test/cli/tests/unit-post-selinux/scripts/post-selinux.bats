@@ -5,13 +5,13 @@
 # Run with: ./test unit-post-selinux
 
 setup() {
-    HERE="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
-    REPO="${HERE}"
-    while [ "${REPO}" != "/" ] && [ ! -f "${REPO}/podshift.spec" ]; do
-        REPO="$(dirname "${REPO}")"
-    done
-    SCRIPT="${REPO}/src/server/opt/podshift/rpm/post/enforce-selinux.sh"
-    STUBS="${HERE}/stubs"
+    local here repo
+    here="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
+    # The shared helper is at the same place from every suite's scripts/ folder.
+    declare -F find-repo-root >/dev/null || source "${here}/../../../shared/fn/utils/find-repo-root.sh"
+    repo="$(find-repo-root "${here}")" || return 1
+    SCRIPT="${repo}/src/server/opt/podshift/rpm/post/enforce-selinux.sh"
+    STUBS="${here}/stubs"
     CONFIG="${BATS_TEST_TMPDIR}/selinux-config"
     DESKTOP="${BATS_TEST_TMPDIR}/desktop"
     SETENFORCE_LOG="${BATS_TEST_TMPDIR}/setenforce.log"

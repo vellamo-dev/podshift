@@ -8,6 +8,6 @@ Sets the password of the VM login user (the current user on this computer, if th
 
 ## Examples
 
-```sh
+```bash
 ./test postinstall-vm-user-password
 ```

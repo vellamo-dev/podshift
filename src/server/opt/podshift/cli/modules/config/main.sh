@@ -27,7 +27,7 @@ fi
 # @stderr: the reason on failure.
 # @exitcode: 0 on success, 1 on failure.
 podshift-config() {
-    local key value caller rc
+    local key value caller rc found
 
     # shellcheck source=../../../fn/utils/is-admin.sh
     declare -F is-admin >/dev/null || source "${DIR_6D9F9C6E360C}/../../../fn/utils/is-admin.sh"
@@ -80,8 +80,18 @@ podshift-config() {
         1)
             # Get a single key from either source.
             key="${1}"
-            grep -h "^${key}=" "${PODSHIFT_TSV_CONF}" "${PODSHIFT_RUNTIME_CONF}" 2>/dev/null \
-                || echo "${key} is not set"
+            # The key goes into a grep pattern, so only a plain name is looked up.
+            if [[ ! "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+                echo "Invalid key '${key}'. A key has only letters, digits and underscores." >&2
+                return 1
+            fi
+            # grep exits 2 when one of the files is missing, even with a match, so the output decides.
+            found="$(grep -h "^${key}=" "${PODSHIFT_TSV_CONF}" "${PODSHIFT_RUNTIME_CONF}" 2>/dev/null)" || true
+            if [[ -n "${found}" ]]; then
+                printf '%s\n' "${found}"
+            else
+                echo "${key} is not set"
+            fi
             return 0
             ;;
         2)

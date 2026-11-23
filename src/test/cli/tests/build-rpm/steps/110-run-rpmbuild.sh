@@ -15,6 +15,7 @@
 # @stdout: the last rpmbuild lines, if it failed.
 # @exitcode: 0 if the RPM was built, 2 otherwise.
 run-rpmbuild() {
+    local line
     local run_dir out_file
     run_dir="${1}"
     out_file="${run_dir}/rpmbuild.log"

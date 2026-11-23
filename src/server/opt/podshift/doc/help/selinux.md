@@ -15,8 +15,8 @@ sudo podshift selinux enforce [--force]
 
 It asks before it changes anything. `--force` skips the question.
 
-## Examples:
+## Examples `(root)`
 
-```shell
+```bash
 sudo podshift selinux enforce
 ```

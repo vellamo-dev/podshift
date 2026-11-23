@@ -10,7 +10,7 @@ The build bundles run it after `build-rpm-export`, before the VM tests start. `u
 
 ## Examples
 
-```sh
+```bash
 ./test build-container-stop                            # stop both builder containers
 TST_KEEP_BUILDERS=true ./test bundle-build-install-validate   # keep them running after the build
 ```

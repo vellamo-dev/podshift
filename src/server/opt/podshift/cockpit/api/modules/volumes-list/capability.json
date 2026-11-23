@@ -1,7 +1,7 @@
 {
   "action": "volumes-list",
   "name": "Volumes list",
-  "description": "Lists the podshift user's Podman volumes with their source, mountpoint, size, users, details and systemd unit.",
+  "description": "Lists the podshift user's Podman volumes with their source, mountpoint, size, users, details, systemd unit and owning installed Quadlet file or app.",
   "status": "active",
   "input": {
     "type": "object",
@@ -21,6 +21,15 @@
             "status": { "type": "string", "enum": ["In use", "Unused"] },
             "running": { "type": "boolean" },
             "source": { "type": "string", "enum": ["quadlet", "container", "unmanaged"] },
+            "quadlet": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "app": { "type": "string" }
+              },
+              "required": ["name"],
+              "additionalProperties": false
+            },
             "rows": {
               "type": "array",
               "items": {

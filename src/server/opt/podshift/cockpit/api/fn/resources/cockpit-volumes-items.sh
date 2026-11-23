@@ -25,6 +25,9 @@
 #   volume has the PODMAN_SYSTEMD_UNIT label, else unmanaged. For container, the systemd group
 #   shows the unit of the first such container by name. status is In use when any container,
 #   running or not, uses the volume, else Unused. running is true when one of them is running.
+#   quadlet, set only for the quadlet source, is {name, app}: name is the .volume file name and
+#   app, only for a file in a bundle folder, the app name. quadlet-remove takes app when it is set,
+#   else name.
 # @arg: $1 - JSON array from podman volume inspect.
 # @arg: $2 - JSON array of containers: podman ps -a entries with VolumeNames or Mounts added.
 # @arg: $3 - JSON object mapping a volume name to {source, unit, unit_state, file, app} from Quadlet .volume files.
@@ -45,8 +48,13 @@ cockpit-volumes-items() {
     [[ -n "${sources}" ]] || sources='{}'
     [[ -n "${units}" ]] || units='{}'
     [[ -n "${sizes}" ]] || sizes='{}'
-    jq -n -c --argjson vols "${vols}" --argjson ctrs "${ctrs}" --argjson sources "${sources}" \
-        --argjson units "${units}" --argjson sizes "${sizes}" --arg home "${home%/}" '
+    # The JSON is read from files, not arguments: Linux limits one argument to 128 KB.
+    jq -n -c --slurpfile vols <(printf '%s' "${vols}") --slurpfile ctrs <(printf '%s' "${ctrs}") \
+        --slurpfile sources <(printf '%s' "${sources}") --slurpfile units <(printf '%s' "${units}") \
+        --slurpfile sizes <(printf '%s' "${sizes}") --arg home "${home%/}" '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($vols | one) as $vols | ($ctrs | one) as $ctrs | ($sources | one) as $sources
+        | ($units | one) as $units | ($sizes | one) as $sizes |
         def row($id; $label; $v):
             if $v == null or $v == "" then empty
             else {id: $id, label: $label, value: ($v | tostring)} end;
@@ -78,6 +86,10 @@ cockpit-volumes-items() {
                        | todate
                   end
             end;
+        def owner: if type != "object" then null
+            else (((.file // "") | if type == "string" then . else "" end | split("/") | last) // "") as $f
+                | ((.app // "") | if type == "string" then . else "" end) as $a
+                | if $f == "" then null else {name: $f} + (if $a == "" then {} else {app: $a} end) end end;
         def volnames: ((.VolumeNames | arr) + [(.Mounts | arr)[] | objects | select((.Type // "") == "volume") | .Name // empty])
             | map(tostring);
         if ($vols | type) != "array" or ($ctrs | type) != "array" or ($sources | type) != "object"
@@ -94,6 +106,7 @@ cockpit-volumes-items() {
                 | select(.u != "")] | sort_by(.n) | first // null) as $cu
             | (($sources[$name] // null) | if type == "object" then . else null end) as $q
             | (if $q != null then "quadlet" elif $cu != null then "container" else "unmanaged" end) as $source
+            | ($q | owner) as $owner
             | (if $source == "quadlet" then $q
                elif $source == "container" then (($units[$cu.u] // {}) | obj) + {unit: $cu.u}
                else {} end) as $s
@@ -126,6 +139,7 @@ cockpit-volumes-items() {
                      else empty end)
                 ] | map(select((.rows | length) > 0)))
               }
+            + (if $owner == null then {} else {quadlet: $owner} end)
           ) | sort_by(.title, .id))}
     ' 2>/dev/null || return 1
 }

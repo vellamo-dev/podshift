@@ -1,7 +1,7 @@
 {
   "action": "containers-list",
   "name": "Containers list",
-  "description": "Lists the podshift user's Podman containers with their source, state, image, ports, details, usage and systemd unit.",
+  "description": "Lists the podshift user's Podman containers with their source, state, image, ports, details, usage, systemd unit and owning installed Quadlet file or app.",
   "status": "active",
   "input": {
     "type": "object",
@@ -24,6 +24,15 @@
             "source": { "type": "string", "enum": ["quadlet", "unit", "unmanaged"] },
             "autoUpdate": { "type": "string", "enum": ["registry", "local"] },
             "autoUpdateActive": { "type": "boolean" },
+            "quadlet": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "app": { "type": "string" }
+              },
+              "required": ["name"],
+              "additionalProperties": false
+            },
             "rows": {
               "type": "array",
               "items": {

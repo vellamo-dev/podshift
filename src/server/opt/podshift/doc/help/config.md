@@ -36,13 +36,20 @@ podshift config --unset <key>    remove a custom key
 
 ## Examples `(root)`
 
-```shell
+```bash
 sudo podshift config PODSHIFT_NW_DEVICE eth0
 ```
 
 ## Examples `(podshift)`
 
-```shell
+Set a value:
+
+```bash
 podshift config TSV_APP_DOMAIN example.com
+```
+
+Remove it again:
+
+```bash
 podshift config --unset TSV_APP_DOMAIN
 ```

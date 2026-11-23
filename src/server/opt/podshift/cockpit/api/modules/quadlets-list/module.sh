@@ -15,17 +15,6 @@ if [[ -z "${DIR_F8A03C15D7B4:-}" ]]; then
     readonly DIR_F8A03C15D7B4
 fi
 
-# shellcheck source=../../fn/quadlets/cockpit-quadlets-items.sh
-declare -F cockpit-quadlets-items >/dev/null || source "${DIR_F8A03C15D7B4}/../../fn/quadlets/cockpit-quadlets-items.sh"
-
-# @description: Runs podman, replaced in tests so the listing can be stubbed.
-# @arg: $@ - podman arguments (quadlet ls --format json).
-# @stdout: the JSON listing from podman.
-# @exitcode: podman's exit code.
-cockpit-quadlets-list-podman() {
-    podman "$@"
-}
-
 # @description: Prints the quadlets-list result {items:[...]} for the podshift user.
 # @details:
 #   Runs `podman quadlet ls --format json` rootless in the podshift session. An empty or
@@ -35,6 +24,10 @@ cockpit-quadlets-list-podman() {
 # @exitcode: 0 when the object was written, 1 when podman or the mapping failed.
 cockpit-module-quadlets-list() {
     local raw
+    # shellcheck source=./fn/cockpit-quadlets-list-podman.sh
+    declare -F cockpit-quadlets-list-podman >/dev/null || source "${DIR_F8A03C15D7B4}/fn/cockpit-quadlets-list-podman.sh"
+    # shellcheck source=../../fn/quadlets/cockpit-quadlets-items.sh
+    declare -F cockpit-quadlets-items >/dev/null || source "${DIR_F8A03C15D7B4}/../../fn/quadlets/cockpit-quadlets-items.sh"
     raw="$(cockpit-quadlets-list-podman quadlet ls --format json)" || return 1
     [[ -n "${raw}" ]] || raw='[]'
     cockpit-quadlets-items "${raw}"

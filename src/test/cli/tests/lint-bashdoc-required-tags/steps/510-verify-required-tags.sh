@@ -10,7 +10,7 @@
 
 # @description: Checks always-required bashdoc tags on scanned files under the configured roots.
 # @details:
-#   Reads src/test/cli/tests/lint-bashdoc-tags/data/tags.conf for scan paths, required tags,
+#   Reads src/test/cli/shared/conf/bashdoc-tags.conf for scan paths, required tags,
 #   short-header files and exceptions. Each finding is also written to
 #   <run_dir>/lint-bashdoc-required-tags.log as one line after the timestamp that write-log adds,
 #   with five tab-separated fields: severity, kind, file, line and text. severity is problem.
@@ -24,7 +24,7 @@ verify-required-tags() {
     local run_dir tags_conf section line file bad n mode
     local -a scan_paths required_tags short_header_tags short_header_files exception_files conf_files files
     run_dir="${1}"
-    tags_conf="src/test/cli/tests/lint-bashdoc-tags/data/tags.conf"
+    tags_conf="src/test/cli/shared/conf/bashdoc-tags.conf"
     bad=0
     scan_paths=()
     required_tags=()
@@ -35,7 +35,7 @@ verify-required-tags() {
     files=()
 
     if [[ ! -f "${tags_conf}" ]]; then
-        echo "DETAIL: ${tags_conf}: missing tags.conf"
+        echo "DETAIL: ${tags_conf}: missing bashdoc-tags.conf"
         echo "NOTE: 1 problems"
         return 2
     fi

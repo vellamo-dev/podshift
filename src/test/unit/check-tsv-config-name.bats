@@ -7,6 +7,7 @@ setup() {
 }
 
 @test "good custom names return 0 and print nothing" {
+    local name
     for name in TSV_APP TSV_A TSV_APP_DOMAIN TSV_PG_VERSION TSV_A1 TSV_A_ TSV_A__B TSV_N TSV_NAME TSV_EN TSV_E TSV_NEW; do
         run check-tsv-config-name "${name}"
         [ "${status}" -eq 0 ]
@@ -15,6 +16,7 @@ setup() {
 }
 
 @test "names that are not TSV_ plus a capital letter are INVALID_NAME" {
+    local name
     for name in "" TSV_ TSV TSV_app TSV_App APP_NAME tsv_APP TSV_1APP TSV__APP "TSV_A B" TSV_A-B TSV_A.B TSV_Ä "TSV_A"$'\n' PODSHIFT_NW_DEVICE; do
         run check-tsv-config-name "${name}"
         [ "${status}" -eq 1 ]
@@ -29,6 +31,7 @@ setup() {
 }
 
 @test "names starting with TSV_NW or TSV_ENV are RESERVED_NAME" {
+    local name
     for name in TSV_NW1 TSV_NW8 TSV_NW9 TSV_NW TSV_NWORDER TSV_NW_X TSV_ENV TSV_ENV2 TSV_ENVIRONMENT TSV_ENV_NAME; do
         run check-tsv-config-name "${name}"
         [ "${status}" -eq 1 ]

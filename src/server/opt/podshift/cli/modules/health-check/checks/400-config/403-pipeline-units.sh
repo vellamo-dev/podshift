@@ -7,9 +7,9 @@
 # @category: check
 # @title: Quadlet pipeline units
 # @run-as: podshift
-# @description: Verifies the drop, drop safety, validation and install watcher units are enabled and active.
-# @rationale: Without them, dropped quadlets are not picked up, validated or installed.
-# @fix: As the podshift user: systemctl --user enable --now podshift-drop.path podshift-drop-safety.timer podshift-qdl-validate.path podshift-qdl-install.path
+# @description: Verifies the drop, drop safety, validation, install and remove watcher units are enabled and active.
+# @rationale: Without them, dropped quadlets are not picked up, validated or installed, and removals are not done.
+# @fix: As the podshift user: systemctl --user enable --now podshift-drop.path podshift-drop-safety.timer podshift-qdl-validate.path podshift-qdl-install.path podshift-qdl-remove.path
 # @license: AGPL-3.0-or-later
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
@@ -26,7 +26,7 @@ fi
 health-check-pipeline-units() {
     local unit bad
     bad=""
-    for unit in podshift-drop.path podshift-drop-safety.timer podshift-qdl-validate.path podshift-qdl-install.path; do
+    for unit in podshift-drop.path podshift-drop-safety.timer podshift-qdl-validate.path podshift-qdl-install.path podshift-qdl-remove.path; do
         if ! systemctl --user is-enabled --quiet "${unit}" 2>/dev/null; then
             bad+="${bad:+, }${unit} not enabled"
         elif ! systemctl --user is-active --quiet "${unit}" 2>/dev/null; then

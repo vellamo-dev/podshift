@@ -6,6 +6,6 @@ For checks, use `dev-cli-help` and `lint-help-files`. To read the help of every 
 
 ## Examples
 
-```sh
+```bash
 ./test dev-cli-help-show
 ```

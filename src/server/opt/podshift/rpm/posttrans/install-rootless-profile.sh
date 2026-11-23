@@ -21,14 +21,16 @@ fi
 # @description: Creates the shell profiles for the podshift user.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 install-rootless-profile() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-PRF"
     local file_bashrc file_profile tpl_profile tpl_bashrc bashrc_skeleton
     bashrc_skeleton="/etc/skel/.bashrc"
     file_bashrc="/home/podshift/.bashrc"
     file_profile="/home/podshift/.bash_profile"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_A8B677A69011}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_A8B677A69011}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_A8B677A69011}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Creating bash profile for podshift..."
     # Load main config for PODSHIFT_RUNTIME_CONF_TEMPLATES
     # shellcheck source=../../fn/load-podshift-conf-main.sh

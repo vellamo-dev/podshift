@@ -13,6 +13,7 @@
 # @description: Runs restorecon on each directory listed in /opt/podshift/conf/restorecon-dirs.
 # @exitcode: 0 always.
 fix-dir-permissions() {
+    local dir
     local path_file_dirs_list
     path_file_dirs_list=/opt/podshift/conf/restorecon-dirs
     if [ -f "${path_file_dirs_list}" ]; then

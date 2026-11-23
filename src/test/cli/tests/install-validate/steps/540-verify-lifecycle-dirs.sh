@@ -24,7 +24,9 @@ verify-lifecycle-dirs() {
         /home/podshift/.quadlets/rejected \
         /home/podshift/.quadlets/staging \
         /home/podshift/.quadlets/installed-backup \
-        /home/podshift/.quadlets/failed; do
+        /home/podshift/.quadlets/failed \
+        /home/podshift/.quadlets/remove-queue \
+        /home/podshift/.quadlets/web-upload; do
         vm-run "${TST_RPM_INSTALLER_VM}" test -d "${path}" && continue
         echo "Missing: ${path}"
         missing=$((missing + 1))

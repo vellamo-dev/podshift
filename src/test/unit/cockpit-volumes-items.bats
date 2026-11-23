@@ -18,7 +18,7 @@ setup() {
     [ "${status}" -eq 0 ]
     printf '%s' "${output}" | jq -e '
         [.items[].title] == ["3f9a1c7e5b2d","backups","cache","pgdata","web-data"]
-        and all(.items[]; (keys | sort) == ["groups","id","rows","running","source","status","title"])
+        and all(.items[]; ((keys - ["quadlet"]) | sort) == ["groups","id","rows","running","source","status","title"])
     '
 }
 
@@ -129,4 +129,25 @@ setup() {
     [ "${status}" -eq 1 ]
     run cockpit-volumes-items '[]' '[]' '{}' '{}' '[]' ''
     [ "${status}" -eq 1 ]
+}
+
+@test "JSON larger than one command-line argument is read, not refused" {
+    local vols
+    # Over 1 MB: Linux allows 128 KB in one argument and macOS 1 MB for all of them.
+    vols="$(jq -n -c '[range(0; 1500) | {Name: ("v" + tostring), Driver: "local", Pad: ("x" * 800)}]')"
+    [ "${#vols}" -gt 1048576 ]
+    run cockpit-volumes-items "${vols}" '[]' '{}' '{}' '{}' ''
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '(.items | length) == 1500 and .items[0].id == "v0"'
+}
+
+@test "quadlet: the installed .volume file and its app, only for the quadlet source" {
+    run cockpit-volumes-items "${INSPECT}" "${CONTAINERS}" "${SOURCES}" "${UNITS}" "${SIZES}" /home/podshift
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '
+        ([.items[] | select(has("quadlet")) | {(.title): .quadlet}] | add) == {pgdata: {name: "pgdata.volume", app: "shop"}}
+    '
+    run cockpit-volumes-items "${INSPECT}" "${CONTAINERS}" '{"cache":{"source":"quadlet","unit":"cache-volume.service","file":"~/.config/containers/systemd/cache.volume"}}' "${UNITS}" "${SIZES}" /home/podshift
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '(.items[] | select(.id == "cache") | .quadlet) == {name: "cache.volume"}'
 }

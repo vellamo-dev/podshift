@@ -26,7 +26,10 @@ cockpit-inspect-image-ref() {
     local images ref
     images="${1-}"
     ref="${2-}"
-    jq -n -r -e --argjson images "${images}" --arg ref "${ref}" '
+    # The JSON is read from a file, not an argument: Linux limits one argument to 128 KB.
+    jq -n -r -e --slurpfile images <(printf '%s' "${images}") --arg ref "${ref}" '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($images | one) as $images |
         def bare: tostring | ascii_downcase | sub("\\Asha256:"; "");
         def tags: if type == "array" then [.[] | select(type == "string"
             and test("\\A[A-Za-z0-9._:/@][A-Za-z0-9._:/@-]{0,255}\\z") and (startswith("<none>") | not))] else [] end;

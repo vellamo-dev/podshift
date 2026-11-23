@@ -34,7 +34,10 @@ cockpit-secrets-items() {
     secrets="${1-}"
     ctrs="${2-}"
     [[ -n "${ctrs}" ]] || ctrs='[]'
-    jq -n -c --argjson secrets "${secrets}" --argjson ctrs "${ctrs}" '
+    # The JSON is read from files, not arguments: Linux limits one argument to 128 KB.
+    jq -n -c --slurpfile secrets <(printf '%s' "${secrets}") --slurpfile ctrs <(printf '%s' "${ctrs}") '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($secrets | one) as $secrets | ($ctrs | one) as $ctrs |
         def row($id; $label; $v):
             if $v == null or $v == "" then empty
             else {id: $id, label: $label, value: ($v | tostring)} end;

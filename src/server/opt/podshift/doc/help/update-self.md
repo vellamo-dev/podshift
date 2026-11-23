@@ -11,6 +11,6 @@ It works only when PodShift was installed from a repository such as COPR. An ins
 
 Update PodShift, and the UI when it is installed:
 
-```shell
+```bash
 sudo podshift update-self
 ```

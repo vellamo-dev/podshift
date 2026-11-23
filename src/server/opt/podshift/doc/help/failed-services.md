@@ -6,11 +6,11 @@ This command lists all user-level *systemd* services that have failed to start o
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift failed-services
 ```
 ## Usage `(podshift)`
 
-```shell
+```bash
 failed-services
 ```

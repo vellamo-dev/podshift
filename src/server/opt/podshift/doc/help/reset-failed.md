@@ -6,13 +6,13 @@ When a systemd service fails, it locks into a '**failed**' state and often stops
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift reset-failed
 ```
 
 ## Usage `(podshift)`
 
-```shell
+```bash
 reset-failed
 ```
 

@@ -34,8 +34,7 @@ VM_SAMPLE=$'  UNIT                           LOAD      ACTIVE   SUB     DESCRIPT
 }
 
 @test "text can also be read from stdin" {
-    output="$(printf '%s\n' 'ok.service loaded active running Ok' | cockpit-overview-service-counts)"
-    status=$?
+    run cockpit-overview-service-counts <<< 'ok.service loaded active running Ok'
     [ "${status}" -eq 0 ]
     [ "${output}" = "1 / 1" ]
 }

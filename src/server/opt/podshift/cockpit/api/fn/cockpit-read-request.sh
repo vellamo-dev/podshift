@@ -13,23 +13,24 @@
 # @description: Reads the request body from stdin with a size bound and a time bound.
 # @details:
 #   Reading stops when stdin ends, the size bound is passed, or the waiting time is over. Nothing
-#   is printed on failure.
+#   is printed on failure. 131072 bytes is the largest request of any action (quadlet-drop); the
+#   handler then checks the smaller bound of the action with cockpit-request-limit.
 # @stdout: the request bytes when they fit the bounds.
-# @exitcode: 0 when the body is non-empty and within the bound, 1 when stdin is empty, 2 when the body is larger than 65536 bytes, 3 when the 5 second wait ends first.
+# @exitcode: 0 when the body is non-empty and within the bound, 1 when stdin is empty, 2 when the body is larger than 131072 bytes, 3 when the 5 second wait ends first.
 cockpit-read-request() {
     local max_bytes wait_seconds tmp start size pid
-    # Fixed request bounds: 65536 bytes and 5 seconds.
-    max_bytes=65536
+    # Fixed request bounds: 131072 bytes and 5 seconds.
+    max_bytes=131072
     wait_seconds=5
     tmp="$(mktemp)" || return 1
     : >"${tmp}"
     # Bash 3.2 read -t returns 1 at once when a pipe has no data yet. That is
     # the same status as end of file, so a timed read cannot tell them apart.
-    # dd bs=1 reads one byte per record on both GNU and BSD, so a short pipe
-    # read does not finish the copy early. It blocks while the writer stays open.
+    # head -c counts bytes on both GNU and BSD, so a short pipe read does not
+    # finish the copy early. It blocks while the writer stays open.
     # An explicit stdin redirect is required. Without job control, Bash points a
     # background command at /dev/null when no redirection is written on it.
-    dd bs=1 count=$((max_bytes + 1)) of="${tmp}" <&0 2>/dev/null &
+    head -c $((max_bytes + 1)) <&0 >"${tmp}" 2>/dev/null &
     pid=$!
     start="${SECONDS}"
     while kill -0 "${pid}" 2>/dev/null; do

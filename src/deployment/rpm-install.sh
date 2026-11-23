@@ -27,9 +27,11 @@ prepare-files-for-rpm-package() {
     rpm_exec_dir="${2}"
     source_dir="$(dirname "${DIR_E791E4A6E1FF}")/server"
 
-    # shellcheck source=./fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_E791E4A6E1FF}/fn/utils/print-step.sh"
-    print-step-header "${step_tag}" "Preparing files for RPM package..."
+    # shellcheck source=./fn/utils/print-deploy-header.sh
+    declare -F print-deploy-header >/dev/null || source "${DIR_E791E4A6E1FF}/fn/utils/print-deploy-header.sh"
+    # shellcheck source=./fn/utils/print-deploy-ok.sh
+    declare -F print-deploy-ok >/dev/null || source "${DIR_E791E4A6E1FF}/fn/utils/print-deploy-ok.sh"
+    print-deploy-header "${step_tag}" "Preparing files for RPM package..."
 
     # shellcheck source=./fn/generate-rpm-dirs-list.sh
     declare -F generate-rpm-dirs-list >/dev/null || source "${DIR_E791E4A6E1FF}/fn/generate-rpm-dirs-list.sh"
@@ -49,7 +51,7 @@ prepare-files-for-rpm-package() {
     # shellcheck source=./fn/deploy-files.sh
     declare -F deploy-files >/dev/null || source "${DIR_E791E4A6E1FF}/fn/deploy-files.sh"
     # Clone other files
-    deploy-files "${build_root}" "${source_dir}"
+    deploy-files "${build_root}" "${source_dir}" || return 1
 
     # shellcheck source=./fn/deploy-sh-symlinks.sh
     declare -F deploy-sh-symlinks >/dev/null || source "${DIR_E791E4A6E1FF}/fn/deploy-sh-symlinks.sh"
@@ -62,7 +64,7 @@ prepare-files-for-rpm-package() {
     generate-files-list-for-rpm "${build_root}" "${rpm_exec_dir}/files.list"
 
     cd "${rpm_exec_dir}"
-    print-step-ok "Files ready for RPM package creation"
+    print-deploy-ok "Files ready for RPM package creation"
 }
 
 prepare-files-for-rpm-package "${1}" "${2}"

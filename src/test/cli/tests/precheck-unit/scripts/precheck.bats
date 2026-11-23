@@ -4,12 +4,12 @@
 # Run with: ./test precheck-unit
 
 setup() {
+    local repo
     HERE="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
-    REPO="${HERE}"
-    while [ "${REPO}" != "/" ] && [ ! -f "${REPO}/podshift.spec" ]; do
-        REPO="$(dirname "${REPO}")"
-    done
-    SCRIPT="${REPO}/utils/portable/precheck.sh"
+    # The shared helper is at the same place from every suite's scripts/ folder.
+    declare -F find-repo-root >/dev/null || source "${HERE}/../../../shared/fn/utils/find-repo-root.sh"
+    repo="$(find-repo-root "${HERE}")" || return 1
+    SCRIPT="${repo}/utils/portable/precheck.sh"
     source "${HERE}/precheck-make-root.sh"
     ROOT="${BATS_TEST_TMPDIR}/root"
     unset STUB_UID STUB_RPM STUB_DNF_PODMAN STUB_DNF_PODSHIFT STUB_DNF_INSTALL STUB_SELINUX STUB_TARGET STUB_DOCKER STUB_PORTS STUB_NET STUB_BASH_VERSION STUB_ROUTE STUB_ROUTE6 STUB_IPV4 STUB_IPV6 STUB_NM_CONN STUB_NM_METHOD STUB_NM_ACTIVE STUB_NETWORKD_ACTIVE STUB_RPM_IDENTITY STUB_CLOUD_NAME STUB_CLOUD_ZONE STUB_CLOUD_FAIL SUDO_USER
@@ -772,4 +772,16 @@ run_without_cloud_init() {
     head -c 20000 "${SCRIPT}" >"${BATS_TEST_TMPDIR}/cut.sh"
     run bash "${BATS_TEST_TMPDIR}/cut.sh"
     [[ "${output}" != *"PodShift precheck"* ]]
+}
+
+@test "PC_REQUIRES lists the Requires packages of podshift.spec in the same order" {
+    local repo spec_list pc_list
+    repo="${SCRIPT%/utils/portable/precheck.sh}"
+    spec_list="$(awk '/^Requires:/ { for (i = 2; i <= NF; i++) printf "%s ", $i }' "${repo}/podshift.spec")"
+    spec_list="${spec_list% }"
+    pc_list="$(sed -n 's/^    PC_REQUIRES="\(.*\)"$/\1/p' "${SCRIPT}")"
+    echo "spec: ${spec_list}"
+    echo "precheck: ${pc_list}"
+    [ -n "${spec_list}" ]
+    [ "${pc_list}" = "${spec_list}" ]
 }

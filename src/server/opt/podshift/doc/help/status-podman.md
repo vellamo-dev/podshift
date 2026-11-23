@@ -4,12 +4,12 @@ Shows the status of the rootless Podman API socket (`podman.socket`).
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift status-podman
 ```
 
 ## Usage `(podshift)`
 
-```shell
+```bash
 status-podman
 ```

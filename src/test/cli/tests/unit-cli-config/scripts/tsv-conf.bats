@@ -4,13 +4,13 @@
 # Run with: ./test unit-cli-config
 
 setup() {
-    HERE="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
-    REPO="${HERE}"
-    while [ "${REPO}" != "/" ] && [ ! -f "${REPO}/podshift.spec" ]; do
-        REPO="$(dirname "${REPO}")"
-    done
-    UTILS="${REPO}/src/server/opt/podshift/fn/utils"
-    LOADER="${REPO}/src/server/opt/podshift/fn/load-podshift-conf-runtime.sh"
+    local here repo
+    here="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
+    # The shared helper is at the same place from every suite's scripts/ folder.
+    declare -F find-repo-root >/dev/null || source "${here}/../../../shared/fn/utils/find-repo-root.sh"
+    repo="$(find-repo-root "${here}")" || return 1
+    UTILS="${repo}/src/server/opt/podshift/fn/utils"
+    LOADER="${repo}/src/server/opt/podshift/fn/load-podshift-conf-runtime.sh"
     TSV_FILE="${BATS_TEST_TMPDIR}/tsv.conf"
     MARKER="${BATS_TEST_TMPDIR}/marker"
     {
@@ -60,6 +60,7 @@ setup() {
 }
 
 @test "write: valid lines are kept in canonical form and other lines are dropped with a note" {
+    local expected
     run bash -c 'source "$1"; write-tsv-conf-lines "$2" 2>"$3"' bash "${UTILS}/write-tsv-conf-lines.sh" "${TSV_FILE}" "${BATS_TEST_TMPDIR}/err"
     [ "${status}" -eq 0 ]
     expected="# Custom TSV_* variables used by quadlets.

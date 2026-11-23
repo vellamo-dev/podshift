@@ -26,6 +26,7 @@ setup() {
 }
 
 @test "file errors keep name, path and kind but no text" {
+    local state
     for state in FILE_NOT_FOUND OUTSIDE_QUADLET_DIR FILE_UNREADABLE; do
         run cockpit-quadlet-view-result web.service "${state}" "${QFILE}" container 131072 < /dev/null
         [ "${status}" -eq 0 ]

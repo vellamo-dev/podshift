@@ -21,13 +21,19 @@ fi
 # @description: Imports the SELinux port definitions.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 update-selinux() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-SEL"
     local import_file port_list
-    # shellcheck source=../../../../../../etc/selinux/local/port-config.semanage
+    # shellcheck source=../../../../etc/selinux/local/port-config.semanage
     import_file="/etc/selinux/local/port-config.semanage"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_4F418A769F3C}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_4F418A769F3C}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_4F418A769F3C}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-skip.sh
+    declare -F print-step-skip >/dev/null || source "${DIR_4F418A769F3C}/../../fn/utils/print-step-skip.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_4F418A769F3C}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Updating SELinux configuration..."
 
     # Port labelling only matters when SELinux is enabled (real Fedora target);

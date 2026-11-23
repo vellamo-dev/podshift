@@ -9,7 +9,7 @@ When `RPM_VM_USER_PSW` is set (in the environment or the local `.env`), the last
 
 ## Examples
 
-```sh
+```bash
 ./test install-vm-start                   # start the installer VM again, keep what is inside
 ./test install-vm-create install-vm-start # fresh VM, then start it
 ```

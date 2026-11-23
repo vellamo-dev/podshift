@@ -25,9 +25,11 @@ deploy-dirs() {
     path_build=$(realpath "$1")
     path_dirs=$(realpath "$2")
     cd "${path_dirs}"
-    # shellcheck source=./utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_AC638D967F6D}/utils/print-step.sh"
-    print-step-header "${step_tag}" "Deploying directories..."
+    # shellcheck source=./utils/print-deploy-header.sh
+    declare -F print-deploy-header >/dev/null || source "${DIR_AC638D967F6D}/utils/print-deploy-header.sh"
+    # shellcheck source=./utils/print-deploy-ok.sh
+    declare -F print-deploy-ok >/dev/null || source "${DIR_AC638D967F6D}/utils/print-deploy-ok.sh"
+    print-deploy-header "${step_tag}" "Deploying directories..."
     find . -type d -exec sh -c 'install -dm755 "$1" "$2/${1#./}"' _ {} "${path_build}" \;
-    print-step-ok
+    print-deploy-ok
 }

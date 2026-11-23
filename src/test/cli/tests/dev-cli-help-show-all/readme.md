@@ -8,6 +8,6 @@ It checks nothing beyond that the help runs. For checks, use `dev-cli-help` and 
 
 ## Examples
 
-```sh
+```bash
 ./test dev-cli-help-show-all
 ```

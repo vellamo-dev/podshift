@@ -10,8 +10,8 @@
 
 # @description: Checks that the PodShift user preset exists and enables the PodShift path and timer units.
 # @details:
-#   The units are podshift-drop.path, podshift-drop-safety.timer, podshift-qdl-validate.path and
-#   podshift-qdl-install.path.
+#   The units are podshift-drop.path, podshift-drop-safety.timer, podshift-qdl-validate.path,
+#   podshift-qdl-install.path and podshift-qdl-remove.path.
 # @arg: $1 - the run folder.
 # @stdout: the problem, if any.
 # @exitcode: 0 if all is well, 2 otherwise.
@@ -26,7 +26,7 @@ verify-preset() {
         return 2
     fi
     missing=0
-    for unit in podshift-drop.path podshift-drop-safety.timer podshift-qdl-validate.path podshift-qdl-install.path; do
+    for unit in podshift-drop.path podshift-drop-safety.timer podshift-qdl-validate.path podshift-qdl-install.path podshift-qdl-remove.path; do
         printf '%s\n' "${content}" | grep -qE "^enable[[:space:]]+${unit}" && continue
         echo "${preset} does not enable ${unit}"
         missing=$((missing + 1))

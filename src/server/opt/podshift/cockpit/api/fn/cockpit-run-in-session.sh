@@ -22,27 +22,27 @@ fi
 # @description: Runs one module as the podshift user and prints only its data.
 # @details:
 #   Requires effective UID 300, resolves the action through the dispatch map and sources the
-#   module. No envelope is written and nothing is logged.
+#   module. No envelope is written and nothing is logged. The action arguments arrive on stdin as one
+#   JSON object, {} when empty, and the module function gets them as its first argument. They are
+#   never a command line word.
 # @arg: $1 - action name.
-# @arg: $2 - action arguments as one JSON object; {} when empty. The module function gets it as its first argument.
 # @stdout: the module data on success.
 # @stderr: a fixed note when the process is not uid 300.
 # @exitcode: 0 when the module ran, 1 when the uid, the action or the module is refused.
 cockpit-session-run() {
-    local action args resolved fn_name module_dir realm rest
+    local action args resolved canonical fn_name module_dir realm rest
     if [[ "${EUID}" -ne 300 ]]; then
         printf 'podshift-api: session entry requires uid 300\n' >&2
         return 1
     fi
     action="${1:-}"
-    args="${2:-}"
+    args="$(cat)"
     [[ -n "${args}" ]] || args='{}'
     # shellcheck source=./cockpit-dispatch-action.sh
     declare -F cockpit-dispatch-action >/dev/null || source "${DIR_7CB42E0E6E57}/cockpit-dispatch-action.sh"
-    resolved="$(cockpit-dispatch-action lookup "${action}" 2>/dev/null)" || return 1
-    fn_name="$(printf '%s' "${resolved}" | jq -r '.function')" || return 1
-    module_dir="$(printf '%s' "${resolved}" | jq -r '.directory')" || return 1
-    realm="$(printf '%s' "${resolved}" | jq -r '.realm')" || return 1
+    resolved="$(cockpit-dispatch-action fields "${action}" 2>/dev/null)" || return 1
+    IFS=$'\t' read -r canonical fn_name module_dir realm <<<"${resolved}" || return 1
+    [[ "${canonical}" == "${action}" ]] || return 1
     [[ "${realm}" == "podshift" ]] || return 1
     rest="${fn_name#cockpit-module-}"
     [[ -n "${rest}" && "${rest}" != "${fn_name}" ]] || return 1

@@ -15,21 +15,6 @@ if [[ -z "${DIR_3512CBDFC57A:-}" ]]; then
     readonly DIR_3512CBDFC57A
 fi
 
-# shellcheck source=../../fn/services/cockpit-services-args.sh
-declare -F cockpit-services-args >/dev/null || source "${DIR_3512CBDFC57A}/../../fn/services/cockpit-services-args.sh"
-# shellcheck source=../../fn/services/cockpit-services-loaded.sh
-declare -F cockpit-services-loaded >/dev/null || source "${DIR_3512CBDFC57A}/../../fn/services/cockpit-services-loaded.sh"
-# shellcheck source=../../fn/services/cockpit-services-view-result.sh
-declare -F cockpit-services-view-result >/dev/null || source "${DIR_3512CBDFC57A}/../../fn/services/cockpit-services-view-result.sh"
-
-# @description: Runs systemctl --user in the current (podshift) session.
-# @arg: $@ - systemctl arguments.
-# @stdout: systemctl stdout.
-# @exitcode: the systemctl exit code.
-cockpit-service-view-systemctl() {
-    systemctl --user "$@"
-}
-
 # @description: Prints the unit file or the status of one loaded user service of the podshift user.
 # @details:
 #   The unit and mode are checked by cockpit-services-args. The unit must be one of the loaded
@@ -45,6 +30,14 @@ cockpit-service-view-systemctl() {
 # @exitcode: 0 when the result was written, 1 when the arguments are refused or systemctl fails.
 cockpit-module-service-view() {
     local parsed unit mode raw text rc
+    # shellcheck source=../../fn/services/cockpit-services-args.sh
+    declare -F cockpit-services-args >/dev/null || source "${DIR_3512CBDFC57A}/../../fn/services/cockpit-services-args.sh"
+    # shellcheck source=./fn/cockpit-service-view-systemctl.sh
+    declare -F cockpit-service-view-systemctl >/dev/null || source "${DIR_3512CBDFC57A}/fn/cockpit-service-view-systemctl.sh"
+    # shellcheck source=../../fn/services/cockpit-services-loaded.sh
+    declare -F cockpit-services-loaded >/dev/null || source "${DIR_3512CBDFC57A}/../../fn/services/cockpit-services-loaded.sh"
+    # shellcheck source=../../fn/services/cockpit-services-view-result.sh
+    declare -F cockpit-services-view-result >/dev/null || source "${DIR_3512CBDFC57A}/../../fn/services/cockpit-services-view-result.sh"
     parsed="$(cockpit-services-args "${1-}" yes)" || return 1
     unit="${parsed%%$'\t'*}"
     mode="${parsed#*$'\t'}"

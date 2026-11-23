@@ -9,7 +9,7 @@ The share is set when the VM is created, so to add or change it, run this test a
 
 ## Examples
 
-```sh
+```bash
 ./test install-vm-create                  # fresh installer VM, not started
 ./test install-vm-start                   # start it, or start it again after install-vm-stop
 ```

@@ -15,6 +15,7 @@
 # @stdout: the last rpmbuild lines if it failed, or NOTE skipped.
 # @exitcode: 0 if the RPMs were built or skipped, 2 otherwise.
 run-ui-rpmbuild() {
+    local line
     local run_dir out_file
     run_dir="${1}"
     [[ "${TST_UI_PRESENT}" == "true" ]] || { echo "NOTE: skipped"; return 0; }

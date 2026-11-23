@@ -25,9 +25,11 @@ deploy-sh-scripts() {
     path_build=$(realpath "$1")
     path_sh_files=$(realpath "$2")
     cd "${path_sh_files}"
-    # shellcheck source=./utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_69240E92BC62}/utils/print-step.sh"
-    print-step-header "${step_tag}" "Deploying shell scripts..."
+    # shellcheck source=./utils/print-deploy-header.sh
+    declare -F print-deploy-header >/dev/null || source "${DIR_69240E92BC62}/utils/print-deploy-header.sh"
+    # shellcheck source=./utils/print-deploy-ok.sh
+    declare -F print-deploy-ok >/dev/null || source "${DIR_69240E92BC62}/utils/print-deploy-ok.sh"
+    print-deploy-header "${step_tag}" "Deploying shell scripts..."
     find . -name "*.sh" -type f -exec sh -c 'install -Dm755 "$1" "$2/${1#./}"' _ {} "${path_build}" \;
-    print-step-ok
+    print-deploy-ok
 }

@@ -15,21 +15,6 @@ if [[ -z "${DIR_79D638708AAC:-}" ]]; then
     readonly DIR_79D638708AAC
 fi
 
-# @description: Shows a spinner and the check title on one line until it is stopped.
-# @arg: $1 - the check title.
-# @stdout: the spinner line, redrawn in place.
-health-run-live-spinner() {
-    local title spinner j
-    title="${1}"
-    spinner='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-    while true; do
-        for ((j = 0; j < ${#spinner}; j++)); do
-            printf '\r\033[K        %s %s' "${spinner:j:1}" "${title}"
-            sleep 0.1
-        done
-    done
-}
-
 # @description: Runs one check and writes its result line to a file.
 # @details:
 #   In interactive mode a spinner shows the check title meanwhile, and the line is cleared at the
@@ -49,6 +34,8 @@ health-run-live() {
     spinner_pid=""
     if [[ "${PODSHIFT_OUTPUT:-plain}" == "interactive" ]]; then
         title="$(grep -m1 '^# @title:' "${script}" 2>/dev/null | sed 's/^# @title: //')"
+        # shellcheck source=health-run-live-spinner.sh
+        declare -F health-run-live-spinner >/dev/null || source "${DIR_79D638708AAC}/health-run-live-spinner.sh"
         health-run-live-spinner "${title:-$(basename "${script}" .sh)}" &
         spinner_pid=$!
     fi

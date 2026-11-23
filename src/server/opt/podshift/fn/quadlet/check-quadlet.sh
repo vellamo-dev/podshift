@@ -20,8 +20,11 @@ fi
 #   Checks first that the file parses, then checks each line of pattern-<ext>.conf in order,
 #   stopping at the first failure. A trailing all-digits suffix (a collision rename such as
 #   app.container.1698400000123456789) is removed from the name first.
+#   Last, check-quadlet-name checks the name key and the reserved endings.
+#   Only a type with a pattern file is accepted (.container, .volume, .network, .image), so a
+#   .pod is refused until PodShift supports pods (see docs/roadmap.md).
 # @arg: $1 - quadlet file.
-# @stdout: on failure, one line: "<name>: no pattern for .<ext>", the parse error, or the section problem.
+# @stdout: on failure, one line with the reason (type not accepted, no extension, parse, section or name problem).
 # @exitcode: 0 if valid, 1 otherwise.
 check-quadlet() {
     local file name extension pattern_file sections line
@@ -33,8 +36,12 @@ check-quadlet() {
     [[ "${name}" == *.* ]] && extension="${name##*.}"
     pattern_file="${DIR_DA62C4D7A7A0}/../../assets/quadlets-validator/patterns/pattern-${extension}.conf"
 
-    if [[ -z "${extension}" || ! -f "${pattern_file}" ]]; then
-        echo "${name}: no pattern for .${extension}"
+    if [[ -z "${extension}" ]]; then
+        echo "${name}: no Quadlet file extension"
+        return 1
+    fi
+    if [[ ! -f "${pattern_file}" ]]; then
+        echo "${name}: .${extension} files are not accepted"
         return 1
     fi
 
@@ -53,5 +60,9 @@ check-quadlet() {
         (( ${#words[@]} > 0 )) || continue
         check-quadlet-section "${file}" "${name}" "${words[@]}" || return 1
     done < "${pattern_file}"
+
+    # shellcheck source=./check-quadlet-name.sh
+    declare -F check-quadlet-name >/dev/null || source "${DIR_DA62C4D7A7A0}/check-quadlet-name.sh"
+    check-quadlet-name "${file}" || return 1
     return 0
 }

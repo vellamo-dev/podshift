@@ -8,6 +8,7 @@ setup() {
 
 # Alphanumeric start plus allowed chars is valid.
 @test "good names return 0 and print nothing" {
+    local name
     for name in app web2 My_App my-app 1app a my.app app.v2 a.b.c app_1.2-3 9; do
         run is-valid-app-name "${name}"
         [ "${status}" -eq 0 ]
@@ -25,6 +26,7 @@ setup() {
 
 # The first char must be alphanumeric.
 @test "a leading dot, dash or underscore returns 1" {
+    local name
     for name in .app -app _app .hidden ..; do
         run is-valid-app-name "${name}"
         [ "${status}" -eq 1 ]
@@ -34,6 +36,7 @@ setup() {
 
 # The charset is limited to letters, digits, underscore, dot and dash.
 @test "characters other than letters, digits, underscore, dot and dash return 1" {
+    local name
     for name in "my app" "my/app" 'my\app' "app!" "app@" "app:1" "app,1" "app;rm" 'app$x' 'app`x`' "app'" 'app"' "app*" "app~" "appé" "приложение" "app+1" "app=1" "app%"; do
         run is-valid-app-name "${name}"
         [ "${status}" -eq 1 ]
@@ -53,6 +56,7 @@ setup() {
 
 # A quadlet extension suffix is rejected.
 @test "a name that ends like a quadlet file returns 1" {
+    local ext
     for ext in artifact build container image kube network pod volume quadlets; do
         run is-valid-app-name "app.${ext}"
         [ "${status}" -eq 1 ]
@@ -70,6 +74,7 @@ setup() {
 
 # A reserved word is only rejected as the final extension.
 @test "a reserved word inside the name or before another ending is fine" {
+    local name
     for name in my.container.app container-app containerapp app.container2 app-pod app_volume my.pod.v2 build image app.zipx; do
         run is-valid-app-name "${name}"
         [ "${status}" -eq 0 ]
@@ -78,6 +83,7 @@ setup() {
 
 # A bare reserved word without a dot is allowed.
 @test "a name that is only a reserved word without a dot is fine" {
+    local name
     for name in container pod volume network build image kube artifact quadlets zip; do
         run is-valid-app-name "${name}"
         [ "${status}" -eq 0 ]

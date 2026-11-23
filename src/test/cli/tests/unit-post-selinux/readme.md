@@ -8,6 +8,6 @@ The bats files live in this test's `scripts/` folder, not in `src/test/unit/`, b
 
 ## Examples
 
-```sh
+```bash
 ./test --plain unit-post-selinux
 ```

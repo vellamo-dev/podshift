@@ -33,8 +33,14 @@ configure-ssh-ports() {
     local -r step_tag="PS-PT-SSP"
     local -r drop_in="/etc/ssh/sshd_config.d/10-podshift-ssh-ports.conf"
     local template
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_ACF1F23ED9E4}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_ACF1F23ED9E4}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_ACF1F23ED9E4}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-skip.sh
+    declare -F print-step-skip >/dev/null || source "${DIR_ACF1F23ED9E4}/../../fn/utils/print-step-skip.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_ACF1F23ED9E4}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Configuring SSH ports 22 and 1022..."
 
     if ! command -v sshd >/dev/null 2>&1; then

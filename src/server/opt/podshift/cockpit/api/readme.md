@@ -8,11 +8,11 @@ The program does not become root, does not change sudo or polkit, and does not r
 
 Run it as root and send one JSON object on stdin:
 
-```sh
+```bash
 echo '{"apiVersion":1,"action":"ping","args":{}}' | /opt/podshift/cockpit/api/main.sh
 ```
 
-```sh
+```bash
 echo '{"apiVersion":1,"action":"capabilities","args":{}}' | /opt/podshift/cockpit/api/main.sh
 ```
 
@@ -24,7 +24,7 @@ One JSON object on stdin:
 {"apiVersion":1,"action":"ping","args":{}}
 ```
 
-`apiVersion` must be the number `1`. `action` must be a known name. `args` must be an object. Unknown fields are rejected. The registered actions are `ping`, `capabilities`, `overview-status`, `overview-usage`, `overview-info`, `overview-config`, `health-check`, `networks-list`, `images-list`, `volumes-list`, `containers-list`, `inspect`, `secrets-list`, `services-list`, `service-view`, `service-logs`, `quadlets-list`, `quadlet-view`, `config-set`, `config-unset` and `env-set`. All take `args` as `{}` except `inspect`, which takes `{"kind": ..., "ref": ...}`, `service-view`, which takes `{"unit": ..., "mode": ...}`, `service-logs` and `quadlet-view`, which take `{"unit": ...}`, `config-set`, which takes `{"key": ..., "value": ...}`, `config-unset`, which takes `{"key": ...}`, and `env-set`, which takes `{"value": ...}`.
+`apiVersion` must be the number `1`. `action` must be a known name. `args` must be an object. Unknown fields are rejected. The registered actions are `ping`, `capabilities`, `overview-status`, `overview-usage`, `overview-info`, `overview-config`, `health-check`, `networks-list`, `images-list`, `volumes-list`, `containers-list`, `inspect`, `secrets-list`, `services-list`, `service-view`, `service-logs`, `quadlets-list`, `quadlet-view`, `config-set`, `config-unset`, `env-set`, `quadlet-drop`, `quadlet-drop-history`, `quadlet-install-log` and `quadlet-remove`. All take `args` as `{}` except `inspect`, which takes `{"kind": ..., "ref": ...}`, `service-view`, which takes `{"unit": ..., "mode": ...}`, `service-logs` and `quadlet-view`, which take `{"unit": ...}`, `config-set`, which takes `{"key": ..., "value": ...}`, `config-unset`, which takes `{"key": ...}`, `env-set`, which takes `{"value": ...}`, `quadlet-drop`, which takes `{"name": ..., "content": ...}`, and `quadlet-remove`, which takes `{"name": ..., "volumes": ...}`.
 
 ## Response
 
@@ -57,7 +57,7 @@ Stdout is one JSON object. A handled request exits 0, including a refusal or a b
 
 | Bound | Value |
 |---|---|
-| Request size | 65536 bytes |
+| Request size | 65536 bytes, or 131072 bytes for `quadlet-drop` (`cockpit-request-limit`); stdin is read up to 131072 bytes, then the bound of the action is checked |
 | Request wait | 5 seconds |
 | Capability file | 65536 bytes |
 | Module output | 131072 bytes, stopped while reading |
@@ -167,6 +167,8 @@ Networks list runs in the `podshift` realm. It reads `podman network ls --format
 - `containers`: one row per attached container, with the container name as label and its IP address, without the prefix length, as value. A container without an address shows `No IP`.
 - `labels`: the network labels, sorted by key.
 
+`quadlet` is `{name, app?}` and is set only when an installed `.network` file in `PODSHIFT_PODMAN_QUADLETS_DIR`, or in one bundle folder below it, creates the network: `name` is the file name (for example `front.network`) and `app` the application name for a file in a bundle folder. A network that only has the `PODMAN_SYSTEMD_UNIT` label gets no `quadlet`. The UI uninstalls `app` when it is set, else `name`, with `quadlet-remove`.
+
 If `podman network ls` or `podman network inspect` fails, the action fails.
 
 ### Images list
@@ -194,7 +196,7 @@ Volumes list runs in the `podshift` realm. It reads `podman volume ls --format j
 
 `rows` are `{id, label, value}` items: `mountpoint` (shown as `~/...` under the podshift home), `driver`, `size`, `created` (UTC ISO 8601; the UI formats it) and `used-by` (container names sorted, each with its state capitalized, for example `db (Running), db-backup (Exited)`, or `Unused`). Rows with no value are left out.
 
-`size` comes from `du -sb` on the mountpoint, limited to 5 seconds per volume, in decimal units like podman. The podshift user owns its volumes, but files that a container wrote with another subuid can be unreadable; du skips them and exits non-zero, and its partial number is still used, so the size can be too small. When du prints no number or times out, the row is left out.
+`size` comes from `du -sb` on the mountpoint, limited to 5 seconds for all volumes together, in decimal units like podman. A volume that the time does not reach has no size. The podshift user owns its volumes, but files that a container wrote with another subuid can be unreadable; du skips them and exits non-zero, and its partial number is still used, so the size can be too small. When du prints no number or times out, the row is left out.
 
 `source` is one of:
 
@@ -207,7 +209,9 @@ Volumes list runs in the `podshift` realm. It reads `podman volume ls --format j
 - `details`: `anonymous` (`Yes` or `No`), `options` and `labels` (`key=value`, sorted, joined with `, `).
 - `systemd` (quadlet and container only): `unit` (`<base>-volume.service` for a Quadlet file, or the container unit of the first such container by name), `unit_state`, `file` (shown as `~/...`) and `app`.
 
-If `podman volume ls`, `podman volume inspect`, `podman ps -a` or `podman container inspect` fails, the action fails. A failed `du` only leaves the size out.
+`quadlet` is `{name, app?}` and is set only for the `quadlet` source: `name` is the `.volume` file name (for example `pgdata.volume`) and `app` the application name for a file in a bundle folder. The UI uninstalls `app` when it is set, else `name`, with `quadlet-remove`.
+
+If `podman volume ls`, `podman volume inspect` or `podman ps -a` fails, the action fails. A failed `podman container inspect` falls back to one inspect per container, as in Containers list; a container that still fails gets no volume names. A failed `du` only leaves the size out.
 
 ### Containers list
 
@@ -223,14 +227,16 @@ Containers list runs in the `podshift` realm. It reads `podman ps -a --format js
 
 `autoUpdate` is `registry` or `local`, from the `io.containers.autoupdate` label (`image` counts as `registry`); it is missing when the label is not set. `autoUpdateActive` is `true` only when the container has a `PODMAN_SYSTEMD_UNIT` label and that unit is `active`, because `podman auto-update` only updates containers that systemd runs. It does not check `podman-auto-update.timer`.
 
+`quadlet` is `{name, app?}` and is set only when the `PODMAN_SYSTEMD_UNIT` label names the unit of a `.container` file in `PODSHIFT_PODMAN_QUADLETS_DIR`, or in one bundle folder below it (the unit name from `cockpit-overview-quadlet-unit`): `name` is the file name (for example `boy.container`) and `app` the application name for a file in a bundle folder. A `quadlet` source found only through `SourcePath` elsewhere gets no `quadlet`. The UI uninstalls `app` when it is set, else `name`, with `quadlet-remove`.
+
 `groups` are `{id, label, rows}` items, and empty groups are left out:
 
 - `details`: `networks` (the attached networks sorted, else the network mode, for example `pasta`), `volumes` (named volumes as `name → destination` and bind mounts as `path → destination`, shown as `~/...` under the podshift home), `auto-update` (`Registry`, `Local` or `Off`), `restart` (the restart policy, `no` when none), `cpu` and `memory` (running containers only).
 - `systemd` (quadlet and unit only): `unit`, `unit_state` (`ActiveState`), `file` (the `.container` file, or the unit `SourcePath` or `FragmentPath`, shown as `~/...`) and `app` (the application name, for a file in a bundle folder).
 
-`cpu` is the `cpu_percent` of the stats sample and `memory` the used part of `mem_usage`, in decimal units like podman. The sample is limited to 5 seconds. When it fails, times out or is not a JSON array, both rows are left out for every container; stopped and paused containers never have them.
+`cpu` is the `cpu_percent` of the stats sample and `memory` the used part of `mem_usage`, in decimal units like podman. The list has an 8 second budget: the sample gets the time that is left, at most 5 seconds, and is skipped when less than 1 second is left. When it fails, times out or is not a JSON array, both rows are left out for every container; stopped and paused containers never have them.
 
-If `podman ps -a` or `podman container inspect` fails, the action fails. A failed stats sample only leaves CPU and Memory out.
+If `podman ps -a` fails, the action fails. If the one `podman container inspect` for all containers fails, for example because a container was removed in between, each container is inspected on its own (`cockpit-container-inspect-each`): a container that still fails keeps only its `podman ps` fields and is logged to `podshift-api` with the first line of the error. A failed stats sample only leaves CPU and Memory out.
 
 ### Secrets list
 
@@ -240,7 +246,7 @@ Secrets list runs in the `podshift` realm. It reads the secret IDs from `podman 
 
 `rows` are `{id, label, value}` items: `driver`, `created`, `updated` and `used-by` (for example `db (env DB_PASSWORD), web (file at /run/secrets/api-token)`, or `Unused`). Rows with no value are left out.
 
-If `podman secret ls`, `podman secret inspect`, `podman ps -a` or `podman container inspect` fails, the action fails.
+If `podman secret ls`, `podman secret inspect` or `podman ps -a` fails, the action fails. A failed `podman container inspect` falls back to one inspect per container, as in Containers list; a container that still fails is left out of `usedBy`.
 
 ### Inspect
 
@@ -252,7 +258,7 @@ Inspect runs in the `podshift` realm and only reads from podman. It takes `args`
 
 Any other kind, ref or mode fails the input contract with `INVALID_ARGS` (for example `Given arguments are not supported: ref.`), and podman is not run. The module checks them again before it runs `podman <kind> inspect -- <ref>` for the podshift user.
 
-```sh
+```bash
 echo '{"apiVersion":1,"action":"inspect","args":{"kind":"volume","ref":"pgdata"}}' | /opt/podshift/cockpit/api/main.sh
 ```
 
@@ -335,13 +341,45 @@ Config unset runs in the `podshift` realm and takes `{"key": ...}`. It applies t
 
 Environment tag set (`env-set`) runs in the `root` realm, because only root may write `/var/lib/podshift/runtime.conf`, and takes `{"value": ...}`. The tag is checked with `is-valid-env-tag`, the same rule as `podshift env --set` (`^[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}$`). The current value is read with `load-podshift-conf-runtime`, as `podshift env` shows it. When `TSV_ENV` is already set, nothing is written, so the UI can set the tag only once; root can still change it with `sudo podshift env --set <tag>`. `update-podshift-conf` writes the file. `data` is `{"key":"TSV_ENV","ok":true}`, or `ok: false` with `error` `INVALID_TAG` or `ALREADY_SET` and a `message`.
 
+### Quadlet drop
+
+Quadlet drop runs in the `podshift` realm, so the file is written by the podshift user. It takes `args` `{"name": "<file name>", "content": "<base64>"}`. `content` is always base64 (standard alphabet, padded, no line breaks), for a Quadlet text file and a `.zip` alike; the contract allows 4 to 68268 characters, the base64 length of 50 KB. `name` is 1 to 255 characters and is checked by `cockpit-quadlet-drop-name`: no folder part (`/` or `\`), not hidden (no leading `.`), an extension of `PODSHIFT_DROP_QUADLET_EXTENSIONS` (`.container`, `.volume`, `.network`, `.image`) or `.zip`, and the name without the extension must pass `is-valid-app-name` (starts with a letter or a digit, then only letters, digits, `_`, `.` and `-`). The decoded file must not be empty and not larger than `PODSHIFT_DROP_MAX_BUNDLE_SIZE` KB (50), the bundle bound of `drop-process`, which also applies to a single Quadlet file here.
+
+The file is decoded into a temp file in `PODSHIFT_QUADLET_WEB_UPLOAD_DIR` (`/home/podshift/.quadlets/web-upload`, 0700, cleaned by tmpfiles after 1 day), set to mode 0644, and moved with `mv -n` (a rename, as both folders are under `/home/podshift`) to `PODSHIFT_DROP_DIR/<name>` only when `stat` shows owner `podshift`, group `podshift` and mode `644`. A name that is already in the drop directory is refused with `NAME_BUSY` instead of getting a suffix: `drop-process` sends a name with a suffix after the extension to trash, and a suffix before it would rename the Quadlet. Every refusal removes the temp file. On success `uploaded <name> to the drop folder` is logged with the `podshift-qdl-upload` tag. Nothing goes to the drop history here: `drop-process` gives the file its drop ID and logs it as `accepted` about 2 seconds later, and the UI shows the file name under the drop zone until then.
+
+`data` is `{name, ok: true}`, with `name` the file name in the drop directory, or `{name, ok: false, error, message}` with `error` one of `INVALID_NAME`, `UNSUPPORTED_TYPE`, `INVALID_CONTENT`, `EMPTY_FILE`, `TOO_LARGE`, `WRONG_OWNER`, `NAME_BUSY` and `DROP_UNAVAILABLE` (the upload or drop folder is missing, or `PODSHIFT_DROP_MAX_BUNDLE_SIZE` is not a whole number). The request bound of this action is 131072 bytes.
+
+### Quadlet drop history
+
+Quadlet drop history runs in the `root` realm, because the podshift user cannot read the journal on Fedora, and takes `{}`. It shows one row per drop, so the same file dropped three times gives three rows.
+
+Every item that enters the drop directory gets a drop ID in `drop-process`, whoever dropped it (Cockpit, a terminal, `scp`), refused items too. The ID is a UUIDv7 (`new-uuid7`: the time from `date +%s%3N` and 10 bytes from `/dev/urandom`, built by the pure `format-uuid7`), so IDs sort by time. An accepted Quadlet file is written to the validation queue with `# podshift-drop-id: <uuid>` as line 1, through a hidden temp file and a rename (`set-drop-id`); an older drop ID line, for example in a copy of an installed file, is always removed. An accepted `.zip` keeps its content and carries the ID in its queued name, `shop.zip.<uuid>`; `process-bundle` writes the same ID line into every file of the bundle. The ID line travels with the file through validate and install, and `is-same-installed-file` leaves it out, so a new drop of an installed file is still `unchanged`. A file placed in the validation queue or the source folder by hand gets a new ID there.
+
+`drop-process`, `qdl-validate` (with `process-bundle`) and `qdl-install` log each step with `log-drop-history`: `logger -t podshift-drop-history -p info` with a JSON message `{id, name, status}` plus `reason` and `description` (the `[Unit]` Description of a Quadlet file) when known. A missing or invalid ID logs nothing. `name` is the dropped file name (`web.container`, `shop.zip`); a bundle folder `shop.qdl-bundle` is logged as `shop.zip`, and the collision suffix and the zip drop ID are removed from the name (`get-original-name`). The statuses are `accepted` (moved to the validation queue), `validated`, `installing`, `installed`, `unchanged` (the same item is already installed; sent to trash), `failed` and `refused` (with the reason; a refused Quadlet is kept in `/home/podshift/.quadlets/rejected`, and a refused drop goes to trash). A removal is not a drop and is not in the drop history; it logs to the `podshift-qdl-remove` tag, which the install log shows. The existing log lines of the three steps are unchanged.
+
+The module runs `journalctl -n 1000 -o json --no-pager SYSLOG_IDENTIFIER=podshift-drop-history _UID=<uid>` once, and `cockpit-drop-history-items` keeps the newest record of each drop ID: `{id, name, status, time}` plus `reason` of that record and `description`, the newest non-empty one of that drop. Records without a valid ID or with another status are skipped. `time` is UTC ISO 8601 to the second. Items are newest first, at most 100. `data` is `{readable: true, items}`, or `{readable: false, error: "JOURNAL_UNREADABLE", reason, items: []}` as in Service logs. `name` is cut to 255 characters, `reason` and `description` to 200, so 100 items fit in the module output bound; else 50, 25, 10 and 1 are tried.
+
+### Quadlet install log
+
+Quadlet install log runs in the `root` realm and takes `{}`. It runs `journalctl -n 2000 -p info -o json --output-fields=SYSLOG_IDENTIFIER,_COMM,USER_UNIT,PRIORITY,MESSAGE,_PID,SYSLOG_PID,_HOSTNAME --no-pager SYSLOG_IDENTIFIER=podshift-drop-process _UID=<uid> + SYSLOG_IDENTIFIER=podshift-qdl-validate _UID=<uid> + SYSLOG_IDENTIFIER=podshift-qdl-install _UID=<uid> + SYSLOG_IDENTIFIER=podshift-qdl-remove _UID=<uid> + SYSLOG_IDENTIFIER=systemd _UID=<uid> + SYSLOG_IDENTIFIER=podman _UID=<uid>` once (`cockpit-install-log-matches`); `-p info` leaves out debug lines such as `still settling`. `cockpit-install-log-filter` then reads the lines twice. First it collects the units that PodShift started or removed: the unit of each `podshift-qdl-install` line `queued start of <unit>`, and each `.service` name or Quadlet file name in a `podshift-qdl-remove` line other than a `used by` refusal (a file name gives its unit as `get-quadlet-unit-name` does, so `web.container` gives `web.service` and `front.network` gives `front-network.service`; `remove-item` logs `stopping <unit>` for each unit, so the units of an app show too). Then it keeps the step lines, the systemd lines whose `USER_UNIT` is one of these units (so `Starting boy.service`, `Started boy.service`, `boy.service: Failed with result 'exit-code'.` and `Stopped boy.service` show), and the podman lines whose message has `PODMAN_SYSTEMD_UNIT=<unit>` for one of these units (container create, init, start, remove and so on), except `health_status`, `exec` and `exec_died` events. The user manager start (sockets, targets, slices, `podman.socket`, `podman-auto-update.timer` and so on), `libpod-*.scope` lines, `podshift-*` and `run-*` units and units that PodShift did not start, such as the examples, are left out. A unit started again later (after a restart or reboot) only shows while its install or removal line is still in the 2000 lines. The container's own output is not read. 2000 lines are read because the systemd matches also bring one `podshift-api-*` line per API call and the health check runs; the newest 100 kept lines are returned. The history tag is not included, as its messages are JSON for the history. `data` is `{readable: true, entries}`, oldest first, with the entries of Service logs (`{time, hostname, identifier, priority, message}` plus `pid`, `message` cut to 1024 characters), or `{readable: false, error: "JOURNAL_UNREADABLE", reason, entries: []}`. When 100 entries do not fit in 131072 bytes, 50, 25, 10 and then 1 are tried.
+
+### Quadlet remove
+
+Quadlet remove runs in the `podshift` realm. It takes `args` `{"name": "<file or app>", "volumes": <boolean>}`; `volumes` is optional and `false` by default. `name` (1 to 255 characters) is either an installed Quadlet file at the top of `PODSHIFT_PODMAN_QUADLETS_DIR`, such as `web.container` (a Quadlet extension, and the base name passes `is-valid-app-name`), or an app, the folder of an installed bundle (the `.zip` name without `.zip`). A file inside an app folder cannot be removed on its own.
+
+The module only checks and queues, so it stays inside the 10 second bound. It refuses a name that is not installed, and a file or app that another installed Quadlet refers to (`Network=`, `Volume=`, `Pod=`, `Image=`, `Mount=` with a Quadlet file name, or a plain `Network=` name, `Volume=` source or `Mount=` `type=volume` source equal to the base name of the `.network` or `.volume` being removed). Then it writes one request file `PODSHIFT_QUADLET_REMOVE_QUEUE_DIR/<name>` (`/home/podshift/.quadlets/remove-queue`, 0700) with the content `volumes=0` or `volumes=1`, through a hidden temp file and `mv -n`, and logs `queued removal of <name>` with the `podshift-qdl-remove` tag. Nothing goes to the drop history.
+
+`podshift-qdl-remove.path` starts `podshift-qdl-remove.service`, which handles the requests oldest first with `remove-item`, the same helper as `podshift quadlet rm`. It checks again that nothing uses the item, also a container that is not part of it on one of its networks or volumes; stops the units, containers first and networks last (`PODSHIFT_QUADLET_STOP_TIMEOUT` seconds each); runs `podman quadlet rm --force` (with `--recursive` for an app); removes leftover containers with the `PODMAN_SYSTEMD_UNIT` label of a removed unit, the pods, and the networks (`podman network rm` without `--force`); and removes the volumes only with `volumes=1`. Each step and the result (`removed <name>`, `<name>: used by web.container`, `podman quadlet rm failed for <name>`) are logged with the `podshift-qdl-remove` tag. The Podman behaviour is taken from the Podman docs and is not verified on Fedora.
+
+`data` is `{name, ok: true}` when the request is queued, or `{name, ok: false, error, message}` with `error` one of `INVALID_NAME`, `NOT_FOUND`, `IN_USE` (`message` is `used by <files>`), `BUSY` (a request for this name is already waiting) and `REMOVE_UNAVAILABLE` (the remove queue folder is missing). `ok: true` means queued, not removed; the UI follows the result in Quadlet install log.
+
 ## Journal
 
-```sh
+```bash
 journalctl -t podshift-api --no-pager
 ```
 
-The tag is `podshift-api`. Each line has a matched action or a fixed marker (`not-root`, `invalid-request`, `unknown-action`), a result code, and `duration_ms`. The raw body, arguments, module output and caller text are not logged. If logging fails, the JSON response is unchanged.
+The tag is `podshift-api`. Each line has a matched action or a fixed marker (`not-root`, `invalid-request`, `unknown-action`), a result code, and `duration_ms`. A failed request adds `reason=` (`module`, `output`, `contract`, `size`, `timeout`, `realm` or `metadata`), and for `module` also `detail=` with the first line of the module stderr (control characters replaced, at most 200 characters), for example `podshift-api action=networks-list code=INTERNAL duration_ms=412 reason=module detail=<first stderr line>`. The raw body, arguments, module output and caller text are not logged; a module must not print a secret to stderr. If logging fails, the JSON response is unchanged.
 
 ## Further reading
 

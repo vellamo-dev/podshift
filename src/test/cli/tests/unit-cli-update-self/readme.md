@@ -16,6 +16,6 @@ The bats files live in this test's `scripts/` folder, not in `src/test/unit/`, b
 
 Run the update-self tests.
 
-```sh
+```bash
 ./test --plain unit-cli-update-self
 ```

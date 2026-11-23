@@ -4,11 +4,11 @@
 # Run with: ./test unit-cli-update-self
 
 setup() {
-    HERE="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
-    REPO="${HERE}"
-    while [ "${REPO}" != "/" ] && [ ! -f "${REPO}/podshift.spec" ]; do
-        REPO="$(dirname "${REPO}")"
-    done
+    local here
+    here="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
+    # The shared helper is at the same place from every suite's scripts/ folder.
+    declare -F find-repo-root >/dev/null || source "${here}/../../../shared/fn/utils/find-repo-root.sh"
+    REPO="$(find-repo-root "${here}")" || return 1
     SCRIPT="${REPO}/src/server/opt/podshift/cli/modules/update-self/main.sh"
     SUDO_LOG="${BATS_TEST_TMPDIR}/sudo.log"
     RELOAD="Reload the PodShift page in Cockpit to load the new UI."

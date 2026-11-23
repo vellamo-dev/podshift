@@ -4,6 +4,6 @@ Removes all files and folders in `artifacts/tmp/`. The folder itself stays.
 
 ## Examples
 
-```sh
+```bash
 ./test clean-tmp
 ```

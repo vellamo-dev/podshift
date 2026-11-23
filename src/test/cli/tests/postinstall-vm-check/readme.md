@@ -4,6 +4,6 @@ Checks that the installer VM is already running and has PodShift installed. It n
 
 ## Examples
 
-```sh
+```bash
 ./test postinstall-vm-check
 ```

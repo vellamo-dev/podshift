@@ -10,7 +10,7 @@
 
 # @description: Checks bashdoc tag names and allowed values against the marked tables in coding.md.
 # @details:
-#   Reads src/test/cli/tests/lint-bashdoc-tags/data/tags.conf for scan paths, conf files,
+#   Reads src/test/cli/shared/conf/bashdoc-tags.conf for scan paths, conf files,
 #   short-header and exception lists. Known tags, old tag names and allowed values come from
 #   docs/coding.md between the <!-- lint:tags -->, <!-- lint:allowed-values --> and
 #   <!-- lint:old-tags --> markers (each closed by <!-- lint:end -->). Override the coding.md
@@ -29,7 +29,7 @@ verify-tag-values() {
     local run_dir tags_conf coding_md section line file bad n work_dir
     local -a scan_paths short_header_files exception_files conf_files files
     run_dir="${1}"
-    tags_conf="src/test/cli/tests/lint-bashdoc-tags/data/tags.conf"
+    tags_conf="src/test/cli/shared/conf/bashdoc-tags.conf"
     coding_md="${BASHDOC_CODING_MD:-docs/coding.md}"
     work_dir="artifacts/work/lint-bashdoc-tag-values"
     bad=0
@@ -42,7 +42,7 @@ verify-tag-values() {
     mkdir -p "${work_dir}"
 
     if [[ ! -f "${tags_conf}" ]]; then
-        echo "DETAIL: ${tags_conf}: missing tags.conf"
+        echo "DETAIL: ${tags_conf}: missing bashdoc-tags.conf"
         echo "NOTE: 1 problems"
         return 2
     fi

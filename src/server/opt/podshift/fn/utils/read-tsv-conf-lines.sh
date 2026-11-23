@@ -15,9 +15,6 @@ if [[ -z "${DIR_9C4DFA8FEF49:-}" ]]; then
     readonly DIR_9C4DFA8FEF49
 fi
 
-# shellcheck source=./parse-tsv-conf-line.sh
-declare -F parse-tsv-conf-line >/dev/null || source "${DIR_9C4DFA8FEF49}/parse-tsv-conf-line.sh"
-
 # @description: Sets and exports every TSV_NAME=value line of a tsv.conf file, in file order.
 # @details:
 #   Pure Bash with no subprocess. Each line goes through parse-tsv-conf-line, so values are never
@@ -27,6 +24,8 @@ declare -F parse-tsv-conf-line >/dev/null || source "${DIR_9C4DFA8FEF49}/parse-t
 # @exitcode: 0 when the file was read, 1 when it cannot be read.
 read-tsv-conf-lines() {
     local file line tsv_key tsv_value
+    # shellcheck source=./parse-tsv-conf-line.sh
+    declare -F parse-tsv-conf-line >/dev/null || source "${DIR_9C4DFA8FEF49}/parse-tsv-conf-line.sh"
     file="${1-}"
     [[ -n "${file}" && -f "${file}" && -r "${file}" ]] || return 1
     while IFS= read -r line || [[ -n "${line}" ]]; do

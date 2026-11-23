@@ -11,39 +11,10 @@
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
 
-# @description: Prints the human verdict label, matching the CLI Result line without the icon.
-# @arg: $1 - the verdict line from health-verdict.
-# @stdout: a label such as "Healthy (27 passed, 1 note)".
-# @exitcode: 0 always.
-cockpit-health-check-label() {
-    local verdict passed issues warnings errors skipped notes state counts
-    IFS=$'\t' read -r verdict passed issues warnings errors skipped notes <<< "${1}"
-    passed="${passed:-0}"
-    issues="${issues:-0}"
-    warnings="${warnings:-0}"
-    errors="${errors:-0}"
-    skipped="${skipped:-0}"
-    notes="${notes:-0}"
-    case "${verdict}" in
-        healthy)         state="Healthy" ;;
-        needs-attention) state="Needs attention" ;;
-        issues-found)    state="Issues found" ;;
-        *)               state="Check incomplete" ;;
-    esac
-    counts=""
-    (( passed > 0 ))    && counts="${passed} passed"
-    (( issues == 1 ))   && counts="${counts:+${counts}, }1 issue"
-    (( issues > 1 ))    && counts="${counts:+${counts}, }${issues} issues"
-    (( warnings == 1 )) && counts="${counts:+${counts}, }1 warning"
-    (( warnings > 1 ))  && counts="${counts:+${counts}, }${warnings} warnings"
-    (( notes == 1 ))    && counts="${counts:+${counts}, }1 note"
-    (( notes > 1 ))    && counts="${counts:+${counts}, }${notes} notes"
-    (( errors == 1 ))   && counts="${counts:+${counts}, }1 check could not run"
-    (( errors > 1 ))    && counts="${counts:+${counts}, }${errors} checks could not run"
-    (( skipped > 0 ))   && counts="${counts:+${counts}, }${skipped} skipped"
-    printf '%s (%s)\n' "${state}" "${counts}"
-    return 0
-}
+if [[ -z "${DIR_E732843725A5:-}" ]]; then
+    DIR_E732843725A5="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    readonly DIR_E732843725A5
+fi
 
 # @description: Prints the Cockpit health-check object: groups of rows, plus a summary.
 # @details:
@@ -82,8 +53,10 @@ cockpit-health-check-data() {
         key="${1}"
         [[ -n "${key}" ]] || return 0
         label_text="$(jq -r -n --argjson titles "${titles_json}" --arg key "${key}" 'if ($titles | has($key)) then $titles[$key] else $key end')" || return 1
-        groups_json="$(jq -c -n --argjson groups "${groups_json}" --arg id "${key}" --arg label "${label_text}" --argjson rows "${rows_json}" \
-            '$groups + [{id:$id, label:$label, rows:$rows}]')" || return 1
+        # Groups and rows are read from files, not arguments: Linux limits one argument to 128 KB.
+        groups_json="$(jq -c -n --slurpfile groups <(printf '%s' "${groups_json}") --arg id "${key}" --arg label "${label_text}" \
+            --slurpfile rows <(printf '%s' "${rows_json}") \
+            '$groups[0] + [{id:$id, label:$label, rows:$rows[0]}]')" || return 1
     }
 
     while IFS=$'\t' read -r group id title status detail fix || [[ -n "${group}${id}${title}${status}${detail}" ]]; do
@@ -106,7 +79,7 @@ cockpit-health-check-data() {
             --arg value "${detail}" \
             --arg fix "${fix}" \
             '{id:$id, label:$label, state:$state, value:$value, fix:(if $fix == "" then null else $fix end)}')" || return 1
-        rows_json="$(jq -c -n --argjson rows "${rows_json}" --argjson row "${row_json}" '$rows + [$row]')" || return 1
+        rows_json="$(jq -c -n --slurpfile rows <(printf '%s' "${rows_json}") --argjson row "${row_json}" '$rows[0] + [$row]')" || return 1
     done <<< "${results}"
     _cockpit_health_flush_group "${prev_group}" || return 1
 
@@ -121,15 +94,17 @@ cockpit-health-check-data() {
         issues-found)    state_key="fail" ;;
         *)               state_key="fail" ;;
     esac
+    # shellcheck source=./cockpit-health-check-label.sh
+    declare -F cockpit-health-check-label >/dev/null || source "${DIR_E732843725A5}/cockpit-health-check-label.sh"
     label="$(cockpit-health-check-label "${verdict_line}")"
     jq -n -c \
-        --argjson groups "${groups_json}" \
+        --slurpfile groups <(printf '%s' "${groups_json}") \
         --arg state "${state_key}" \
         --arg label "${label}" \
         --argjson passed "${passed}" \
         --argjson notes "${notes}" \
         --argjson warnings "${warnings}" \
         --argjson failed "${issues}" \
-        '{groups:$groups, summary:{state:$state, label:$label, passed:$passed, notes:$notes, warnings:$warnings, failed:$failed}}'
+        '{groups:$groups[0], summary:{state:$state, label:$label, passed:$passed, notes:$notes, warnings:$warnings, failed:$failed}}'
 }
 

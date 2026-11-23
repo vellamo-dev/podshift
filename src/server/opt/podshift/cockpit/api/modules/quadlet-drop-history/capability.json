@@ -1,0 +1,37 @@
+{
+  "action": "quadlet-drop-history",
+  "name": "Quadlet drop history",
+  "description": "Shows the latest status of each drop of a Quadlet file or bundle for the podshift user, one item per drop ID, newest first, from the podshift-drop-history journal records read as root.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "readable": { "type": "boolean" },
+      "error": { "type": "string", "enum": ["JOURNAL_UNREADABLE"] },
+      "reason": { "type": "string", "maxLength": 200 },
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "pattern": "\\A[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\z" },
+            "name": { "type": "string", "maxLength": 255 },
+            "status": { "type": "string", "enum": ["accepted", "validated", "installing", "installed", "unchanged", "failed", "refused"] },
+            "time": { "type": "string" },
+            "reason": { "type": "string", "maxLength": 200 },
+            "description": { "type": "string", "maxLength": 200 }
+          },
+          "required": ["id", "name", "status", "time"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["readable", "items"],
+    "additionalProperties": false
+  }
+}

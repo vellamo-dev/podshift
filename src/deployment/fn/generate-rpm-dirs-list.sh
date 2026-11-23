@@ -24,12 +24,14 @@ generate-rpm-dirs-list() {
     root_path=$(realpath "$1")
     file_dirs_list=/opt/podshift/conf/restorecon-dirs
     path_file_dirs_list="${root_path}/${file_dirs_list}"
-    # shellcheck source=./utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_C61F78822895}/utils/print-step.sh"
-    print-step-header "${step_tag}" "Generating directories list..."
+    # shellcheck source=./utils/print-deploy-header.sh
+    declare -F print-deploy-header >/dev/null || source "${DIR_C61F78822895}/utils/print-deploy-header.sh"
+    # shellcheck source=./utils/print-deploy-ok.sh
+    declare -F print-deploy-ok >/dev/null || source "${DIR_C61F78822895}/utils/print-deploy-ok.sh"
+    print-deploy-header "${step_tag}" "Generating directories list..."
     : >"${path_file_dirs_list}"
     cd "${root_path}"
     find . -type f | sed 's|/[^/]*$||' | sed 's|^./|/|' | sort -u | grep -v '^/[^/]*$' >"${path_file_dirs_list}"
     cat "${path_file_dirs_list}"
-    print-step-ok
+    print-deploy-ok
 }

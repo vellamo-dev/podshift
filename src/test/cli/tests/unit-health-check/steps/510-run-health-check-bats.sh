@@ -16,14 +16,14 @@
 # @stdout: NOTE with the counts, and one DETAIL line per test, failed ones first.
 # @exitcode: 0 if all passed, 2 otherwise (PodShift problem).
 run-health-check-bats() {
-    local run_dir log bats_file podshift_dir rc passed failed
+    local run_dir log bats_dir podshift_dir rc passed failed
     run_dir="${1}"
     log="${run_dir}/unit-health-check.log"
-    bats_file="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")/../scripts" && pwd -P)/health-check-env-tag.bats"
+    bats_dir="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")/../scripts" && pwd -P)"
     podshift_dir="$(CDPATH='' cd -P -- "${TST_PODSHIFT_DIR}" && pwd -P)" || return 2
     # A clean environment, so no variable from this shell changes the result.
     env -i PATH="${PATH}" HOME="${HOME}" TST_PODSHIFT_DIR="${podshift_dir}" \
-        bats --tap "${bats_file}" >"${log}" 2>&1
+        bats --tap "${bats_dir}" >"${log}" 2>&1
     rc=$?
     passed="$(grep -c '^ok ' "${log}")"
     failed="$(grep -c '^not ok ' "${log}")"

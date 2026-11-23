@@ -28,6 +28,16 @@ setup() {
 }
 
 @test "text can also be read from stdin" {
-    output="$(printf '%s\n' 'app@one.service loaded activating start Instance' | cockpit-services-loaded)"
+    run cockpit-services-loaded <<< 'app@one.service loaded activating start Instance'
+    [ "${status}" -eq 0 ]
     [ "${output}" = $'app@one.service\tactivating' ]
+}
+
+@test "a marker glued to the name is dropped in the C and the UTF-8 locale alike" {
+    local locale
+    for locale in C C.UTF-8; do
+        LC_ALL="${locale}" run cockpit-services-loaded $'●app.service loaded failed failed App\n'
+        [ "${status}" -eq 0 ]
+        [ "${output}" = $'app.service\tfailed' ]
+    done
 }

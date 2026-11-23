@@ -18,7 +18,7 @@
 # @description: Reports the data left behind after uninstallation, also to the journal (tag podshift-install).
 # @exitcode: 0 always.
 podshift-rpm-do-postun() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PU-0PU"
     local action
     action="${1}"

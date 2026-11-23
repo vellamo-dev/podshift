@@ -11,12 +11,16 @@
 # @author: Vellamo.fyi
 
 # @description: Checks the status of the podshift user account service.
-# @exitcode: 0 on success, 1 if not an administrator.
+# @arg: $@ - none; any argument is refused.
+# @exitcode: 0 on success, 1 if given an argument or not an administrator.
 root-status-user() {
+    # shellcheck source=../../fn/utils/require-no-args.sh
+    declare -F require-no-args >/dev/null || source /opt/podshift/fn/utils/require-no-args.sh
+    require-no-args status-user "$@" || return 1
     # shellcheck source=../../fn/utils/require-admin.sh
     declare -F require-admin >/dev/null || source /opt/podshift/fn/utils/require-admin.sh
     require-admin || return 1
     systemctl status user@300 --no-pager
 }
 
-root-status-user
+root-status-user "$@"

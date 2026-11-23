@@ -3,5 +3,5 @@
 Description=PodShift example Quadlet volume
 
 [Volume]
-VolumeName=example-quadlet-vol
+VolumeName=example-quadlet
 Label=podshift.example=1

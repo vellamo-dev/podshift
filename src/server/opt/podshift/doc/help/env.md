@@ -15,12 +15,12 @@ A tag may use `a-z`, `A-Z`, `0-9`, `_`, `.` and `-`, up to 128 characters.
 
 ## Examples `(root)`
 
-```shell
+```bash
 sudo podshift env --set prod
 ```
 
 ## Examples `(any)`
 
-```shell
+```bash
 podshift env
 ```

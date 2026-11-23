@@ -1,7 +1,7 @@
 {
   "action": "networks-list",
   "name": "Networks list",
-  "description": "Lists the podshift user's Podman networks with their source, settings, containers and labels.",
+  "description": "Lists the podshift user's Podman networks with their source, settings, containers, labels and owning installed Quadlet file or app.",
   "status": "active",
   "input": {
     "type": "object",
@@ -21,6 +21,15 @@
             "subtitle": { "type": "string" },
             "status": { "type": "string", "enum": ["In use", "Unused"] },
             "source": { "type": "string", "enum": ["builtin", "quadlet", "unit", "unmanaged"] },
+            "quadlet": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "app": { "type": "string" }
+              },
+              "required": ["name"],
+              "additionalProperties": false
+            },
             "rows": {
               "type": "array",
               "items": {

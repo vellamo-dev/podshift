@@ -16,15 +16,13 @@ if [[ -z "${DIR_4AB486171993:-}" ]]; then
 fi
 
 # @description: Runs setenforce 1, then sets SELINUX=enforcing in the config file.
-# @arg: $1 - path to the SELinux config file. When empty, uses PODSHIFT_SELINUX_CONFIG or /etc/selinux/config.
+# @arg: $1 - path to the SELinux config file.
 # @stderr: errors from selinux-write-config when the config file cannot be updated.
-# @exitcode: 0 on success, 1 if setenforce failed (config unchanged), 2 if the config file could not be updated.
+# @exitcode: 0 on success, 1 if setenforce failed (config unchanged), 2 if no config file was given (nothing changed) or it could not be updated.
 selinux-set-enforcing() {
     local config
     config="${1:-}"
-    if [[ -z "${config}" ]]; then
-        config="${PODSHIFT_SELINUX_CONFIG:-/etc/selinux/config}"
-    fi
+    [[ -n "${config}" ]] || return 2
     if ! setenforce 1; then
         return 1
     fi

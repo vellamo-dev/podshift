@@ -11,8 +11,12 @@
 # @author: Vellamo.fyi
 
 # @description: Clears the failed state of the podshift user's systemd units.
-# @exitcode: 0 on success, 1 if not the podshift user.
+# @arg: $@ - none; any argument is refused.
+# @exitcode: 0 on success, 1 if given an argument or not the podshift user.
 rootless-reset-failed() {
+    # shellcheck source=../../fn/utils/require-no-args.sh
+    declare -F require-no-args >/dev/null || source /opt/podshift/fn/utils/require-no-args.sh
+    require-no-args reset-failed "$@" || return 1
     # shellcheck source=../../fn/utils/require-podshift.sh
     declare -F require-podshift >/dev/null || source /opt/podshift/fn/utils/require-podshift.sh
     require-podshift || return 1
@@ -22,4 +26,4 @@ rootless-reset-failed() {
     systemctl --user reset-failed
 }
 
-rootless-reset-failed
+rootless-reset-failed "$@"

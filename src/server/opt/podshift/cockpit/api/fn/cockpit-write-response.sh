@@ -36,13 +36,16 @@ cockpit-write-response() {
     # shellcheck source=../../../fn/common/get-podshift-version.sh
     declare -F get-podshift-version >/dev/null || source "${DIR_2C4B298360B3}/../../../fn/common/get-podshift-version.sh"
     version="$(get-podshift-version)" || return 1
+    # Request and data are read from files, not arguments: Linux limits one argument to 128 KB.
     jq -n -c \
         --arg version "${version}" \
         --arg code "${code}" \
         --arg message "${message}" \
-        --argjson request "${request_json}" \
-        --argjson data "${data_json}" \
-        '{
+        --slurpfile request <(printf '%s' "${request_json}") \
+        --slurpfile data <(printf '%s' "${data_json}") \
+        'def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($request | one) as $request | ($data | one) as $data
+        | {
             podshift: {version: $version, apiVersion: 1},
             request: $request,
             status: {ok: ($code == "OK"), code: $code, message: $message},

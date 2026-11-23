@@ -22,13 +22,17 @@ fi
 # @description: Installs the Podman auto-update timer override.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 install-podman-auto-update-override() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-OVR"
     local timer_conf timer_file template_dir
     timer_conf='podman-auto-update.timer.d/override.conf'
     timer_file="/home/podshift/.config/systemd/user/${timer_conf}"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_E8A110D64653}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_E8A110D64653}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_E8A110D64653}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_E8A110D64653}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Installing the Podman auto-update timer override..."
     # Load main config for PODSHIFT_RUNTIME_CONF_TEMPLATES
     # shellcheck source=../../fn/load-podshift-conf-main.sh

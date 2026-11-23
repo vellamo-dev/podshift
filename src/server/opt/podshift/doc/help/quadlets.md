@@ -4,12 +4,12 @@ Lists all rootless Podman quadlets (`podman quadlet ls`).
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift quadlets
 ```
 
 ## Usage `(podshift)`
 
-```shell
+```bash
 quadlets
 ```

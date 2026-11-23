@@ -30,6 +30,6 @@ The last steps check, in the same order, that no example file, labeled network, 
 
 ## Examples
 
-```sh
+```bash
 ./test cleanup-examples
 ```

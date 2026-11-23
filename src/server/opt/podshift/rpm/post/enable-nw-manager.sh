@@ -21,10 +21,14 @@ fi
 # @description: Enables and starts NetworkManager.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 enable-nw-manager() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PO-ENM"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_7E317E9021FA}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_7E317E9021FA}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_7E317E9021FA}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_7E317E9021FA}/../../fn/utils/print-step-ok.sh"
 
     print-step-header "${step_tag}" "Enabling and starting Network Manager..."
 

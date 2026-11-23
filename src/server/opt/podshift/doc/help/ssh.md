@@ -16,9 +16,16 @@ podshift ssh port 22                turn the ssh service on again
 
 Before it turns port 22 off, the command checks with `ss -tln` that sshd listens on 1022, and opens port 1022 in the firewall if it is not open yet. `--force` skips the listening check. The check sees only this machine, not a firewall of your provider. Test `ssh -p 1022` from another terminal first. A session that is already open on port 22 stays open.
 
-## Examples:
+## Examples `(root)`
 
-```shell
+Move SSH to port 1022:
+
+```bash
 sudo podshift ssh port 1022
+```
+
+Move it back to port 22:
+
+```bash
 sudo podshift ssh port 22
 ```

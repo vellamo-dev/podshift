@@ -4,6 +4,6 @@ Copies the built RPM out of the builder container to `artifacts/rpm/`.
 
 ## Examples
 
-```sh
+```bash
 ./test build-rpm-export   # build a fresh RPM
 ```

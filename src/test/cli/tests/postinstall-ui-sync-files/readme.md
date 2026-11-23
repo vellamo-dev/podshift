@@ -8,6 +8,6 @@ If `/usr/share/cockpit/podshift` or `/usr/local/share/cockpit/podshift` is a mou
 
 ## Examples
 
-```sh
+```bash
 ./test postinstall-ui-sync-files
 ```

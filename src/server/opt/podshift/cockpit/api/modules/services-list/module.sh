@@ -15,19 +15,6 @@ if [[ -z "${DIR_7899F62CFB05:-}" ]]; then
     readonly DIR_7899F62CFB05
 fi
 
-# shellcheck source=../../fn/services/cockpit-services-loaded.sh
-declare -F cockpit-services-loaded >/dev/null || source "${DIR_7899F62CFB05}/../../fn/services/cockpit-services-loaded.sh"
-# shellcheck source=../../fn/services/cockpit-services-items.sh
-declare -F cockpit-services-items >/dev/null || source "${DIR_7899F62CFB05}/../../fn/services/cockpit-services-items.sh"
-
-# @description: Runs systemctl --user in the current (podshift) session.
-# @arg: $@ - systemctl arguments.
-# @stdout: systemctl stdout.
-# @exitcode: the systemctl exit code.
-cockpit-services-list-systemctl() {
-    systemctl --user "$@"
-}
-
 # @description: Lists the podshift user's loaded systemd user services as Services tab items.
 # @details:
 #   Runs systemctl --user list-units --type=service --all --plain --no-legend --no-pager and
@@ -43,6 +30,12 @@ cockpit-services-list-systemctl() {
 cockpit-module-services-list() {
     local raw show
     local -a units
+    # shellcheck source=./fn/cockpit-services-list-systemctl.sh
+    declare -F cockpit-services-list-systemctl >/dev/null || source "${DIR_7899F62CFB05}/fn/cockpit-services-list-systemctl.sh"
+    # shellcheck source=../../fn/services/cockpit-services-loaded.sh
+    declare -F cockpit-services-loaded >/dev/null || source "${DIR_7899F62CFB05}/../../fn/services/cockpit-services-loaded.sh"
+    # shellcheck source=../../fn/services/cockpit-services-items.sh
+    declare -F cockpit-services-items >/dev/null || source "${DIR_7899F62CFB05}/../../fn/services/cockpit-services-items.sh"
     raw="$(cockpit-services-list-systemctl list-units --type=service --all --plain --no-legend --no-pager 2>/dev/null)" || return 1
     mapfile -t units < <(cockpit-services-loaded "${raw}" | cut -f 1 | grep -E '^[A-Za-z0-9:_@\\]' | LC_ALL=C sort -u)
     if [[ "${#units[@]}" -eq 0 ]]; then

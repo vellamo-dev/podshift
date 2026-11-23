@@ -15,44 +15,6 @@ if [[ -z "${DIR_9E41C7A2D5B8:-}" ]]; then
     readonly DIR_9E41C7A2D5B8
 fi
 
-# shellcheck source=../../fn/services/cockpit-services-args.sh
-declare -F cockpit-services-args >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/services/cockpit-services-args.sh"
-# shellcheck source=../../fn/services/cockpit-services-loaded.sh
-declare -F cockpit-services-loaded >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/services/cockpit-services-loaded.sh"
-# shellcheck source=../../fn/quadlets/cockpit-quadlet-view-path.sh
-declare -F cockpit-quadlet-view-path >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/quadlets/cockpit-quadlet-view-path.sh"
-# shellcheck source=../../fn/quadlets/cockpit-quadlet-view-result.sh
-declare -F cockpit-quadlet-view-result >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/quadlets/cockpit-quadlet-view-result.sh"
-
-# @description: Runs systemctl --user in the current (podshift) session.
-# @arg: $@ - systemctl arguments.
-# @stdout: systemctl stdout.
-# @exitcode: the systemctl exit code.
-cockpit-quadlet-view-systemctl() {
-    systemctl --user "$@"
-}
-
-# @description: Prints the installed-quadlet directory, loading main.conf when needed.
-# @details:
-#   Uses PODSHIFT_PODMAN_QUADLETS_DIR, usually /home/podshift/.config/containers/systemd, where
-#   podman quadlet install puts the files. When main.conf does not set it, the default
-#   ~/.config/containers/systemd of the current (podshift) user is used.
-# @stdout: the directory path, or nothing when it is not known.
-# @exitcode: 0 always.
-cockpit-quadlet-view-dir() {
-    if [[ -z "${PODSHIFT_PODMAN_QUADLETS_DIR:-}" ]]; then
-        # shellcheck source=../../../../fn/load-podshift-conf-main.sh
-        declare -F load-podshift-conf-main >/dev/null || source "${DIR_9E41C7A2D5B8}/../../../../fn/load-podshift-conf-main.sh"
-        load-podshift-conf-main 2>/dev/null || true
-    fi
-    if [[ -n "${PODSHIFT_PODMAN_QUADLETS_DIR:-}" ]]; then
-        printf '%s\n' "${PODSHIFT_PODMAN_QUADLETS_DIR}"
-    elif [[ -n "${HOME:-}" ]]; then
-        printf '%s\n' "${HOME}/.config/containers/systemd"
-    fi
-    return 0
-}
-
 # @description: Prints the Quadlet file that one loaded user service of the podshift user was generated from.
 # @details:
 #   The unit is checked by cockpit-services-args and must be one of the loaded units of
@@ -70,6 +32,18 @@ cockpit-quadlet-view-dir() {
 # @exitcode: 0 when the result was written, 1 when the arguments are refused or systemctl fails.
 cockpit-module-quadlet-view() {
     local parsed unit raw src_path dir kind rc real_dir file_dir text
+    # shellcheck source=../../fn/services/cockpit-services-args.sh
+    declare -F cockpit-services-args >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/services/cockpit-services-args.sh"
+    # shellcheck source=./fn/cockpit-quadlet-view-systemctl.sh
+    declare -F cockpit-quadlet-view-systemctl >/dev/null || source "${DIR_9E41C7A2D5B8}/fn/cockpit-quadlet-view-systemctl.sh"
+    # shellcheck source=../../fn/services/cockpit-services-loaded.sh
+    declare -F cockpit-services-loaded >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/services/cockpit-services-loaded.sh"
+    # shellcheck source=../../fn/quadlets/cockpit-quadlet-view-result.sh
+    declare -F cockpit-quadlet-view-result >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/quadlets/cockpit-quadlet-view-result.sh"
+    # shellcheck source=./fn/cockpit-quadlet-view-dir.sh
+    declare -F cockpit-quadlet-view-dir >/dev/null || source "${DIR_9E41C7A2D5B8}/fn/cockpit-quadlet-view-dir.sh"
+    # shellcheck source=../../fn/quadlets/cockpit-quadlet-view-path.sh
+    declare -F cockpit-quadlet-view-path >/dev/null || source "${DIR_9E41C7A2D5B8}/../../fn/quadlets/cockpit-quadlet-view-path.sh"
     parsed="$(cockpit-services-args "${1-}" no)" || return 1
     unit="${parsed%%$'\t'*}"
     raw="$(cockpit-quadlet-view-systemctl list-units --type=service --all --plain --no-legend --no-pager 2>/dev/null)" || return 1

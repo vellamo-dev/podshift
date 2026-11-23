@@ -28,6 +28,9 @@
 #   is a .container file, else unit. autoUpdate is registry or local from the
 #   io.containers.autoupdate label (image counts as registry) and is missing when off.
 #   autoUpdateActive, set only with autoUpdate, is true when the unit is set and active.
+#   quadlet, set only when the Quadlet map (installed .container files) has the unit, is {name,
+#   app}: name is the file name, for example boy.container, and app, only for a file in a bundle
+#   folder, the app name. quadlet-remove takes app when it is set, else name.
 # @arg: $1 - JSON array from podman ps -a --format json.
 # @arg: $2 - JSON array from podman container inspect.
 # @arg: $3 - JSON object mapping a unit name to {file, app} from Quadlet .container files.
@@ -48,8 +51,13 @@ cockpit-containers-items() {
     [[ -n "${quadlets}" ]] || quadlets='{}'
     [[ -n "${units}" ]] || units='{}'
     [[ -n "${stats}" ]] || stats='[]'
-    jq -n -c --argjson ps "${ps}" --argjson ins "${inspect}" --argjson quadlets "${quadlets}" \
-        --argjson units "${units}" --argjson stats "${stats}" --arg home "${home%/}" '
+    # The JSON is read from files, not arguments: Linux limits one argument to 128 KB.
+    jq -n -c --slurpfile ps <(printf '%s' "${ps}") --slurpfile ins <(printf '%s' "${inspect}") \
+        --slurpfile quadlets <(printf '%s' "${quadlets}") --slurpfile units <(printf '%s' "${units}") \
+        --slurpfile stats <(printf '%s' "${stats}") --arg home "${home%/}" '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($ps | one) as $ps | ($ins | one) as $ins | ($quadlets | one) as $quadlets
+        | ($units | one) as $units | ($stats | one) as $stats |
         def row($id; $label; $v):
             if $v == null or $v == "" then empty
             else {id: $id, label: $label, value: ($v | tostring)} end;
@@ -105,6 +113,10 @@ cockpit-containers-items() {
             | if $hp == null or $cp == null then empty
               else "\($ip):\(if $r > 1 then "\($hp)-\($hp + $r - 1)" else "\($hp)" end) → "
                 + "\(if $r > 1 then "\($cp)-\($cp + $r - 1)" else "\($cp)" end)/\(.protocol // "tcp")" end;
+        def owner: if type != "object" then null
+            else (((.file // "") | if type == "string" then . else "" end | split("/") | last) // "") as $f
+                | ((.app // "") | if type == "string" then . else "" end) as $a
+                | if $f == "" then null else {name: $f} + (if $a == "" then {} else {app: $a} end) end end;
         def mount:
             if (.Type // "") == "volume" and (.Name // "") != "" then "\(.Name) → \(.Destination // "")"
             elif (.Type // "") == "bind" and (.Source // "") != "" then "\(.Source | display) → \(.Destination // "")"
@@ -124,6 +136,7 @@ cockpit-containers-items() {
             | (($labels.PODMAN_SYSTEMD_UNIT // "") | str) as $unit
             | (if $unit == "" then {} else (($units[$unit] // {}) | obj) end) as $u
             | (if $unit == "" then null else ($quadlets[$unit] // null) | (if type == "object" then . else null end) end) as $q
+            | ($q | owner) as $owner
             | (if $unit == "" or (($u.load_state // "") == "not-found" and $q == null) then "unmanaged"
                elif $q != null or (($u.file // "") | str | endswith(".container")) then "quadlet"
                else "unit" end) as $source
@@ -178,6 +191,7 @@ cockpit-containers-items() {
               }
             + (if $au == null then {}
                else {autoUpdate: $au, autoUpdateActive: ($unit != "" and ($u.unit_state // "") == "active")} end)
+            + (if $owner == null then {} else {quadlet: $owner} end)
           ) | sort_by(.title, .id))}
     ' 2>/dev/null || return 1
 }

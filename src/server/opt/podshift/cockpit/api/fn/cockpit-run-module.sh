@@ -23,14 +23,21 @@ fi
 #   second wall-clock bound (120 seconds for health-check) that includes the session tunnel and descendant processes. A missing
 #   session marker with a failed tunnel is REALM_UNAVAILABLE, and the systemd-run diagnostics are
 #   then printed to stderr. Timeout, size, nonzero status and output that is not one JSON value are
-#   internal failures. Module bytes are not printed on failure.
+#   internal failures. Module bytes are not printed on failure; for a module that exits nonzero,
+#   the first line of its stderr is printed to stderr as "podshift-api: module stderr: <line>".
+#   The arguments are written to a file in the private work directory and passed on stdin, never on
+#   a command line, so they do not show in ps or in the journal.
 # @arg: $1 - action name.
 # @arg: $2 - action arguments as one JSON object, already checked against the input contract; {} when empty. The module function gets it as its first argument.
 # @stdout: the module JSON value on success.
-# @stderr: a fixed diagnostic, with no module body.
+# @stderr: a fixed diagnostic, with no module body, plus the first module stderr line when the module failed.
 # @exitcode: 0 on success, 10 when the podshift session could not be entered, 11 on an internal failure, 12 when output exceeded the bound, 13 when the time bound was exceeded.
 cockpit-run-module() {
+    local max_bytes timeout_s resolved canonical fn_name module_dir realm rest max_capture starter
+    local reader prod waited deadline watchdog timed_out oversized size unit prod_rc first data_size
+    local first_err compact
     local action args work rc
+    local -a launch
     action="${1:-}"
     args="${2:-}"
     [[ -n "${args}" ]] || args='{}'
@@ -51,12 +58,9 @@ cockpit-run-module() {
         declare -F cockpit-enter-session >/dev/null || source "${DIR_22B830488942}/cockpit-enter-session.sh"
         # shellcheck source=./cockpit-stop-process-tree.sh
         declare -F cockpit-stop-process-tree >/dev/null || source "${DIR_22B830488942}/cockpit-stop-process-tree.sh"
-        resolved="$(cockpit-dispatch-action lookup "${action}" 2>/dev/null)" || exit 11
-        canonical="$(printf '%s' "${resolved}" | jq -r '.action')" || exit 11
+        resolved="$(cockpit-dispatch-action fields "${action}" 2>/dev/null)" || exit 11
+        IFS=$'\t' read -r canonical fn_name module_dir realm <<<"${resolved}" || exit 11
         [[ "${canonical}" == "${action}" ]] || exit 11
-        fn_name="$(printf '%s' "${resolved}" | jq -r '.function')" || exit 11
-        module_dir="$(printf '%s' "${resolved}" | jq -r '.directory')" || exit 11
-        realm="$(printf '%s' "${resolved}" | jq -r '.realm')" || exit 11
         case "${realm}" in
             root|podshift) ;;
             *) exit 11 ;;
@@ -77,36 +81,28 @@ cockpit-run-module() {
             max_capture="${max_bytes}"
         fi
         mkfifo "${work}/fifo" || exit 11
+        printf '%s' "${args}" >"${work}/args" || exit 11
         # The leader file is written by the session process itself. setsid may fork, so $! is not a reliable group id.
         : >"${work}/leader"
-        if command -v setsid >/dev/null 2>&1; then
-            if [[ "${realm}" == "podshift" ]]; then
-                setsid --wait bash -c 'printf "%s\n" "$$" > "$4"; source "$1"; cockpit-enter-session "$2" "$3" "$5"' _ \
-                    "${DIR_22B830488942}/cockpit-enter-session.sh" "${action}" "${work}/unit" "${work}/leader" "${args}" \
-                    >"${work}/fifo" 2>"${work}/err" &
-            else
-                setsid --wait bash -c 'printf "%s\n" "$$" > "$3"; source "$1"; "$2" "$4"' _ \
-                    "${module_dir}/module.sh" "${fn_name}" "${work}/leader" "${args}" \
-                    >"${work}/fifo" 2>"${work}/err" &
-            fi
+        # setsid starts the module in its own process group, so a timeout can stop all of it. Without
+        # setsid (macOS) the module runs directly.
+        launch=()
+        command -v setsid >/dev/null 2>&1 && launch=(setsid --wait)
+        if [[ "${realm}" == "podshift" ]]; then
+            "${launch[@]}" bash -c 'printf "%s\n" "$$" > "$4"; source "$1"; cockpit-enter-session "$2" "$3"' _ \
+                "${DIR_22B830488942}/cockpit-enter-session.sh" "${action}" "${work}/unit" "${work}/leader" \
+                <"${work}/args" >"${work}/fifo" 2>"${work}/err" &
         else
-            if [[ "${realm}" == "podshift" ]]; then
-                bash -c 'printf "%s\n" "$$" > "$4"; source "$1"; cockpit-enter-session "$2" "$3" "$5"' _ \
-                    "${DIR_22B830488942}/cockpit-enter-session.sh" "${action}" "${work}/unit" "${work}/leader" "${args}" \
-                    >"${work}/fifo" 2>"${work}/err" &
-            else
-                bash -c 'printf "%s\n" "$$" > "$3"; source "$1"; "$2" "$4"' _ \
-                    "${module_dir}/module.sh" "${fn_name}" "${work}/leader" "${args}" \
-                    >"${work}/fifo" 2>"${work}/err" &
-            fi
+            "${launch[@]}" bash -c 'printf "%s\n" "$$" > "$3"; source "$1"; "$2" "$(cat)"' _ \
+                "${module_dir}/module.sh" "${fn_name}" "${work}/leader" \
+                <"${work}/args" >"${work}/fifo" 2>"${work}/err" &
         fi
         starter=$!
         : >"${work}/out"
-        # dd, not read -t. On Bash 3.2, read -t returns 1 immediately when a
-        # pipe has no data yet, and that status is also used for end of file.
-        # bs=1 is one byte per record on GNU and BSD dd, so the copy stops only
-        # at the count or when the writer closes.
-        dd bs=1 count=$((max_capture + 1)) of="${work}/out" <"${work}/fifo" 2>/dev/null &
+        # head -c, not read -t. On Bash 3.2, read -t returns 1 immediately when a pipe has no data yet,
+        # and that status is also used for end of file. head -c counts bytes, so it stops only at the
+        # bound or when the writer closes, and a full bound means the output was too large.
+        head -c $((max_capture + 1)) <"${work}/fifo" >"${work}/out" 2>/dev/null &
         reader=$!
         prod=""
         waited=0
@@ -136,11 +132,6 @@ cockpit-run-module() {
         while kill -0 "${reader}" 2>/dev/null; do
             if [[ -s "${work}/timed_out" ]] || (( SECONDS >= deadline )); then
                 timed_out=1
-                break
-            fi
-            size="$(wc -c < "${work}/out" | tr -d '[:space:]')"
-            if [[ -n "${size}" ]] && (( size > max_capture )); then
-                oversized=1
                 break
             fi
             sleep 0.1
@@ -206,7 +197,7 @@ cockpit-run-module() {
             exit 12
         fi
         if [[ "${realm}" == "podshift" ]]; then
-            first="$(dd bs=1 count=1 < "${work}/out" 2>/dev/null || true)"
+            first="$(head -c 1 "${work}/out" 2>/dev/null || true)"
             if [[ "${first}" != $'\034' ]]; then
                 if [[ "${prod_rc}" -ne 0 ]]; then
                     printf 'podshift-api: podshift session could not be entered\n' >&2
@@ -228,6 +219,9 @@ cockpit-run-module() {
         fi
         if [[ "${prod_rc}" -ne 0 ]]; then
             printf 'podshift-api: module failed\n' >&2
+            # The first stderr line of the module, so the journal line can say why.
+            first_err="$(grep -m 1 -v '^[[:space:]]*$' "${work}/err" 2>/dev/null | head -c 400)" || first_err=""
+            [[ -z "${first_err}" ]] || printf 'podshift-api: module stderr: %s\n' "${first_err}" >&2
             exit 11
         fi
         if ! jq -e -s 'length == 1' < "${work}/data" >/dev/null 2>&1; then

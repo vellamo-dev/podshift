@@ -32,12 +32,16 @@ fi
 # @description: Enables user lingering for the podshift user.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 enable-rootless-linger() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-LNG"
     local dir_linger file_linger linger_status
     file_linger="/var/lib/systemd/linger/podshift"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_BA906559DA86}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_BA906559DA86}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_BA906559DA86}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_BA906559DA86}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Enabling user lingering for podshift..."
     dir_linger="$(dirname "${file_linger}")"
 

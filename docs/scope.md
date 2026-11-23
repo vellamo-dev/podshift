@@ -180,9 +180,16 @@ Output is written for people first, and stays clean for logs and scripts:
 
 PodShift provides built-in help for the end user, so no external documentation is needed at runtime for common tasks.
 
-```shell
-podshift --help                # usage guide: the full list of commands
-podshift --help <command>      # detailed help for a single command
+Show the usage guide, the full list of commands:
+
+```bash
+podshift --help
+```
+
+Show the detailed help for a single command:
+
+```bash
+podshift --help <command>
 ```
 
 `podshift --help` shows the usage guide with every available command grouped by area. Passing a command name shows help for that command only, for example `podshift --help containers`.

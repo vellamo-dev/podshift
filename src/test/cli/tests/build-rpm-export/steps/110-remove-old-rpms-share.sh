@@ -15,6 +15,7 @@
 # @stdout: NOTE with how many were removed, or none found.
 # @exitcode: 0 if no old RPM is left, 1 otherwise.
 remove-old-rpms-share() {
+    local file
     local run_dir old count
     run_dir="${1}"
     old="$(find "${TST_RPM_SHARE_DIR}" -maxdepth 1 -type f -name '*.rpm' 2>/dev/null)"

@@ -73,12 +73,6 @@ payload() {
     '
 }
 
-@test "health-check label matches the CLI wording for mixed counts" {
-    run cockpit-health-check-label "$(printf 'issues-found 22 2 1 0 0 1' | tr ' ' '\t')"
-    [ "${status}" -eq 0 ]
-    [ "${output}" = "Issues found (22 passed, 2 issues, 1 warning, 1 note)" ]
-}
-
 @test "Environment tag set is ok and unset is a warning with the env fix" {
     run payload $'config|env-tag|Environment tag|OK|dev\n' "healthy 1 0 0 0 0 0"
     [ "${status}" -eq 0 ]

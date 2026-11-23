@@ -25,9 +25,11 @@ deploy-sh-symlinks() {
     path_build=$(realpath "$1")
     path_src=$(realpath "$2")
     count=0
-    # shellcheck source=./utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_DAA882B02926}/utils/print-step.sh"
-    print-step-header "${step_tag}" "Deploying command links..."
+    # shellcheck source=./utils/print-deploy-header.sh
+    declare -F print-deploy-header >/dev/null || source "${DIR_DAA882B02926}/utils/print-deploy-header.sh"
+    # shellcheck source=./utils/print-deploy-ok.sh
+    declare -F print-deploy-ok >/dev/null || source "${DIR_DAA882B02926}/utils/print-deploy-ok.sh"
+    print-deploy-header "${step_tag}" "Deploying command links..."
     mkdir -p "${path_build}/usr/bin" "${path_build}/usr/sbin"
 
     # Dispatcher becomes /usr/bin/podshift.
@@ -54,5 +56,5 @@ deploy-sh-symlinks() {
         count=$((count + 1))
     done
 
-    print-step-ok "Created ${count} command links"
+    print-deploy-ok "Created ${count} command links"
 }

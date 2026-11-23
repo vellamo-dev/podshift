@@ -85,41 +85,82 @@ The containers belong to `podshift`, so you either are that user, or you enter i
 
 The everyday way:
 
-```sh
+```bash
 sudo -u podshift -i
 ```
 
 Two other ways exist and give the same result:
 
 - `machinectl shell podshift@` - a systemd login session
-- `systemd-run --machine=podshift@.host --user --wait --pipe --quiet bash` - the low-level form `podshift` itself uses
+- `systemd-run --machine=podshift@.host --user --wait --pipe --quiet bash` - the low-level form, which the Cockpit API handler uses. The `podshift` CLI itself switches with `sudo -u podshift -i`.
 
-Once inside, everything works directly:
+Once inside, everything works directly. A login shell of root, the podshift user or an admin (a member of `wheel`) gets the shell helpers `quit` and `hcl` and the `PODSHIFT_*` and `TSV_*` variables from `/etc/profile.d/podshift.sh`; the shells of other users get nothing from PodShift.
 
-```sh
-containers                  # list containers
-podshift health-check       # the health check
-podman logs <container>     # read logs
-systemctl --user status …   # user service state
+List the containers:
+
+```bash
+containers
+```
+
+Run the health check:
+
+```bash
+podshift health-check
+```
+
+Read the logs of a container:
+
+```bash
+podman logs <container>
+```
+
+Show the state of a user service:
+
+```bash
+systemctl --user status <name>
 ```
 
 ### Run from root
 
-Root drives everything through the `podshift` CLI, which enters the right realm for each command:
+Root drives everything through the `podshift` CLI, which enters the right realm for each command.
 
-```sh
-sudo podshift containers      # containers live under podshift; the CLI tunnels in
+List the containers, which live under podshift; the CLI tunnels in:
+
+```bash
+sudo podshift containers
+```
+
+Run the health check:
+
+```bash
 sudo podshift health-check
-sudo podshift config …        # admin realm, runs as root
+```
+
+List the configuration, in the admin realm as root:
+
+```bash
+sudo podshift config
 ```
 
 Root cannot run the bare shortcuts, and `sudo podman ps` shows root's own (empty) store. Use `sudo podshift …` instead.
 
 ### One-liners without switching
 
-```sh
+List the podshift user's containers with Podman:
+
+```bash
 sudo -u podshift -i podman ps
+```
+
+List them with the shortcut:
+
+```bash
 sudo -u podshift -i containers
+```
+
+Show the state of a user service:
+
+```bash
 sudo -u podshift -i systemctl --user status <name>
 ```
 
@@ -127,7 +168,7 @@ sudo -u podshift -i systemctl --user status <name>
 
 sshd listens on port 22 and port 1022. Port 22 is open in the firewall until you close it:
 
-```sh
+```bash
 sudo podshift ssh port 1022
 ```
 
@@ -147,7 +188,7 @@ See `podshift --help selinux` for details.
 
 ## Day-to-day
 
-The built-in help lists every command: `podshift --help` and `podshift --help <command>`.
+The built-in help lists every command: `podshift --help`. `podshift --help <command>` or `podshift <command> --help` shows the page for one command without running it.
 
 Run as the podshift user (after `sudo -u podshift -i`):
 
@@ -155,15 +196,55 @@ Run as the podshift user (after `sudo -u podshift -i`):
 - `services`, `failed-services`, `reset-failed`, `daemon-reload` - user systemd service state
 - `update` - update containers that have auto-update on
 - `status-podman` - the rootless Podman API socket
+- `quadlet rm` - remove an installed Quadlet file or app, see [Install and remove Quadlets](#install-and-remove-quadlets)
+- `secret` - create, list, replace, and remove Podman secrets
+
+`sudo podshift quadlet` and `sudo podshift secret` also work: `podshift` switches an admin to the podshift user with `sudo -u podshift -i`, as for the shortcuts.
 
 Run as root with `sudo podshift`:
 
 - `config` - read and set configuration
 - `env` - show or set the environment tag
 - `network` - examine, check, and fix the external network
-- `secret` - create, list, replace, and remove Podman secrets
 - `ssh` - turn the firewall ssh service (port 22) on or off
 - `selinux` - switch SELinux to enforcing
 - `update-self` - update PodShift itself, and the Cockpit UI when it is installed from a repository
 - `health-check` - check the server
 - `status-cockpit`, `status-firewall`, `status-user` - system service status
+
+### Install and remove Quadlets
+
+A Quadlet file or `.zip` bundle dropped into `/home/podshift/drop` is checked and installed once. The folder is fixed: `podshift-drop.path` watches it, so changing `PODSHIFT_DROP_DIR` does not move the watch. PodShift never replaces an installed Quadlet:
+
+- Only `.container`, `.volume`, `.network` and `.image` files are accepted, alone or in a bundle. Pods are not supported yet: a dropped `.pod` goes to `/home/podshift/trash`, and a bundle with a `.pod` in it is rejected. A file with a `Pod=` key is refused too.
+- The same file again (same content after the `TSV_` values are filled in) is logged as `unchanged` and moved to `/home/podshift/trash`.
+- A different file with an installed name, or an app that is already installed, is refused and moved to `/home/podshift/.quadlets/rejected` with the reason "already installed, remove it first".
+- The name key (`ContainerName`, `NetworkName`, `VolumeName`) must be set and equal the file base name, so `web.container` sets `ContainerName=web`.
+- A base name must not end with `-pod`, `-network`, `-volume`, `-image` or `-build`. Quadlet adds those endings to the service names, so `web.network` runs as `web-network.service`.
+- The name must be free in Podman for that type.
+- Every Quadlet file it refers to (`Network=front.network`, `Volume=data.volume:/data`) must be installed, waiting in the drop, or in the same bundle. Every `Secret=` must exist as a Podman secret.
+- A plain name such as `Network=web`, `Volume=data:/data` or `Mount=type=volume,source=data,...` is not checked at install, but it counts as a use of an installed `web.network` or `data.volume`, so removing that file is refused. `Network=host`, `none` and similar, paths, `Pod=` without `.pod` and registry images are not counted.
+
+To change an installed Quadlet, remove it, then drop the new version.
+
+Every drop gets its own drop ID, a UUIDv7 that starts with the time. A dropped Quadlet file gets the line `# podshift-drop-id: <uuid>` as its first line, and every file of a bundle gets the same line. The Drop History in Cockpit shows one row per drop.
+
+Show the drop ID of the installed web.container as the podshift user:
+
+```bash
+head -n 1 /home/podshift/.config/containers/systemd/web.container
+```
+
+Remove the single file web.container as the podshift user:
+
+```bash
+podshift quadlet rm web.container
+```
+
+Remove the app shop and its Podman volumes, without the question:
+
+```bash
+podshift quadlet rm shop --volumes --yes
+```
+
+A removal is refused while another installed Quadlet refers to it. Volumes are kept unless `--volumes` is given. See `podshift --help quadlet`.

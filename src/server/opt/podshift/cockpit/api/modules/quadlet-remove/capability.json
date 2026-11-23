@@ -1,0 +1,26 @@
+{
+  "action": "quadlet-remove",
+  "name": "Quadlet remove",
+  "description": "Queues the removal of one installed Quadlet file or app of the podshift user. The podshift-qdl-remove service stops its units, removes its files, leftover containers and networks, and its volumes only when volumes is true; each step goes to the install log (podshift-qdl-remove tag), not to the drop history.",
+  "status": "active",
+  "input": {
+    "type": "object",
+    "properties": {
+      "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+      "volumes": { "type": "boolean" }
+    },
+    "required": ["name"],
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" },
+      "ok": { "type": "boolean" },
+      "error": { "type": "string", "enum": ["INVALID_NAME", "NOT_FOUND", "IN_USE", "BUSY", "REMOVE_UNAVAILABLE"] },
+      "message": { "type": "string" }
+    },
+    "required": ["name", "ok"],
+    "additionalProperties": false
+  }
+}

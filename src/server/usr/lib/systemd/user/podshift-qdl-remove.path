@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch the PodShift remove queue for quadlets waiting to be removed
+
+[Path]
+DirectoryNotEmpty=/home/podshift/.quadlets/remove-queue
+# See: [podshift-qdl-remove.service](<./podshift-qdl-remove.service>)
+Unit=podshift-qdl-remove.service
+
+[Install]
+WantedBy=default.target

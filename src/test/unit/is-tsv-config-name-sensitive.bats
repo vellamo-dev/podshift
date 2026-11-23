@@ -8,6 +8,7 @@ setup() {
 }
 
 @test "a listed whole word anywhere in the name is a secret" {
+    local name
     for name in TSV_PASSWORD TSV_DB_PASSWORD TSV_PASSWD TSV_PSW TSV_PSWD TSV_PWD TSV_PASS TSV_DB_PASS_OLD TSV_SECRET TSV_SECRETS TSV_APP_SECRET TSV_TOKEN TSV_API_TOKEN TSV_GITHUB_TOKEN_2 TSV_APIKEY TSV_CREDENTIAL TSV_CREDENTIALS TSV_A__TOKEN TSV_TOKEN_; do
         run is-tsv-config-name-sensitive "${name}" "${RULES}"
         [ "${status}" -eq 0 ]
@@ -16,6 +17,7 @@ setup() {
 }
 
 @test "KEY after API or PRIVATE is a secret" {
+    local name
     for name in TSV_API_KEY TSV_PRIVATE_KEY TSV_STRIPE_API_KEY TSV_SSH_PRIVATE_KEY_FILE TSV_API__KEY; do
         run is-tsv-config-name-sensitive "${name}" "${RULES}"
         [ "${status}" -eq 0 ]
@@ -23,6 +25,7 @@ setup() {
 }
 
 @test "words that only contain a secret word are not secrets" {
+    local name
     for name in TSV_PASSAGE TSV_KEYBOARD TSV_TOKENIZER_MODEL TSV_PASSPORT_URL TSV_COMPASS TSV_SECRETARY TSV_PWDX TSV_BYPASS TSV_APP TSV_DOMAIN; do
         run is-tsv-config-name-sensitive "${name}" "${RULES}"
         [ "${status}" -eq 1 ]
@@ -31,6 +34,7 @@ setup() {
 }
 
 @test "KEY alone or after another word is not a secret" {
+    local name
     for name in TSV_KEY TSV_SSH_KEY TSV_KEY_API TSV_PUBLIC_KEY TSV_API TSV_PRIVATE TSV_API_KEYS; do
         run is-tsv-config-name-sensitive "${name}" "${RULES}"
         [ "${status}" -eq 1 ]

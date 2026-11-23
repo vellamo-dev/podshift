@@ -39,6 +39,7 @@ setup() {
 }
 
 @test "maps the sample listing fixture, including every known suffix" {
+    local raw
     raw="$(cat "${FIXTURES}/ls-ok.json")"
     run cockpit-quadlets-items "${raw}"
     [ "${status}" -eq 0 ]
@@ -67,6 +68,7 @@ setup() {
 }
 
 @test "reads the first Description= from the [Unit] section of the quadlet file" {
+    local raw
     QDL="${BATS_TEST_TMPDIR}/web.container"
     printf '[Unit]\nDescription=  Shop web frontend  \nDescription=Second\n[Container]\nDescription=ignored\nImage=web\n' > "${QDL}"
     raw="$(jq -nc --arg p "${QDL}" '[{Name:"web.container",UnitName:"web.service",Path:$p,Status:"active/running",App:"",Pod:""}]')"
@@ -76,6 +78,7 @@ setup() {
 }
 
 @test "a file with no unit Description, or only one in another section, yields an empty description" {
+    local raw
     QDL="${BATS_TEST_TMPDIR}/plain.container"
     printf '[Unit]\nAfter=network.target\n[Container]\nDescription=not the unit\nImage=web\n' > "${QDL}"
     raw="$(jq -nc --arg p "${QDL}" '[{Name:"plain.container",Path:$p,Status:"Not loaded"}]')"
@@ -91,6 +94,7 @@ setup() {
 }
 
 @test "a missing or unreadable quadlet file yields an empty description" {
+    local raw
     run cockpit-quadlets-items '[{"Name":"gone.container","Path":"/no/such/gone.container","Status":"Not loaded"}]'
     [ "${status}" -eq 0 ]
     printf '%s' "${output}" | jq -e '.items[0].description == ""'

@@ -4,12 +4,12 @@ Lists all rootless Podman pods (`podman pod ls`).
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift pods
 ```
 
 ## Usage `(podshift)`
 
-```shell
+```bash
 pods
 ```

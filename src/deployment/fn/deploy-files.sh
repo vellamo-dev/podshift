@@ -25,10 +25,11 @@ fi
 # @exitcode: 1 if the allowlist is missing or empty.
 deploy-files() {
     local -r step_tag="PS-DP-FLS"
-    local path_files path_build conf_file line f base ext
+    local path_files path_build conf_file line f base ext skip
     local -A allowed_ext allowed_exact
+    local -a skip_paths
     # Source-only documentation: kept in the repo, never shipped in the RPM.
-    local -a skip_paths=(
+    skip_paths=(
         "usr/bin/readme.md"
         "usr/sbin/readme.md"
     )
@@ -36,13 +37,17 @@ deploy-files() {
     conf_file="${DIR_296C98A79FFF}/../allowed-extensions.conf"
     path_build=$(realpath "$1")
     path_files=$(realpath "$2")
-    # shellcheck source=./utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_296C98A79FFF}/utils/print-step.sh"
-    print-step-header "${step_tag}" "Deploying files..."
+    # shellcheck source=./utils/print-deploy-header.sh
+    declare -F print-deploy-header >/dev/null || source "${DIR_296C98A79FFF}/utils/print-deploy-header.sh"
+    # shellcheck source=./utils/print-deploy-warn.sh
+    declare -F print-deploy-warn >/dev/null || source "${DIR_296C98A79FFF}/utils/print-deploy-warn.sh"
+    # shellcheck source=./utils/print-deploy-ok.sh
+    declare -F print-deploy-ok >/dev/null || source "${DIR_296C98A79FFF}/utils/print-deploy-ok.sh"
+    print-deploy-header "${step_tag}" "Deploying files..."
 
     if [[ ! -f "${conf_file}" ]]; then
-        print-step-warn "allowlist file not found: ${conf_file}"
-        exit 1
+        print-deploy-warn "allowlist file not found: ${conf_file}"
+        return 1
     fi
 
     # Parse the allowlist into extension and exact-name sets.
@@ -58,8 +63,8 @@ deploy-files() {
     done < "${conf_file}"
 
     if (( ${#allowed_ext[@]} == 0 && ${#allowed_exact[@]} == 0 )); then
-        print-step-warn "allowlist file is empty: ${conf_file}"
-        exit 1
+        print-deploy-warn "allowlist file is empty: ${conf_file}"
+        return 1
     fi
 
     cd "${path_files}"
@@ -80,5 +85,5 @@ deploy-files() {
         fi
         install -Dm644 "${f}" "${path_build}/${f#./}"
     done < <(find . -type f)
-    print-step-ok
+    print-deploy-ok
 }

@@ -8,13 +8,13 @@ There is one runner, `src/test/run.sh`, for every computer. It finds out which O
 
 Run from the project root. The first time, make `./test` executable:
 
-```sh
+```bash
 chmod +x test
 ```
 
 Then run tests:
 
-```sh
+```bash
 bash test --plain quick                # first check after a download, no containers
 ./test host-check                      # is this computer ready for build/install?
 ./test bundle-build-install-validate   # build, install and validate (needs the dev host)
@@ -83,8 +83,8 @@ The tests never need these. They are GUIs that make it easier to see what the te
 
 ## What runs where
 
-- Anywhere: `lint-*`, `dev-cli-help` and `quick`. `release-version-check` too, with curl, jq and network. `dev-cli-help-show-all` needs `glow`; `dev-cli-help-show` does not. `quick` also runs `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check`, `unit-cli-config`, `unit-cli-update-self` and `precheck-unit`, so bats is still required for a full pass.
-- Need bats: `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check`, `unit-cli-config`, `unit-cli-update-self` and `precheck-unit` (they check bats themselves and exit 3 if it is missing).
+- Anywhere: `lint-*`, `dev-cli-help` and `quick`. `release-version-check` too, with curl, jq and network. `dev-cli-help-show-all` needs `glow`; `dev-cli-help-show` does not. `quick` also runs `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check`, `unit-cli-config`, `unit-cli-secret`, `unit-quadlet-lifecycle`, `unit-cli-update-self`, `unit-cli-shortcuts`, `unit-cli-network` and `precheck-unit`, so bats is still required for a full pass.
+- Need bats: `unit-pure-functions`, `unit-cli-selinux`, `unit-health-check`, `unit-cli-config`, `unit-cli-secret`, `unit-quadlet-lifecycle`, `unit-cli-update-self`, `unit-cli-shortcuts`, `unit-cli-network` and `precheck-unit` (they check bats themselves and exit 3 if it is missing).
 - Need the dev host: anything whose Needs include `host-check` (`build-*`, `install-*`, `postinstall-*`, `bundle-*`, `precheck-vm-clean`, `host-container-start`, `hello`). On a Mac that is Apple container and Lima; on Fedora the packages and desktop mark in [What you need](#what-you-need). Other Linux is unsupported and exits 3.
 
 Before full tests, run `./test host-check`, then `./test host-container-start`. The `Fix:` lines cover this machine's host tools only: not bats, and not an installed test VM (`postinstall-*` need that). For one test, `./test --help <test>` prints its Platforms and Needs.
@@ -110,14 +110,18 @@ Test names put the area first and the action last.
 | `postinstall-` | `postinstall-examples` | On demand only, and the last part of `bundle-ui-dev-mount-examples`: puts the example resources from `src/test/fixtures/examples/` (secrets, networks, images, volumes and containers) into the installed VM as the `podshift` user, so the Cockpit UI has real data. Running it again gives the same state. |
 | `postinstall-` | `postinstall-ui-install` | Installs the cockpit-podshift RPM from `ui-rpm-build` in the already installed VM, checks the repo file, the catalogue entry and the package, and keeps it installed. Skips when cockpit-podshift is missing. |
 | `postinstall-` | `postinstall-ui-sync-files` | Copies `../cockpit-podshift/dist` over the installed UI in `/usr/share/cockpit/podshift`. Does nothing when the dev mount is in use. Skips when `dist/` is missing. Reinstalling the UI RPM restores the packaged files. |
-| `lint-` | `lint-cli-modules`, `lint-help-files`, `lint-pure-functions`, `lint-bashdoc-description-length`, `lint-bashdoc-required-tags`, `lint-bashdoc-conditional-tags`, `lint-bashdoc-tag-values`, `lint-spec-scriptlets` | Read the PodShift source and check it, without running anything. |
+| `lint-` | `lint-cli-modules`, `lint-help-files`, `lint-pure-functions`, `lint-local-variables`, `lint-bashdoc-description-length`, `lint-bashdoc-required-tags`, `lint-bashdoc-conditional-tags`, `lint-bashdoc-tag-values`, `lint-spec-scriptlets` | Read the PodShift source and check it, without running anything. |
 | `unit-` | `unit-pure-functions` | Run bats unit tests on single pure functions (files tagged `@unit-test: yes`), with no build or install. Needs bats-core. |
-| `unit-` | `unit-cockpit-api` | Checks the Cockpit JSON handler, ping module and contracts on this computer. The podshift session is mocked. Needs jq. |
+| `unit-` | `unit-cockpit-api` | Checks the Cockpit JSON handler, ping module and contracts on this computer. The podshift session is mocked. Needs jq. The cases are split into `scripts/cases/`. |
 | `unit-` | `unit-cli-selinux` | Runs stubbed bats tests for `podshift selinux enforce`. Needs bats-core, but no VM or root. |
 | `unit-` | `unit-post-selinux` | Runs stubbed bats tests for the post `enforce-selinux` step. Needs bats-core, but no VM or root. |
 | `unit-` | `unit-health-check` | Runs stubbed bats tests for health-check scripts. Needs bats-core, but no VM or root. |
 | `unit-` | `unit-cli-config` | Runs stubbed bats tests for `podshift config` set and `--unset`, and for reading and writing `tsv.conf`. Needs bats-core, but no VM or root. |
+| `unit-` | `unit-cli-secret` | Runs stubbed bats tests for `podshift secret`: the value only from a prompt or stdin. Needs bats-core, but no VM or root. |
+| `unit-` | `unit-quadlet-lifecycle` | Runs stubbed bats tests for installing once, the install checks, `podshift quadlet rm` and the remove queue. Needs bats-core and jq, but no VM, Podman or root. |
 | `unit-` | `unit-cli-update-self` | Runs stubbed bats tests for `podshift update-self`, with rpm, dnf and sudo stubbed. Needs bats-core, but no VM or root. |
+| `unit-` | `unit-cli-shortcuts` | Runs stubbed bats tests that every shortcut refuses arguments, with podman, systemctl and sudo stubbed. Needs bats-core, but no VM or root. |
+| `unit-` | `unit-cli-network` | Runs stubbed bats tests for `podshift network`, with the network facts, curl and the config stubbed. Needs bats-core, but no VM or root. |
 | `precheck-` | `precheck-unit`, `precheck-vm-clean` | Test the portable precheck, `utils/portable/precheck.sh`. `precheck-unit` runs stubbed bats tests with a fake system and needs bats, but no VM. `precheck-vm-clean` runs the script in a fresh installer VM and expects Ready or Ready with warnings. It is the first real check of the `dnf5` output and of the Podman that Fedora offers. Settings: `TST_PRECHECK_AS_ROOT`, `TST_PRECHECK_MODE`. |
 | `dev-` | `dev-cli-help`, `dev-cli-help-show`, `dev-cli-help-show-all` | Run PodShift code on this computer, with no build or install. The `-show` tests print the help for a person to read. |
 | `hello` | `hello` | Prints a greeting, to check that the test runner works. |
@@ -251,6 +255,14 @@ Step rules:
 - A step can print `NOTE: <text>`, shown in brackets after the step title, and `DETAIL: <text>` lines, shown under it.
 - A test needs at least one step of its own.
 
+Bats files and scripts in a test's `scripts/` folder find the repository root with `find-repo-root` from `cli/shared/fn/utils/`. They cannot use the root to find the helper, so they load it by its fixed path from their own folder and pass that folder in, which works from any working directory:
+
+```bash
+here="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
+declare -F find-repo-root >/dev/null || source "${here}/../../../shared/fn/utils/find-repo-root.sh"
+repo="$(find-repo-root "${here}")" || return 1
+```
+
 ## Writing a unit test
 
 1. Tag the function file `# @unit-test: yes` only if it is pure: arguments in, text out, nothing read from the system. Do not tag wrappers that call `ss`, `firewall-cmd` and the like.
@@ -285,7 +297,7 @@ The full chain leaves the test VM running, so you can inspect the installed serv
 
 `./test install-vm-stop` stops the test VM without deleting it. `./test install-vm-start` starts it again and keeps what is inside. `./test install-vm-create` removes it and clones a fresh one from the base.
 
-```sh
+```bash
 limactl list                           # every VM and its state
 limactl shell ps-rpm-installer-fc45    # a shell as the VM user (current user), not root
 limactl stop ps-rpm-installer-fc45     # stop it
@@ -295,7 +307,7 @@ limactl delete ps-rpm-installer-fc45   # remove it
 
 `limactl shell` runs as the VM user, not root. Switch to root inside that shell with `sudo -i`. Or SSH in with the test key (the provision writes it to root's authorized_keys), on port 22 on a fresh VM and 1022 after PodShift is installed:
 
-```sh
+```bash
 ssh -i ~/.ssh/podshift-test-vm -p 22  root@<ip>    # fresh VM
 ssh -i ~/.ssh/podshift-test-vm -p 1022 root@<ip>   # after PodShift
 ```

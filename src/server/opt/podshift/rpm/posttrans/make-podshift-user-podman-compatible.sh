@@ -22,12 +22,16 @@ fi
 # @description: Makes the podshift user rootless-Podman compatible.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 make-podshift-user-podman-compatible() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-PMC"
     local dir_local bin_file
     dir_local="/home/podshift/.local"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_6A062C16DF7A}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_6A062C16DF7A}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_6A062C16DF7A}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_6A062C16DF7A}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Making podshift user compatible with rootless podman..."
 
     if [[ ! -d "${dir_local}" ]]; then

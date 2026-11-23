@@ -25,11 +25,11 @@ podshift-rpm-do-posttrans() {
     local rpm_dir action
     action="${1}"
     rpm_dir="${2}"
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-0PT"
     local -r step_end_tag="PS-PT-1PT"
-    # shellcheck source=../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${rpm_dir}/../fn/utils/print-step.sh"
+    # shellcheck source=../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${rpm_dir}/../fn/utils/print-step-header.sh"
     print-step-header "${step_tag}" "Preparing system (posttrans)..."
     echo -e "\tInstall mode: ${action}"
     # shellcheck source=../fn/utils/is-install-type-desktop.sh
@@ -110,7 +110,7 @@ podshift-rpm-do-posttrans() {
     # Remind about environment tag
     if [ "${action}" -eq 1 ]; then
         echo
-        # shellcheck source=../../../../../opt/podshift/doc/help/note-env-var-conf.txt
+        # shellcheck source=../doc/help/note-env-var-conf.txt
         podshift --help note-env-var-conf
     fi
 

@@ -16,6 +16,7 @@
 # @stderr: the problem, if there is no RPM or more than one.
 # @exitcode: 0 if exactly one was found, 1 otherwise.
 find-exported-rpm() {
+    local file
     local dir files
     dir="${1}"
     [[ "${dir}" == /* ]] || dir="${PWD}/${dir}"

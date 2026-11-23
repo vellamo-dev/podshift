@@ -21,8 +21,8 @@ Images:
 
 Volumes:
 
-- `example-quadlet.volume` goes into `/home/podshift/.config/containers/systemd/` and `example-quadlet-volume.service` is started, which creates `example-quadlet-vol` (source `quadlet`).
-- `example-volume.container` goes into the same folder. The step first creates `example-container-vol` with the `podshift.example=1` label, then starts `example-volume-container.service`, which mounts it and runs `sleep infinity` (source `container`, Running).
+- `example-quadlet.volume` goes into `/home/podshift/.config/containers/systemd/` and `example-quadlet-volume.service` is started, which creates `example-quadlet` (source `quadlet`).
+- `example-volume-container.container` goes into the same folder. The step first creates `example-container-vol` with the `podshift.example=1` label, then starts `example-volume-container.service`, which mounts it and runs `sleep infinity` (source `container`, Running).
 - Each line of `unmanaged.list` is created with `podman volume create` when missing (source `unmanaged`).
 - A small file is written into each example volume, so the Size row is not zero.
 
@@ -37,6 +37,6 @@ Running it again replaces the files and keeps existing networks, images, volumes
 
 ## Examples
 
-```sh
+```bash
 ./test postinstall-examples
 ```

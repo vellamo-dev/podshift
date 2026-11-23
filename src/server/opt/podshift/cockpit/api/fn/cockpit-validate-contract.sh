@@ -24,7 +24,10 @@ cockpit-validate-contract() {
     local contract value result
     contract="${1-}"
     value="${2-}"
-    if ! result="$(jq -n -r --argjson contract "${contract}" --argjson value "${value}" '
+    # The JSON is read from files, not arguments: Linux limits one argument to 128 KB.
+    if ! result="$(jq -n -r --slurpfile contract <(printf '%s' "${contract}") --slurpfile value <(printf '%s' "${value}") '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($contract | one) as $contract | ($value | one) as $value |
         def is_type_name:
             . == "object" or . == "array" or . == "string" or . == "integer"
             or . == "number" or . == "boolean" or . == "null";

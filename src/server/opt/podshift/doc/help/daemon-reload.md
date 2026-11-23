@@ -4,11 +4,11 @@ Reloads the systemd configuration for the podshift user.
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift daemon-reload
 ```
 ## Usage `(podshift)`
 
-```shell
+```bash
 daemon-reload
 ```

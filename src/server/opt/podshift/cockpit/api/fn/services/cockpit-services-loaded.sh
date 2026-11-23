@@ -27,7 +27,9 @@ cockpit-services-loaded() {
     if [[ "$#" -eq 0 ]]; then
         raw="$(cat)"
     fi
-    printf '%s\n' "${raw}" | awk '
+    # Unit names are ASCII; LC_ALL=C makes awk work on bytes, so a UTF-8 marker such as ● is
+    # stripped the same way in every locale.
+    printf '%s\n' "${raw}" | LC_ALL=C awk '
         {
             line = $0
             sub(/^[[:space:]]+/, "", line)

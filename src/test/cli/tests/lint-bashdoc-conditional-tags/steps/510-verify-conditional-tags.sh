@@ -10,7 +10,7 @@
 
 # @description: Checks path- and category-dependent bashdoc tags on scanned files.
 # @details:
-#   Reads src/test/cli/tests/lint-bashdoc-tags/data/tags.conf for scan paths, conf files,
+#   Reads src/test/cli/shared/conf/bashdoc-tags.conf for scan paths, conf files,
 #   short-header and exception lists, host-edit-yes, step prefixes, step entry files,
 #   step-outside-rpm and run-as values. Skips short-header and exception files.
 #   Under src/server, @dest-dir must equal @source-dir with the src/server/ prefix removed
@@ -32,7 +32,7 @@ verify-conditional-tags() {
     local -a scan_paths short_header_files exception_files conf_files files
     local -a host_edit_yes step_prefixes step_entry_files step_outside_rpm run_as_values
     run_dir="${1}"
-    tags_conf="src/test/cli/tests/lint-bashdoc-tags/data/tags.conf"
+    tags_conf="src/test/cli/shared/conf/bashdoc-tags.conf"
     bad=0
     scan_paths=()
     short_header_files=()
@@ -46,7 +46,7 @@ verify-conditional-tags() {
     run_as_values=()
 
     if [[ ! -f "${tags_conf}" ]]; then
-        echo "DETAIL: ${tags_conf}: missing tags.conf"
+        echo "DETAIL: ${tags_conf}: missing bashdoc-tags.conf"
         echo "NOTE: 1 problems"
         return 2
     fi

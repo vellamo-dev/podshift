@@ -15,9 +15,6 @@ if [[ -z "${DIR_F9A9D538E659:-}" ]]; then
     readonly DIR_F9A9D538E659
 fi
 
-# shellcheck source=./parse-tsv-conf-line.sh
-declare -F parse-tsv-conf-line >/dev/null || source "${DIR_F9A9D538E659}/parse-tsv-conf-line.sh"
-
 # @description: Prints comments, blank lines and TSV_NAME='value' lines, dropping any other line.
 # @details:
 #   Uses parse-tsv-conf-line, the same parser as read-tsv-conf-lines. Comment and blank lines are
@@ -32,6 +29,8 @@ declare -F parse-tsv-conf-line >/dev/null || source "${DIR_F9A9D538E659}/parse-t
 # @exitcode: 0 on success, 1 when the file exists but cannot be read.
 write-tsv-conf-lines() {
     local file skip line tsv_key tsv_value dropped rc q esc
+    # shellcheck source=./parse-tsv-conf-line.sh
+    declare -F parse-tsv-conf-line >/dev/null || source "${DIR_F9A9D538E659}/parse-tsv-conf-line.sh"
     file="${1-}"
     skip="${2-}"
     dropped=0

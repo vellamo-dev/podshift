@@ -24,13 +24,15 @@ generate-files-list-for-rpm() {
     local path_build path_files_list
     path_build=$(realpath -m "$1")
     path_files_list="$2"
-    # shellcheck source=./utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_185352DC4DF7}/utils/print-step.sh"
-    print-step-header "${step_tag}" "Generating files list..."
+    # shellcheck source=./utils/print-deploy-header.sh
+    declare -F print-deploy-header >/dev/null || source "${DIR_185352DC4DF7}/utils/print-deploy-header.sh"
+    # shellcheck source=./utils/print-deploy-ok.sh
+    declare -F print-deploy-ok >/dev/null || source "${DIR_185352DC4DF7}/utils/print-deploy-ok.sh"
+    print-deploy-header "${step_tag}" "Generating files list..."
     : >"${path_files_list}"
     # Repo files are config: keep local edits (for example enabled=0) on upgrade.
     find "${path_build}" \( -type f -o -type l \) -printf '/%P\n' | sort |
         sed 's|^/etc/yum\.repos\.d/|%config(noreplace) /etc/yum.repos.d/|' >>"${path_files_list}"
     cat "${path_files_list}"
-    print-step-ok
+    print-deploy-ok
 }

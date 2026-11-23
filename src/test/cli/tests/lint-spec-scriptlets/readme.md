@@ -11,6 +11,6 @@ It needs no VM, container or bats.
 
 ## Examples
 
-```sh
+```bash
 ./test --plain lint-spec-scriptlets
 ```

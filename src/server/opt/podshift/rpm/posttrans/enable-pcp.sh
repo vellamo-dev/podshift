@@ -30,11 +30,15 @@ fi
 # @description: Enables and starts pmcd, pmlogger and cockpit.socket.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 enable-pcp() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-PCP"
     local service
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_336F791ABB4F}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_336F791ABB4F}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_336F791ABB4F}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_336F791ABB4F}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Enabling and starting PCP metrics and Cockpit..."
 
     for service in pmcd pmlogger cockpit.socket; do

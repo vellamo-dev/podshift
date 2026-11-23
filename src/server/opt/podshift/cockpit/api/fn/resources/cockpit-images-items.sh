@@ -42,8 +42,12 @@ cockpit-images-items() {
     [[ -n "${ctrs}" ]] || ctrs='[]'
     [[ -n "${sources}" ]] || sources='{}'
     [[ -n "${units}" ]] || units='{}'
-    jq -n -c --argjson images "${images}" --argjson ctrs "${ctrs}" --argjson sources "${sources}" \
-        --argjson units "${units}" '
+    # The JSON is read from files, not arguments: Linux limits one argument to 128 KB.
+    jq -n -c --slurpfile images <(printf '%s' "${images}") --slurpfile ctrs <(printf '%s' "${ctrs}") \
+        --slurpfile sources <(printf '%s' "${sources}") --slurpfile units <(printf '%s' "${units}") '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($images | one) as $images | ($ctrs | one) as $ctrs | ($sources | one) as $sources
+        | ($units | one) as $units |
         def row($id; $label; $v):
             if $v == null or $v == "" then empty
             else {id: $id, label: $label, value: ($v | tostring)} end;

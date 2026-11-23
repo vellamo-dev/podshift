@@ -26,6 +26,7 @@ parse() {
 }
 
 @test "an escaped single quote is decoded, so a written value reads back the same" {
+    local q esc
     local value written
     [ "$(parse "TSV_A='it'\\''s'")" = "0|TSV_A|it's" ]
     for value in "it's" "'" "a'" "'a" "''" "a'b'c"; do
@@ -53,12 +54,14 @@ parse() {
 }
 
 @test "comments and blank lines return 2" {
+    local line
     for line in "# Custom TSV_* variables" "   # TSV_A=1" "" "   " $'\t'; do
         [ "$(parse "${line}")" = "2|-|-" ]
     done
 }
 
 @test "commands and other lines return 1 and set nothing" {
+    local line
     for line in "touch ${MARKER}" "export PATH=/tmp" "PATH=/tmp" "TSV_A" "source /tmp/x" " TSV_A=1" "TSV_A =1" "export TSV_A=1"; do
         [ "$(parse "${line}")" = "1|-|-" ]
     done
@@ -66,6 +69,7 @@ parse() {
 }
 
 @test "invalid names return 1" {
+    local line
     for line in "TSV_=1" "TSV_a=1" "TSV_A-B=1" "TSV_A.B=1" "tsv_A=1" "TSVA=1" "TSV_Ä=1" "TSV_A\$(id)=1"; do
         [ "$(parse "${line}")" = "1|-|-" ]
     done

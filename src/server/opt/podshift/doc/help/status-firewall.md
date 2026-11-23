@@ -4,6 +4,6 @@ Shows the status of the system firewall (`firewalld`).
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift status-firewall
 ```

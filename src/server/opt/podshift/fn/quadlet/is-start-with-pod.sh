@@ -15,6 +15,7 @@
 # @details:
 #   The value is true if it is true, yes, 1 or on, in any case. A file without the key, or with
 #   another value, is not true.
+#   The pod branches wait for pod support (docs/roadmap.md); a .pod file or Pod= key is refused for now.
 # @arg: $1 - quadlet file.
 # @stdout: nothing.
 # @exitcode: 0 if StartWithPod= is true, 1 if not or if the file cannot be read.

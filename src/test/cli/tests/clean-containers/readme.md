@@ -4,7 +4,7 @@ Removes what the tests create: the RPM builder and cockpit-podshift RPM builder 
 
 ## Examples
 
-```sh
+```bash
 ./test clean-containers
 ./test clean-containers clean-logs   # containers, then logs
 ```

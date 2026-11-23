@@ -4,14 +4,14 @@
 # Run with: ./test unit-cli-selinux
 
 setup() {
-    HERE="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
-    REPO="${HERE}"
-    while [ "${REPO}" != "/" ] && [ ! -f "${REPO}/podshift.spec" ]; do
-        REPO="$(dirname "${REPO}")"
-    done
-    SCRIPT="${REPO}/src/server/opt/podshift/cli/modules/selinux/main.sh"
-    REQUIRE_ADMIN="${REPO}/src/server/opt/podshift/fn/utils/require-admin.sh"
-    STUBS="${HERE}/stubs"
+    local here repo
+    here="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
+    # The shared helper is at the same place from every suite's scripts/ folder.
+    declare -F find-repo-root >/dev/null || source "${here}/../../../shared/fn/utils/find-repo-root.sh"
+    repo="$(find-repo-root "${here}")" || return 1
+    SCRIPT="${repo}/src/server/opt/podshift/cli/modules/selinux/main.sh"
+    REQUIRE_ADMIN="${repo}/src/server/opt/podshift/fn/utils/require-admin.sh"
+    STUBS="${here}/stubs"
     CONFIG="${BATS_TEST_TMPDIR}/selinux-config"
     SETENFORCE_LOG="${BATS_TEST_TMPDIR}/setenforce.log"
     unset STUB_GETENFORCE STUB_SETENFORCE CONFIRM_ANSWER
@@ -169,6 +169,7 @@ run_as_user() {
     echo "${output}"
     [ "${status}" -eq 1 ]
     [[ "${output}" == *"SELinux is disabled. Nothing changed."* ]]
+    [[ "${output}" == *"SELINUX=permissive, in ${CONFIG}"* ]]
     [[ "${output}" == *"touch /.autorelabel"* ]]
     [[ "${output}" == *"Reboot."* ]]
     [ ! -f "${SETENFORCE_LOG}" ]

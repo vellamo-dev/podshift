@@ -16,11 +16,6 @@ if [[ -z "${DIR_E8C1A04B7D26:-}" ]]; then
     readonly DIR_E8C1A04B7D26
 fi
 
-# shellcheck source=cockpit-overview-count.sh
-declare -F cockpit-overview-count >/dev/null || source "${DIR_E8C1A04B7D26}/cockpit-overview-count.sh"
-# shellcheck source=../services/cockpit-services-loaded.sh
-declare -F cockpit-services-loaded >/dev/null || source "${DIR_E8C1A04B7D26}/../services/cockpit-services-loaded.sh"
-
 # @description: Counts loaded systemd user service units from systemctl list-units text as active over total.
 # @details:
 #   Reads list-units output from stdin, or from $1 when that argument is given. The units come
@@ -34,6 +29,10 @@ declare -F cockpit-services-loaded >/dev/null || source "${DIR_E8C1A04B7D26}/../
 # @exitcode: 0 always.
 cockpit-overview-service-counts() {
     local raw used all
+    # shellcheck source=cockpit-overview-count.sh
+    declare -F cockpit-overview-count >/dev/null || source "${DIR_E8C1A04B7D26}/cockpit-overview-count.sh"
+    # shellcheck source=../services/cockpit-services-loaded.sh
+    declare -F cockpit-services-loaded >/dev/null || source "${DIR_E8C1A04B7D26}/../services/cockpit-services-loaded.sh"
     raw="${1-}"
     if [[ "$#" -eq 0 ]]; then
         raw="$(cat)"

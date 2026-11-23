@@ -13,6 +13,7 @@
 # @stdout: NOTE with the count, and a DETAIL line for each problem.
 # @exitcode: 0 if all are fine, 2 otherwise (PodShift problem).
 verify-spec-scriptlets() {
+    local line
     local run_dir spec bad
     run_dir="${1}"
     spec="podshift.spec"

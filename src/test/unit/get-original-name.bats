@@ -49,3 +49,21 @@ setup() {
     run get-original-name "web.container.12ab"
     [ "${output}" = "web.container.12ab" ]
 }
+
+# The drop ID after .zip of a queued bundle is removed.
+@test "the drop ID of a queued zip is removed" {
+    run get-original-name "/home/podshift/.quadlets/validation-queue/shop.zip.018bcfe5-6800-7012-b456-789abcdef012"
+    [ "${output}" = "shop.zip" ]
+}
+
+# The collision suffix comes off first, then the drop ID.
+@test "the drop ID and a collision suffix after it are removed" {
+    run get-original-name "shop.zip.018bcfe5-6800-7012-b456-789abcdef012.1761612345123456789"
+    [ "${output}" = "shop.zip" ]
+}
+
+# Only a UUID right after .zip is a drop ID.
+@test "a UUID after another extension is kept" {
+    run get-original-name "web.container.018bcfe5-6800-7012-b456-789abcdef012"
+    [ "${output}" = "web.container.018bcfe5-6800-7012-b456-789abcdef012" ]
+}

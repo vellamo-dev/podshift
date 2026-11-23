@@ -18,14 +18,15 @@ fi
 # @description: Stages, fills, checks, installs and starts one item, then moves it out of the source directory.
 # @details:
 #   Empties staging, copies the item there under its original name (the collision suffix removed),
-#   fills the TSV variables, runs the dry run, warns about unit files named like ones installed
-#   elsewhere (warn-duplicate-units, it never blocks), and installs it with Podman. If that worked,
-#   it starts the units (restarts them if the item replaced an installed one), then moves the
-#   original item from source to <backup>/<timestamp>/source and the filled copy to
-#   <backup>/<timestamp>/installed. If a bundle fails to install, the whole application is removed
-#   with remove-app, because Podman installs a bundle file by file (a replaced older version is
-#   gone too; its copy is in the backup). If any step before the start failed, the original item is
-#   moved from source to the failed directory. Either way staging is emptied at the end and the
+#   fills the TSV variables, and checks again that nothing of it is installed yet
+#   (check-installed-item), since another item may have been installed after validation: the same
+#   item already installed is unchanged and the original goes to trash, any other clash fails. Then
+#   it runs the dry run and installs it with Podman, never with --replace. If that worked, it
+#   starts the units, then moves the original item from source to <backup>/<timestamp>/source and
+#   the filled copy to <backup>/<timestamp>/installed. If a bundle fails to install, the partly
+#   installed application is removed with remove-app (the check made sure no older version was
+#   there). If any step before the start failed, the original item is moved from source to the
+#   failed directory. Each item gets one try. Either way staging is emptied at the end and the
 #   original has left source. Starting never waits and never fails the install: a unit that fails
 #   to start is only logged as an error.
 # @arg: $1 - item in the source directory (file or bundle folder).
@@ -33,14 +34,17 @@ fi
 # @arg: $3 - directory where Podman installs quadlets.
 # @arg: $4 - installed-backup directory.
 # @arg: $5 - failed directory.
-# @exitcode: 0 if installed, 1 if the item failed.
+# @arg: $6 - trash directory, for an item that is already installed unchanged.
+# @stdout: a short reason when the item was not installed and the reason is known, one line.
+# @exitcode: 0 if installed, 1 if the item failed, 2 if the same item was already installed (unchanged).
 install-item() {
-    local item staging_dir quadlets_dir backup_dir failed_dir base name staged stamp target failed replaced install_status
+    local item staging_dir quadlets_dir backup_dir failed_dir trash_dir base name staged stamp target failed app reason status
     item="${1}"
     staging_dir="${2}"
     quadlets_dir="${3}"
     backup_dir="${4}"
     failed_dir="${5}"
+    trash_dir="${6-}"
     base="$(basename "${item}")"
 
     # shellcheck source=./get-original-name.sh
@@ -49,6 +53,8 @@ install-item() {
     declare -F empty-staging-dir >/dev/null || source "${DIR_DE13369AAA9E}/empty-staging-dir.sh"
     # shellcheck source=./fill-staged-item.sh
     declare -F fill-staged-item >/dev/null || source "${DIR_DE13369AAA9E}/fill-staged-item.sh"
+    # shellcheck source=./check-installed-item.sh
+    declare -F check-installed-item >/dev/null || source "${DIR_DE13369AAA9E}/check-installed-item.sh"
     # shellcheck source=./dry-run-quadlet.sh
     declare -F dry-run-quadlet >/dev/null || source "${DIR_DE13369AAA9E}/dry-run-quadlet.sh"
     # shellcheck source=./install-quadlet.sh
@@ -57,8 +63,6 @@ install-item() {
     declare -F get-app-name >/dev/null || source "${DIR_DE13369AAA9E}/get-app-name.sh"
     # shellcheck source=./remove-app.sh
     declare -F remove-app >/dev/null || source "${DIR_DE13369AAA9E}/remove-app.sh"
-    # shellcheck source=./warn-duplicate-units.sh
-    declare -F warn-duplicate-units >/dev/null || source "${DIR_DE13369AAA9E}/warn-duplicate-units.sh"
     # shellcheck source=./start-quadlet.sh
     declare -F start-quadlet >/dev/null || source "${DIR_DE13369AAA9E}/start-quadlet.sh"
     # shellcheck source=./move-file.sh
@@ -66,10 +70,12 @@ install-item() {
 
     name="$(get-original-name "${item}")"
     staged="${staging_dir}/${name}"
+    app=""
+    [[ -d "${item}" ]] && app="$(get-app-name "${item}")"
     logger -t podshift-qdl-install -p info "installing ${base}"
 
     failed=0
-    replaced=0
+    reason=""
     if ! empty-staging-dir "${staging_dir}"; then
         logger -t podshift-qdl-install -p err "failed to empty the staging directory"
         failed=1
@@ -78,21 +84,23 @@ install-item() {
         failed=1
     elif ! fill-staged-item "${staged}"; then
         failed=1
-    elif ! dry-run-quadlet "${staging_dir}" "${quadlets_dir}"; then
-        failed=1
     else
-        # A unit file with the name of one installed elsewhere only gets a warning.
-        warn-duplicate-units "${staged}" "${quadlets_dir}"
-        install-quadlet "${staged}" "${quadlets_dir}"
-        install_status=$?
-        if (( install_status == 1 )); then
+        # Second check: something with these names may have been installed since validation.
+        reason="$(check-installed-item "${staged}" "${quadlets_dir}" "${app}")" && status=0 || status=$?
+        if (( status == 2 )); then
+            logger -t podshift-qdl-install -p info "${name} is already installed with the same content"
+            move-file "${item}" "${trash_dir}" podshift-qdl-install || move-file "${item}" "${failed_dir}" podshift-qdl-install
+            empty-staging-dir "${staging_dir}"
+            return 2
+        elif (( status != 0 )); then
+            logger -t podshift-qdl-install -p err "${reason}"
             failed=1
-            # A bundle can be installed in part: remove the whole application.
-            if [[ -d "${staged}" ]]; then
-                remove-app "$(get-app-name "${staged}")" "${quadlets_dir}"
-            fi
-        elif (( install_status == 2 )); then
-            replaced=1
+        elif ! dry-run-quadlet "${staging_dir}" "${quadlets_dir}"; then
+            failed=1
+        elif ! install-quadlet "${staged}"; then
+            failed=1
+            # A bundle can be installed in part: remove the new application again.
+            [[ -n "${app}" ]] && remove-app "${app}" "${quadlets_dir}"
         fi
     fi
 
@@ -100,10 +108,11 @@ install-item() {
         logger -t podshift-qdl-install -p warn "failed to install ${base}"
         move-file "${item}" "${failed_dir}" podshift-qdl-install
         empty-staging-dir "${staging_dir}"
+        [[ -z "${reason}" ]] || printf '%s\n' "${reason}"
         return 1
     fi
 
-    start-quadlet "${staged}" "${replaced}" || logger -t podshift-qdl-install -p err "${name} is installed, but not every unit started"
+    start-quadlet "${staged}" || logger -t podshift-qdl-install -p err "${name} is installed, but not every unit started"
 
     stamp="$(date +%Y%m%d-%H%M%S-%N)"
     target="${backup_dir}/${stamp}"

@@ -60,7 +60,7 @@ Each step script declares its ID in its header with the `@step` tag, for example
 | --- | --- |
 | `./rpm-install.sh` | Entry point. Stages `src/server` into the build root, deploys directories/scripts/files and command links, and generates `files.list` for the `%files` directive. |
 | `./allowed-extensions.conf` | Allowlist consumed by `deploy-files.sh`: the file extensions (`.conf`, `.json`, `.service`, …) and extensionless basenames to deploy as `0644`. |
-| `./fn/utils/print-step.sh` | Step printer: `print-step-header` / `print-step-ok` / `print-step-warn` / `print-step-skip`. |
+| `./fn/utils/print-deploy-*.sh` | Step printers, one per file: `print-deploy-header`, `print-deploy-ok`, `print-deploy-warn` and `print-deploy-skip`. |
 | `./fn/deploy-dirs.sh` | `deploy-dirs()`: recreates the source directory tree inside the build root using `install -dm755`. |
 | `./fn/deploy-files.sh` | `deploy-files()`: copies non-`.sh` files listed in the allowlist (configs, systemd units, docs) into the build root with mode `0644`. |
 | `./fn/deploy-sh-scripts.sh` | `deploy-sh-scripts()`: copies all `.sh` scripts into the build root with executable mode `0755`. |

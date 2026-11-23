@@ -16,6 +16,7 @@
 # @stdout: NOTE with the file names, the problem, or NOTE skipped.
 # @exitcode: 0 if copied or skipped, 1 otherwise.
 copy-ui-rpms-to-share() {
+    local file
     local run_dir old names
     run_dir="${1}"
     [[ "${TST_UI_PRESENT}" == "true" ]] || { echo "NOTE: skipped"; return 0; }

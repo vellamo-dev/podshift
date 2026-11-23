@@ -8,6 +8,6 @@ To copy `dist/` over the installed UI files instead, so the copy survives a rebo
 
 ## Examples
 
-```sh
+```bash
 ./test postinstall-ui-dev-mount
 ```

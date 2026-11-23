@@ -4,12 +4,12 @@ List all _podshift_ volumes and the containers using them. Unused volumes are sh
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift volumes
 ```
 
 ## Usage `(podshift)`
 
-```shell
+```bash
 volumes
 ```

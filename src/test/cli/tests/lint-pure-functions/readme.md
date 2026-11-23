@@ -6,6 +6,6 @@ Only pure functions are tagged: arguments in, text out, nothing read from the sy
 
 ## Examples
 
-```sh
+```bash
 ./test lint-pure-functions
 ```

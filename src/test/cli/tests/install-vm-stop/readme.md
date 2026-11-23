@@ -8,6 +8,6 @@ This test is not part of the bundles. Run it by hand when you want the installer
 
 ## Examples
 
-```sh
+```bash
 ./test install-vm-stop                    # stop the installer VM, leave it in place
 ```

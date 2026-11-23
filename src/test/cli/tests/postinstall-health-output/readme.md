@@ -11,6 +11,6 @@ It passes even when the system has issues. The outputs are saved in the run fold
 
 ## Examples
 
-```sh
+```bash
 ./test postinstall-health-output
 ```

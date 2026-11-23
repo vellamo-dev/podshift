@@ -3,6 +3,7 @@ podshift: manages the PodShift server.
 Usage:
     podshift [--plain] <command> [arguments]
     podshift --help [<command>]
+    podshift <command> --help
     podshift --version
 
 Options:

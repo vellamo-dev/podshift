@@ -8,6 +8,6 @@ If the cockpit-podshift project is missing next to this one, the two UI tests pa
 
 ## Examples
 
-```sh
+```bash
 ./test bundle-ui-rpm-install
 ```

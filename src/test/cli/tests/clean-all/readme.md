@@ -4,6 +4,6 @@ Runs `clean-containers`, `clean-rpm-output`, `clean-tmp`, `clean-work` and `clea
 
 ## Examples
 
-```sh
+```bash
 ./test clean-all
 ```

@@ -22,7 +22,7 @@ The run folder has `ui-builddep.log`, `ui-rpmbuild.log` and `ui-rpmlint.log`.
 
 ## Examples
 
-```sh
+```bash
 ./test ui-rpm-build                                     # build and export the cockpit-podshift RPM
 ./test --fresh ui-rpm-build                             # rebuild the builder image first
 TST_UI_SOURCE=/path/to/cockpit-podshift ./test ui-rpm-build   # another checkout

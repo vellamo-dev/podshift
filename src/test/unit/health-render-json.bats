@@ -4,12 +4,12 @@
 
 setup() {
     source "${TST_PODSHIFT_DIR}/cli/modules/health-check/fn/health-render-json.sh"
-    verdict="$(printf 'issues-found\t1\t1\t0\t0\t0\t0')"
+    VERDICT="$(printf 'issues-found\t1\t1\t0\t0\t0\t0')"
 }
 
 # One array per group, then the verdict and counts.
 @test "one array per group, then the verdict and counts" {
-    run health-render-json "$(printf 'host\tos\tOS\tOK\tFedora 44\nsecurity\tsshd\tSSH\tFAIL\tport 22')" "${verdict}" root
+    run health-render-json "$(printf 'host\tos\tOS\tOK\tFedora 44\nsecurity\tsshd\tSSH\tFAIL\tport 22')" "${VERDICT}" root
     [ "${status}" -eq 0 ]
     [ "${output}" = '{"host":[{"id":"os","status":"OK","detail":"Fedora 44"}],"security":[{"id":"sshd","status":"FAIL","detail":"port 22"}],"verdict":"issues-found","caller":"root","passed":1,"issues":1,"warnings":0,"errors":0,"skipped":0,"notes":0}' ]
 }

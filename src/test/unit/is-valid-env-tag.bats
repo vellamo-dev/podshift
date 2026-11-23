@@ -7,6 +7,7 @@ setup() {
 }
 
 @test "good tags return 0 and print nothing" {
+    local tag
     for tag in dev prod DEV test-1 stg.eu _x a 9 a.b_c-d "$(printf 'a%.0s' {1..128})"; do
         run is-valid-env-tag "${tag}"
         [ "${status}" -eq 0 ]
@@ -15,6 +16,7 @@ setup() {
 }
 
 @test "bad tags return 1" {
+    local tag
     for tag in "" .dev -dev "a b" 'a"b' "a/b" "a:b" "Ä" $'dev\n' "$(printf 'a%.0s' {1..129})"; do
         run is-valid-env-tag "${tag}"
         [ "${status}" -eq 1 ]

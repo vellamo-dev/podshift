@@ -88,8 +88,11 @@ Drop container, network and volume files into a folder, and PodShift checks them
 | ✅ | Variable filling | Fills `${TSV_*}` variables with this server's values before dry run. (Part of Automatic install) |
 | ✅ | Dry run | Runs Podman's Quadlet generator on each validated file, without installing anything, to catch errors before the install.  (Part of Automatic install) |
 | ✅ | Automatic install | After validation and a successful dry run, files are installed automatically as systemd user services that start at boot. |
-| 📋 | Uninstall | Removing a source file removes its services. |
+| 🚧 | Install once | An installed Quadlet is never replaced: the same file again is `unchanged`, a different one with an installed name is refused. Names, dependencies and Podman names are checked first. Not yet verified on Fedora. |
+| 🚧 | Remove | `podshift quadlet rm` and the `quadlet-remove` Cockpit action remove an installed file or app, refused while something uses it. Not yet verified on Fedora. |
 | 📋 | Quadlet logs | A shortcut to see the state and logs of the installed Quadlet services. |
+| 📋 | Drop ID in installed files | Verify on Fedora that Podman keeps the `# podshift-drop-id:` line in the installed Quadlet file. |
+| 📋 | Pod support | Install pods properly: accept `.pod` files alone and in bundles, check that `Pod=` points to a `.pod` in the same app, install and remove a pod together with its containers (pod first on start, containers first on stop), show a pod and its containers as one group in Cockpit, with tests for each step. Until then a `.pod` drop and a file with a `Pod=` key are refused. |
 
 ### Server Health Check
 

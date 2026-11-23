@@ -19,7 +19,7 @@ setup() {
         [.items[].title] == ["db","db-backup","ghost","old-build","scratch","worker"]
         and (.items[0].id | length) == 64
         and .items[0].subtitle == "3f9c1a7e2b4d"
-        and all(.items[]; ((keys - ["autoUpdate","autoUpdateActive"]) | sort) == ["groups","id","rows","running","source","status","subtitle","title"])
+        and all(.items[]; ((keys - ["autoUpdate","autoUpdateActive","quadlet"]) | sort) == ["groups","id","rows","running","source","status","subtitle","title"])
     '
 }
 
@@ -170,4 +170,26 @@ setup() {
         ([.items[] | {(.title): [.status, .running]}] | add) == {"a": ["Exited", false], "b": ["Running", true]}
         and (.items[0].rows[] | select(.id == "state") | .value) == "Exited"
     '
+}
+
+@test "JSON larger than one command-line argument is read, not refused" {
+    local ps inspect
+    # Over 1 MB: Linux allows 128 KB in one argument and macOS 1 MB for all of them.
+    ps="$(jq -n -c '[range(0; 1500) | {Id: ("c" + tostring), Names: ["ctr" + tostring], State: "exited"}]')"
+    inspect="$(jq -n -c '[range(0; 1500) | {Id: ("c" + tostring), Pad: ("x" * 800)}]')"
+    [ "${#inspect}" -gt 1048576 ]
+    run cockpit-containers-items "${ps}" "${inspect}" '{}' '{}' '[]' ''
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '(.items | length) == 1500 and .items[0].title == "ctr0"'
+}
+
+@test "quadlet: the installed .container file and its app, only for containers in the Quadlet map" {
+    run cockpit-containers-items "${PS}" "${INSPECT}" "${QUADLETS}" "${UNITS}" "${STATS}" /home/podshift
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '
+        ([.items[] | select(has("quadlet")) | {(.title): .quadlet}] | add) == {db: {name: "db.container", app: "shop"}}
+    '
+    run cockpit-containers-items "${PS}" "${INSPECT}" '{"db.service":{"file":"~/.config/containers/systemd/db.container"}}' "${UNITS}" "${STATS}" /home/podshift
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '(.items[] | select(.title == "db") | .quadlet) == {name: "db.container"}'
 }

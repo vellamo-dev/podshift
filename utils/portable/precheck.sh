@@ -47,8 +47,8 @@ pc_init() {
     PC_MIN_BASH="5.0"
     # This script itself.
     PC_SELF_MIN_BASH="3.2"
-    # Keep in sync with Requires in podshift.spec.
-    PC_REQUIRES="NetworkManager firewalld cockpit podman openssh-server policycoreutils-python-utils cockpit-selinux cockpit-podman cockpit-files pcp python3-pcp tree nano fail2ban shadow-utils unzip less glow jq"
+    # Keep in sync with Requires in podshift.spec, in the same order (precheck-unit checks it).
+    PC_REQUIRES="podman NetworkManager firewalld openssh-server shadow-utils policycoreutils-python-utils fail2ban jq unzip cockpit cockpit-podman cockpit-selinux cockpit-files pcp python3-pcp tree nano less glow"
     # docs/usage.md: sudo dnf copr enable -y vellamo/podshift
     PC_COPR="vellamo/podshift"
     PC_COPR_REPO_ID="copr:copr.fedorainfracloud.org:vellamo:podshift"
@@ -223,6 +223,14 @@ pc_json_str() {
 
 # ---------- output blocks ----------
 
+# @description: Prints a block heading such as System or a section title, coloured in interactive mode.
+# @arg: $1 - the heading text.
+# @stdout: the heading line after an empty line, or nothing in JSON mode.
+# @exitcode: 0 always.
+pc_heading() {
+    pc_say '\n%s %s\n' "$(pc_c '1;35' "▶")" "$(pc_c '1;36' "$1")"
+}
+
 # @description: Starts a section, records it for the Summary and prints its header and Progress label.
 # @arg: $1 - the section title, for example Checking OS.
 # @stdout: the section header and the Progress label, or nothing in JSON mode.
@@ -233,11 +241,7 @@ pc_section() {
     PC_S_STATUS[PC_S_N]="ok"
     PC_S_PROBLEM[PC_S_N]=""
     PC_S_N=$((PC_S_N + 1))
-    if [ "${PC_MODE}" = "interactive" ]; then
-        pc_say '\n\033[1;35m▶\033[0m \033[1;36m%s\033[0m\n' "$1"
-    else
-        pc_say '\n▶ %s\n' "$1"
-    fi
+    pc_heading "$1"
     pc_say '\n    Progress:\n'
 }
 
@@ -277,11 +281,7 @@ pc_result() {
             ;;
         skip) PC_SKIPPED=$((PC_SKIPPED + 1)) ;;
     esac
-    if [ -n "${note}" ]; then
-        pc_say '        %s %s [%s]\n' "$(pc_icon "${status}")" "${name}" "${note}"
-    else
-        pc_say '        %s %s\n' "$(pc_icon "${status}")" "${name}"
-    fi
+    pc_say '        %s %s%s\n' "$(pc_icon "${status}")" "${name}" "${note:+ [${note}]}"
     if [ -n "${detail}" ]; then
         pc_say '%s\n' "${detail}" | sed 's/^/            /'
     fi
@@ -415,15 +415,10 @@ pc_identity_edition() {
 #   Only called when cloud-init is on PATH, so a missing command never starts a
 #   command-not-found prompt. cloud-init reads its local instance data and makes no network call.
 # @arg: $1 - the key, for example v1.cloud_name.
-# @stdout: the value, or nothing when the query fails or gives null.
+# @stdout: the first line of the value, or nothing when the query fails; pc_cloud_value drops null.
 # @exitcode: 0 always.
 pc_cloud_query() {
-    local value
-    value="$(pc_run 10 cloud-init query "$1" </dev/null 2>/dev/null | head -n 1)"
-    case "${value}" in
-        null | None | none | unknown) value="" ;;
-    esac
-    printf '%s' "${value}"
+    pc_run 10 cloud-init query "$1" </dev/null 2>/dev/null | head -n 1
 }
 
 # @description: Prints one string value from the v1 block of cloud-init's instance-data.json.
@@ -752,11 +747,7 @@ pc_fact() {
 # @exitcode: 0 always.
 pc_show_system() {
     local who edition itype nwb conn method ipv4 cloud hw ci
-    if [ "${PC_MODE}" = "interactive" ]; then
-        pc_say '\n\033[1;35m▶\033[0m \033[1;36m%s\033[0m\n' "System"
-    else
-        pc_say '\n▶ %s\n' "System"
-    fi
+    pc_heading "System"
     pc_say '\n    Facts:\n'
     if [ "${SYS_IS_ROOT}" = "yes" ]; then who="root"; else who="${SYS_USER:-unknown} (not root, some checks are skipped)"; fi
     edition="${SYS_EDITION_TEXT}"
@@ -960,7 +951,7 @@ pc_nw_route_text() {
 # @stdout: the section with its check lines and Verdict, or nothing in JSON mode.
 # @exitcode: 0 if there is no blocker, 1 when there is no default route.
 pc_check_network() {
-    local route noroute pin file cinote
+    local route noroute pin file cinote note
     pc_section "Checking network"
     noroute="no"
     route="$(pc_nw_route_text)"
@@ -995,12 +986,9 @@ After the install, check the network with podshift network examine." ;;
             pc_result warn "IPv4 address comes from DHCP" "" "The IP address may change on reboot, and PodShift's TSV_NW1 to TSV_NW8 follow it.
 After the install, podshift network examine shows how to pin it.${cinote}" ;;
         unknown)
-            if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
-                pc_result info "IPv4 method" "cannot check, nmcli not found"
-            else
-                pc_result info "IPv4 method" "unknown, no active NetworkManager connection"
-            fi
-            ;;
+            note="unknown, no active NetworkManager connection"
+            [ "${SYS_NW_HAS_NMCLI}" != "yes" ] && note="cannot check, nmcli not found"
+            pc_result info "IPv4 method" "${note}" ;;
         *)
             pc_result info "IPv4 method" "${SYS_NW_METHOD}" ;;
     esac
@@ -1021,13 +1009,10 @@ podshift network check also needs an IPv4 default route."
     elif [ -n "${SYS_NW_CONN}" ] && { [ "${SYS_NW_CONN}" = "${PC_NW_DEFAULT_CONN}" ] || [ "${SYS_NW_CONN}" = "${PC_NW_DEFAULT_INIT} ${PC_NW_DEFAULT_DEV}" ]; }; then
         pc_result ok "Connection name" "${SYS_NW_CONN}, PodShift's default"
     elif [ -z "${SYS_NW_CONN}" ]; then
-        if [ "${SYS_NW_HAS_NMCLI}" != "yes" ]; then
-            pc_result info "Connection name" "cannot check, nmcli not found" "PodShift's default is ${PC_NW_DEFAULT_CONN}. Without it, PodShift falls back to the live addresses.
+        note="no active connection"
+        [ "${SYS_NW_HAS_NMCLI}" != "yes" ] && note="cannot check, nmcli not found"
+        pc_result info "Connection name" "${note}" "PodShift's default is ${PC_NW_DEFAULT_CONN}. Without it, PodShift falls back to the live addresses.
 ${pin}"
-        else
-            pc_result info "Connection name" "no active connection" "PodShift's default is ${PC_NW_DEFAULT_CONN}. Without it, PodShift falls back to the live addresses.
-${pin}"
-        fi
     else
         pc_result info "Connection name" "${SYS_NW_CONN}, PodShift's default is ${PC_NW_DEFAULT_CONN}" "PodShift falls back to the live addresses.
 ${pin}"
@@ -1051,13 +1036,14 @@ pc_url_code() {
 # @stdout: the check line, or nothing in JSON mode.
 # @exitcode: 0 if the packages resolve, the check is skipped or the result is unclear, 1 on a blocker.
 pc_check_dry_run() {
-    local pkgs out rc problems
+    local pkgs out rc problems check
+    check="dnf dry run of PodShift's packages"
     if [ "${SYS_IS_ROOT}" != "yes" ]; then
-        pc_result skip "dnf dry run of PodShift's packages" "needs root, run with sudo for this check"
+        pc_result skip "${check}" "needs root, run with sudo for this check"
         return 0
     fi
     if ! pc_has dnf; then
-        pc_result block "dnf dry run of PodShift's packages" "dnf not found"
+        pc_result block "${check}" "dnf not found"
         return 1
     fi
     pkgs="${PC_REQUIRES}"
@@ -1067,14 +1053,14 @@ pc_check_dry_run() {
     rc=$?
     problems="$(printf '%s\n' "${out}" | grep -E -i 'problem|no match for argument|conflict|failed to resolve|nothing provides|^error' | head -n 15)"
     if [ -n "${problems}" ]; then
-        pc_result block "dnf dry run of PodShift's packages" "dnf cannot resolve them" "${problems}"
+        pc_result block "${check}" "dnf cannot resolve them" "${problems}"
         return 1
     fi
     if printf '%s\n' "${out}" | grep -q -i -E 'transaction summary|nothing to do|operation aborted|is this ok'; then
-        pc_result ok "dnf dry run of PodShift's packages" "all packages can be installed"
+        pc_result ok "${check}" "all packages can be installed"
         return 0
     fi
-    pc_result warn "dnf dry run of PodShift's packages" "unclear result (exit ${rc})" "$(printf '%s\n' "${out}" | tail -n 5)"
+    pc_result warn "${check}" "unclear result (exit ${rc})" "$(printf '%s\n' "${out}" | tail -n 5)"
     return 0
 }
 
@@ -1082,7 +1068,7 @@ pc_check_dry_run() {
 # @stdout: the section with its check lines and Verdict, or nothing in JSON mode.
 # @exitcode: 0 if there is no blocker, 1 on a blocker.
 pc_check_packages() {
-    local code bad candidate
+    local code bad candidate podman
     pc_section "Checking packages"
     case "${SYS_USR_STATE}" in
         read-only*image*)
@@ -1127,18 +1113,19 @@ PodShift does not target these. See ${PC_DOCS}/design-choices.md#fedora-server"
 On Fedora with dnf5 the copr command comes in the dnf5-plugins package."
     fi
     # Podman 6 or newer.
+    podman="Podman ${PC_MIN_PODMAN} or newer"
     if [ -n "${SYS_PODMAN_VERSION}" ] && pc_ver_ge "${SYS_PODMAN_VERSION}" "${PC_MIN_PODMAN}"; then
-        pc_result ok "Podman ${PC_MIN_PODMAN} or newer" "installed ${SYS_PODMAN_VERSION}"
+        pc_result ok "${podman}" "installed ${SYS_PODMAN_VERSION}"
     elif ! pc_has dnf; then
-        pc_result warn "Podman ${PC_MIN_PODMAN} or newer" "cannot check, dnf not found"
+        pc_result warn "${podman}" "cannot check, dnf not found"
     else
         candidate="$(pc_dnf_newest podman)"
         if [ -z "${candidate}" ]; then
-            pc_result warn "Podman ${PC_MIN_PODMAN} or newer" "cannot check, dnf gave no Podman version" "dnf could not read the repositories. Check the network, or run with sudo."
+            pc_result warn "${podman}" "cannot check, dnf gave no Podman version" "dnf could not read the repositories. Check the network, or run with sudo."
         elif pc_ver_ge "${candidate}" "${PC_MIN_PODMAN}"; then
-            pc_result ok "Podman ${PC_MIN_PODMAN} or newer" "dnf offers ${candidate}${SYS_PODMAN_VERSION:+, installed ${SYS_PODMAN_VERSION}}"
+            pc_result ok "${podman}" "dnf offers ${candidate}${SYS_PODMAN_VERSION:+, installed ${SYS_PODMAN_VERSION}}"
         else
-            pc_result block "Podman ${PC_MIN_PODMAN} or newer" "newest dnf offers is ${candidate}" "PodShift needs Podman ${PC_MIN_PODMAN} or newer."
+            pc_result block "${podman}" "newest dnf offers is ${candidate}" "PodShift needs Podman ${PC_MIN_PODMAN} or newer."
             pc_section_end
             return 1
         fi
@@ -1153,10 +1140,8 @@ On Fedora with dnf5 the copr command comes in the dnf5-plugins package."
         pc_section_end
         return 1
     fi
-    if ! pc_check_dry_run; then
-        pc_section_end
-        return 1
-    fi
+    # A dry run blocker marks the section blocked, so pc_section_end returns 1 for it.
+    pc_check_dry_run
     pc_section_end
 }
 
@@ -1180,24 +1165,23 @@ pc_ports_in_use() {
 # @stdout: the section with its check lines and Verdict, or nothing in JSON mode.
 # @exitcode: 0 always, since this section only gives warnings.
 pc_check_clashes() {
-    local docker ports users n name home user who
+    local docker ports users n name home user who why
     pc_section "Checking security and clashes"
+    why="PodShift relies on SELinux to keep containers apart from the server and from each other.
+Fedora has it enforcing by default."
     case "${SYS_SELINUX}" in
         enforcing) pc_result ok "SELinux is enforcing" ;;
         permissive)
             if [ "${SYS_INSTALL_TYPE}" = "desktop" ]; then
-                pc_result warn "SELinux is not enforcing" "permissive" "PodShift relies on SELinux to keep containers apart from the server and from each other.
-Fedora has it enforcing by default.
+                pc_result warn "SELinux is not enforcing" "permissive" "${why}
 After installing, run sudo podshift selinux enforce to switch it on."
             else
-                pc_result warn "SELinux is not enforcing" "permissive" "PodShift relies on SELinux to keep containers apart from the server and from each other.
-Fedora has it enforcing by default.
+                pc_result warn "SELinux is not enforcing" "permissive" "${why}
 The PodShift install switches it to enforcing."
             fi
             ;;
         *)
-            pc_result warn "SELinux is not enforcing" "${SYS_SELINUX}" "PodShift relies on SELinux to keep containers apart from the server and from each other.
-Fedora has it enforcing by default.
+            pc_result warn "SELinux is not enforcing" "${SYS_SELINUX}" "${why}
 After installing, sudo podshift selinux enforce prints the steps to turn it back on."
             ;;
     esac
@@ -1229,12 +1213,10 @@ After installing, sudo podshift selinux enforce prints the steps to turn it back
     for name in ${users}; do n=$((n + 1)); done
     if [ "${n}" -gt 1 ]; then
         pc_result warn "One person uses this machine" "${n} login users: ${users% }" "Several people log in here, so it looks like a shared machine. A dedicated server or VM is recommended."
+    elif [ "${n}" -eq 1 ]; then
+        pc_result ok "One person uses this machine" "1 login user: ${users% }"
     else
-        if [ "${n}" -eq 1 ]; then
-            pc_result ok "One person uses this machine" "1 login user: ${users% }"
-        else
-            pc_result ok "One person uses this machine" "0 login users"
-        fi
+        pc_result ok "One person uses this machine" "0 login users"
     fi
     who="$(awk -F: -v id="${PC_USER_UID}" '$3 == id && $1 != "podshift" { print $1 }' "$(pc_path /etc/passwd)" 2>/dev/null | head -n 1)"
     if [ -n "${who}" ]; then
@@ -1267,19 +1249,18 @@ or password logins over SSH stop working."
 # @stdout: 3 if PodShift is installed, 2 on a blocker, 1 on a warning, 0 otherwise.
 # @exitcode: 0 always.
 pc_result_code() {
-    local i
+    local i rc
     [ "${PC_INSTALLED}" = "yes" ] && { echo 3; return; }
+    rc=0
     i=0
     while [ "${i}" -lt "${PC_N}" ]; do
-        [ "${PC_R_STATUS[i]}" = "block" ] && { echo 2; return; }
+        case "${PC_R_STATUS[i]}" in
+            block) echo 2; return ;;
+            warn) rc=1 ;;
+        esac
         i=$((i + 1))
     done
-    i=0
-    while [ "${i}" -lt "${PC_N}" ]; do
-        [ "${PC_R_STATUS[i]}" = "warn" ] && { echo 1; return; }
-        i=$((i + 1))
-    done
-    echo 0
+    echo "${rc}"
 }
 
 # @description: Prints the result name for a result code.
@@ -1309,11 +1290,7 @@ pc_summary() {
         3) color=36; msg="PodShift is already installed." ;;
     esac
     text="$(pc_result_text "${rc}")"
-    if [ "${PC_MODE}" = "interactive" ]; then
-        pc_say '\n\033[1;%sm◆\033[0m \033[1mSummary\033[0m\n\n' "${color}"
-    else
-        pc_say '\n◆ Summary\n\n'
-    fi
+    pc_say '\n%s %s\n\n' "$(pc_c "1;${color}" "◆")" "$(pc_c 1 "Summary")"
     width=0
     for title in $(printf '%s' "${PC_SECTIONS_PLANNED}" | tr ' |' '_ '); do
         [ "${#title}" -gt "${width}" ] && width=${#title}
@@ -1349,18 +1326,10 @@ pc_summary() {
             pc_say '%s\n' "${line}"
         fi
     done
-    if [ "${PC_MODE}" = "interactive" ]; then
-        pc_say '\n    Result: \033[1;%sm%s\033[0m (exit %s)\n' "${color}" "${text}" "${rc}"
-    else
-        pc_say '\n    Result: %s (exit %s)\n' "${text}" "${rc}"
-    fi
+    pc_say '\n    Result: %s (exit %s)\n' "$(pc_c "1;${color}" "${text}")" "${rc}"
     pc_say '        %s\n' "${msg}"
     if [ "${PC_SKIPPED}" -gt 0 ] && [ "${rc}" != "2" ] && [ "${rc}" != "3" ]; then
-        if [ "${PC_SKIPPED}" -eq 1 ]; then
-            pc_say '        1 check skipped. Run with sudo for the full check.\n'
-        else
-            pc_say '        %s checks skipped. Run with sudo for the full check.\n' "${PC_SKIPPED}"
-        fi
+        pc_say '        %s check%s skipped. Run with sudo for the full check.\n' "${PC_SKIPPED}" "$([ "${PC_SKIPPED}" -eq 1 ] || echo s)"
     fi
 }
 
@@ -1369,7 +1338,7 @@ pc_summary() {
 # @stdout: the JSON document.
 # @exitcode: 0 always.
 pc_print_json() {
-    local rc i sep ud
+    local rc i sep ud out field key var value
     # Bash 3.2 cannot parse a case inside $( ), so the JSON value is set here.
     case "${SYS_CI_USER_DATA}" in
         true | false) ud="${SYS_CI_USER_DATA}" ;;
@@ -1381,46 +1350,35 @@ pc_print_json() {
         "$(pc_json_str "$(pc_result_text "${rc}")")" "${rc}" \
         "$([ "${SYS_IS_ROOT}" = "yes" ] && echo true || echo false)" "${PC_SKIPPED}"
     printf '  "system": {\n'
-    printf '    "os_id": %s,\n' "$(pc_json_str "${SYS_OS_ID}")"
-    printf '    "os_name": %s,\n' "$(pc_json_str "${SYS_OS_NAME}")"
-    printf '    "os_version": %s,\n' "$(pc_json_str "${SYS_OS_VERSION}")"
-    printf '    "os_variant_id": %s,\n' "$(pc_json_str "${SYS_OS_VARIANT_ID}")"
-    printf '    "edition": %s,\n' "$(pc_json_str "${SYS_EDITION}")"
-    printf '    "edition_name": %s,\n' "$(pc_json_str "${SYS_EDITION_NAME}")"
-    printf '    "edition_source": %s,\n' "$(pc_json_str "${SYS_EDITION_SOURCE}")"
-    printf '    "install_type": %s,\n' "$(pc_json_str "${SYS_INSTALL_TYPE}")"
-    printf '    "kernel": %s,\n' "$(pc_json_str "${SYS_KERNEL}")"
-    printf '    "arch": %s,\n' "$(pc_json_str "${SYS_ARCH}")"
-    printf '    "bash_running": %s,\n' "$(pc_json_str "${SYS_BASH_VERSION}")"
-    printf '    "bash_system": %s,\n' "$(pc_json_str "${SYS_SYSTEM_BASH_VERSION}")"
-    printf '    "cpus": %s,\n' "$(pc_json_str "${SYS_CPU}")"
-    printf '    "memory": %s,\n' "$(pc_json_str "${SYS_MEMORY}")"
-    printf '    "disk_free": %s,\n' "$(pc_json_str "${SYS_DISK}")"
-    printf '    "virtualisation": %s,\n' "$(pc_json_str "${SYS_VIRT}")"
-    printf '    "hardware_vendor": %s,\n' "$(pc_json_str "${SYS_HW_VENDOR}")"
-    printf '    "hardware_product": %s,\n' "$(pc_json_str "${SYS_HW_PRODUCT}")"
-    printf '    "cloud_name": %s,\n' "$(pc_json_str "${SYS_CLOUD_NAME}")"
-    printf '    "cloud_zone": %s,\n' "$(pc_json_str "${SYS_CLOUD_ZONE}")"
-    printf '    "cloud_source": %s,\n' "$(pc_json_str "${SYS_CLOUD_SOURCE}")"
-    printf '    "cloud_init_state": %s,\n' "$(pc_json_str "${SYS_CI_STATE}")"
-    printf '    "cloud_init_user_data": %s,\n' "${ud}"
-    printf '    "hostname": %s,\n' "$(pc_json_str "${SYS_HOSTNAME}")"
-    printf '    "ip_addresses": %s,\n' "$(pc_json_str "${SYS_IPS}")"
-    printf '    "network_backend": %s,\n' "$(pc_json_str "${SYS_NW_BACKEND}")"
-    printf '    "network_connection": %s,\n' "$(pc_json_str "${SYS_NW_CONN}")"
-    printf '    "network_initializer": %s,\n' "$(pc_json_str "${SYS_NW_INITIALIZER}")"
-    printf '    "network_connection_device": %s,\n' "$(pc_json_str "${SYS_NW_CONN_DEVICE}")"
-    printf '    "network_default_conn_file": %s,\n' "$([ "${SYS_NW_CONN_FILE}" = "yes" ] && echo true || echo false)"
-    printf '    "ipv4_method": %s,\n' "$(pc_json_str "${SYS_NW_METHOD}")"
-    printf '    "default_route_device": %s,\n' "$(pc_json_str "${SYS_NW_ROUTE_DEV}")"
-    printf '    "default_route_gateway": %s,\n' "$(pc_json_str "${SYS_NW_GATEWAY}")"
-    printf '    "default_route_family": %s,\n' "$(pc_json_str "${SYS_NW_ROUTE_FAMILY}")"
-    printf '    "global_ipv4": %s,\n' "$(pc_json_str "${SYS_NW_IPV4}")"
-    printf '    "selinux": %s,\n' "$(pc_json_str "${SYS_SELINUX}")"
-    printf '    "usr": %s,\n' "$(pc_json_str "${SYS_USR_STATE}")"
-    printf '    "podshift_version": %s,\n' "$(pc_json_str "${SYS_PODSHIFT_VERSION}")"
-    printf '    "podman_version": %s,\n' "$(pc_json_str "${SYS_PODMAN_VERSION}")"
-    printf '    "copr_enabled": %s\n' "$([ "${SYS_COPR_ENABLED}" = "yes" ] && echo true || echo false)"
+    # One "key=VAR" per field: VAR is printed as a JSON string, %VAR as true when it is yes
+    # and false otherwise, and +VAR as it is.
+    out=""
+    for field in \
+        os_id=SYS_OS_ID os_name=SYS_OS_NAME os_version=SYS_OS_VERSION os_variant_id=SYS_OS_VARIANT_ID \
+        edition=SYS_EDITION edition_name=SYS_EDITION_NAME edition_source=SYS_EDITION_SOURCE \
+        install_type=SYS_INSTALL_TYPE kernel=SYS_KERNEL arch=SYS_ARCH bash_running=SYS_BASH_VERSION \
+        bash_system=SYS_SYSTEM_BASH_VERSION cpus=SYS_CPU memory=SYS_MEMORY disk_free=SYS_DISK \
+        virtualisation=SYS_VIRT hardware_vendor=SYS_HW_VENDOR hardware_product=SYS_HW_PRODUCT \
+        cloud_name=SYS_CLOUD_NAME cloud_zone=SYS_CLOUD_ZONE cloud_source=SYS_CLOUD_SOURCE \
+        cloud_init_state=SYS_CI_STATE cloud_init_user_data=+ud hostname=SYS_HOSTNAME \
+        ip_addresses=SYS_IPS network_backend=SYS_NW_BACKEND network_connection=SYS_NW_CONN \
+        network_initializer=SYS_NW_INITIALIZER network_connection_device=SYS_NW_CONN_DEVICE \
+        network_default_conn_file=%SYS_NW_CONN_FILE ipv4_method=SYS_NW_METHOD \
+        default_route_device=SYS_NW_ROUTE_DEV default_route_gateway=SYS_NW_GATEWAY \
+        default_route_family=SYS_NW_ROUTE_FAMILY global_ipv4=SYS_NW_IPV4 selinux=SYS_SELINUX \
+        usr=SYS_USR_STATE podshift_version=SYS_PODSHIFT_VERSION podman_version=SYS_PODMAN_VERSION \
+        copr_enabled=%SYS_COPR_ENABLED; do
+        key="${field%%=*}"
+        var="${field#*=}"
+        case "${var}" in
+            +*) var="${var#+}"; value="${!var}" ;;
+            %*) var="${var#%}"; if [ "${!var}" = "yes" ]; then value="true"; else value="false"; fi ;;
+            *) value="$(pc_json_str "${!var}")" ;;
+        esac
+        out="${out:+${out},
+}    \"${key}\": ${value}"
+    done
+    printf '%s\n' "${out}"
     printf '  },\n  "checks": ['
     sep=""
     i=0

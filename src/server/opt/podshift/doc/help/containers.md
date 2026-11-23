@@ -4,11 +4,11 @@ Lists all rootless podman containers, including running and stopped ones.
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift containers
 ```
 ## Usage `(podshift)`
 
-```shell
+```bash
 containers
 ```

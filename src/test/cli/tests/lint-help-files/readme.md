@@ -12,6 +12,6 @@ It needs no VM or container. To run the help code itself, use `dev-cli-help`.
 
 ## Examples
 
-```sh
+```bash
 ./test lint-help-files
 ```

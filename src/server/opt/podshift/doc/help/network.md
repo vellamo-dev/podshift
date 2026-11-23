@@ -28,13 +28,20 @@ The initializer is `cloud-init`, `NetworkManager` or `systemd-networkd`. `--forc
 
 ## Examples `(root)`
 
-```shell
+```bash
 sudo podshift network set --device eth0
 ```
 
 ## Examples `(any)`
 
-```shell
+Check the network settings:
+
+```bash
 podshift nw check
+```
+
+Load TSV_NW1 to TSV_NW8 into the current shell:
+
+```bash
 eval "$(podshift nw reload)"
 ```

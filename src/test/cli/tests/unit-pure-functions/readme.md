@@ -8,6 +8,6 @@ bats must be installed. If it is missing, the test stops with a `Fix:` line. The
 
 ## Examples
 
-```sh
+```bash
 ./test unit-pure-functions
 ```

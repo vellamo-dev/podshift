@@ -10,3 +10,4 @@ enable podshift-drop.path
 enable podshift-drop-safety.timer
 enable podshift-qdl-validate.path
 enable podshift-qdl-install.path
+enable podshift-qdl-remove.path

@@ -4,7 +4,7 @@ The PodShift shell scripts follow a small set of consistent conventions. The cod
 
 ## Documentation
 
-Every `.sh` file is documented with bashdoc tags, so a person can read what a file and each function does without running it. Configuration files that PodShift reads itself, such as `main.conf` and `groups.conf`, use the same file header as scripts. The always-required tags, and that `@file` and `@source-dir` match the path, are enforced by `lint-bashdoc-required-tags` for every `.sh` file and every listed `.conf` file under `src/server`, `src/deployment` and `utils/portable`. Its lists live in `src/test/cli/tests/lint-bashdoc-tags/data/tags.conf`. Path- and category-dependent tags are enforced by `lint-bashdoc-conditional-tags`, which reads the same file. Tag names and allowed values are enforced by `lint-bashdoc-tag-values`, which reads the marked tables in this file.
+Every `.sh` file is documented with bashdoc tags, so a person can read what a file and each function does without running it. Configuration files that PodShift reads itself, such as `main.conf` and `groups.conf`, use the same file header as scripts. The always-required tags, and that `@file` and `@source-dir` match the path, are enforced by `lint-bashdoc-required-tags` for every `.sh` file and every listed `.conf` file under `src/server`, `src/deployment` and `utils/portable`. Its lists live in `src/test/cli/shared/conf/bashdoc-tags.conf`. Path- and category-dependent tags are enforced by `lint-bashdoc-conditional-tags`, which reads the same file. Tag names and allowed values are enforced by `lint-bashdoc-tag-values`, which reads the marked tables in this file.
 
 Each tag is one of two kinds:
 
@@ -93,7 +93,7 @@ The test tags are used only by the test suite in `src/test/`, see [Testing](../s
 - Function tags go directly above the function they describe, in the order of the table.
 - Setting tags go directly above the setting they describe, in a configuration file.
 - A configuration file's header starts with `@file` and follows the table order. Installed files include `@dest-dir` and `@host-edit`; build-time files under `src/deployment` leave them out. A `#` separator line follows the header before any setting tags, such as `@type` in `main.conf`.
-- PodShift's own `.conf` files are listed in `tags.conf` under `[conf-files]`. Formats for other tools (sysusers.d, tmpfiles.d, sysctl.d, systemd drop-ins, `assets/tpl` templates) are left out.
+- PodShift's own `.conf` files are listed in `bashdoc-tags.conf` under `[conf-files]`. Formats for other tools (sysusers.d, tmpfiles.d, sysctl.d, systemd drop-ins, `assets/tpl` templates) are left out.
 - Only tags listed in the table are allowed. A new tag gets a table row first.
 
 ### Short header
@@ -105,11 +105,11 @@ A shell file installed into the system's own places, such as `/etc/profile.d`, r
 - `@description`
 - `@warning`: what to be careful about, for example that it runs in every login shell and is managed by PodShift.
 
-It has no other tags. Every file with a short header is listed below and in `src/test/cli/tests/lint-bashdoc-tags/data/tags.conf` under `[short-header-files]`, which `lint-bashdoc-required-tags` reads.
+It has no other tags. Every file with a short header is listed below and in `src/test/cli/shared/conf/bashdoc-tags.conf` under `[short-header-files]`, which `lint-bashdoc-required-tags` reads.
 
 | File | Runs in |
 |---|---|
-| `src/server/etc/profile.d/podshift.sh` | Every login shell on the server. |
+| `src/server/etc/profile.d/podshift.sh` | Every login shell on the server; it loads only for root, podshift and members of `wheel`. |
 
 ### Exceptions
 
@@ -119,7 +119,7 @@ A file is left without tags only when its nature on the host does not allow them
 - it is generated;
 - it comes from a third party.
 
-An excepted file still starts with one plain comment line saying what it is. Every excepted file is listed here with its reason and in `src/test/cli/tests/lint-bashdoc-tags/data/tags.conf` under `[exception-files]`; there are none at the moment. A file that is not listed here or under [Short header](#short-header) follows the table. `lint-bashdoc-required-tags` checks both lists.
+An excepted file still starts with one plain comment line saying what it is. Every excepted file is listed here with its reason and in `src/test/cli/shared/conf/bashdoc-tags.conf` under `[exception-files]`; there are none at the moment. A file that is not listed here or under [Short header](#short-header) follows the table. `lint-bashdoc-required-tags` checks both lists.
 
 ### Old tag names
 
@@ -166,7 +166,7 @@ Older names map as follows. None remain in the tree.
 - A function loads every helper it uses itself, even when a parent may already have loaded it.
 - The check works because each helper file holds one function with the same name as the file, and function names are unique across the project. The only exception is the macOS and Fedora versions of one helper in `src/test/cli/os-specific/`, since only one of them is loaded per run.
 - Code that is not deployed, such as the test suite in `src/test/`, may load its shared helpers up front in its entry script (`src/test/run.sh`). Its steps and helpers may then call those helpers without loading them. Everything that ships in the RPM follows the loading rules above without exception.
-- Local variables use lowercase; global variables use uppercase.
+- Local variables use lowercase; global variables use uppercase. `./test lint-local-variables` checks that a function or bats test declares every lowercase variable it sets.
 
 ## Behaviour
 
@@ -177,6 +177,7 @@ Older names map as follows. None remain in the tree.
 - In `src/server`, only files that run as their own process run their function: files that systemd runs directly (`ExecStart`) and health checks, which `health-run-check` runs with `bash <file>`. They end with `[[ "${BASH_SOURCE[0]}" == "${0}" ]] && <function>`.
 - Outside `src/server` (for example `src/test`), the `--now` trigger with `BASH_ARGV` is still allowed.
 - Questions are named `is-x` (for example `is-podshift`). They return 0 or 1 and print nothing.
+- `is-admin` asks whether the caller can act as root now (root, or sudo without a password) and guards commands. `is-wheel-member` only reads the groups, never asks sudo and logs nothing, so `/etc/profile.d/podshift.sh` uses it to pick the login shells that get the helpers.
 - Gates are named `require-x` (for example `require-podshift`). They call `is-x`, and on "no" print the reason and the fix on stderr, then return 1. Gates have no trigger: load them, then call them on their own line, always followed by `|| return 1`:
 
   ```bash
@@ -220,6 +221,6 @@ Versions are `x.y.z`. The `Version:` line in `podshift.spec` is the single sourc
 - **Minor (`y`)** goes up when a feature is added or after a bigger refactor, and `z` goes back to 0.
 - **Major (`x`)** stays at 0 until the first stable release. Only the maintainer changes it, never an agent.
 
-Every bump adds a spec `%changelog` entry (`- x.y.z-1`) and sets `Release:` back to `1`. Bump once per task or delivery, not per saved file. An agent bumps the version as the last step of a change and says so in its report.
+Every bump adds a spec `%changelog` entry (header `* <date> <author> - x.y.z`) and sets `Release:` back to `1`. Bump once per task or delivery, not per saved file. An agent bumps the version as the last step of a change and says so in its report.
 
 After a release reaches `stable` and Copr has built it, `./test release-version-check` checks that both versions match. See [release-version-check](../src/test/cli/tests/release-version-check/readme.md).

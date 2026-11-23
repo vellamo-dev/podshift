@@ -19,11 +19,15 @@ fi
 # @description: Creates the rootless remote SSH key pair for the podshift user.
 # @exitcode: 0 always (non-fatal, failures are logged via logger).
 make-rootless-remote-key() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-KEY"
     local podshift_rss_key_file podshift_ssh_dir epoch
-    # shellcheck source=../utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_95A057375FBB}/../utils/print-step.sh"
+    # shellcheck source=../utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_95A057375FBB}/../utils/print-step-header.sh"
+    # shellcheck source=../utils/print-step-skip.sh
+    declare -F print-step-skip >/dev/null || source "${DIR_95A057375FBB}/../utils/print-step-skip.sh"
+    # shellcheck source=../utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_95A057375FBB}/../utils/print-step-ok.sh"
 
     podshift_rss_key_file="/home/podshift/.ssh/podshift_remote_rss"
     podshift_ssh_dir="$(dirname "${podshift_rss_key_file}")"

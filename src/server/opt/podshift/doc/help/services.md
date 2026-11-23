@@ -4,12 +4,12 @@ Lists all user-level systemd service units, including inactive ones, and outputs
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift services
 ```
 
 ## Usage `(podshift)`
 
-```shell
+```bash
 services
 ```

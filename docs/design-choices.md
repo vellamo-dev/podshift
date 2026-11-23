@@ -355,7 +355,7 @@ Installing an app should be as easy as copying a file. PodShift adds a drop fold
 
 **When it's not enough:** If you want full control over each step, install with Podman directly. The folder is only a shortcut.
 
-**For the technical reader:** A systemd path unit watches `/home/podshift/drop`. Processing starts after a short quiet period, and files changed in the last 2 seconds are left to settle, so half-copied files aren't picked up. A timer also sweeps the folder every 5 minutes. Quadlet files (`.container`, `.volume`, `.network`, `.image`, `.kube`, `.pod`, `.build`) and `.zip` bundles up to 50 KB are accepted. Anything else goes to `/home/podshift/trash`, and every step is logged. These are defaults in `/opt/podshift/conf/main.conf`.
+**For the technical reader:** A systemd path unit watches `/home/podshift/drop`. Processing starts after a short quiet period, and files changed in the last 2 seconds are left to settle, so half-copied files aren't picked up. A timer also sweeps the folder every 5 minutes. Quadlet files (`.container`, `.volume`, `.network`, `.image`) and `.zip` bundles of them are accepted, with size limits. Pods are not supported yet. Anything else goes to `/home/podshift/trash`, and every step is logged. These are defaults in `/opt/podshift/conf/main.conf`. Every drop gets its own ID, a UUIDv7, which starts with the time in milliseconds, so IDs sort by time. A Quadlet file carries it as the comment `# podshift-drop-id: <uuid>` on line 1, and a bundle carries it in its queued name and then in every one of its files, so an installed file can be traced back to the drop that put it there. The drop history shows one row per drop, also when the same file is dropped again. Whether `podman quadlet install` keeps that comment line in the installed file is not verified on Fedora yet.
 
 **Read more:**
 
@@ -382,6 +382,19 @@ Installing an app should be as easy as copying a file. PodShift adds a drop fold
 - [Configuration Specifics (Google SRE Workbook)](https://sre.google/workbook/configuration-specifics/)
 - [Fail Fast (Jim Shore, IEEE Software, 2004)](https://martinfowler.com/ieeeSoftware/failFast.pdf)
 - [Quadlet for adhoc units (Podman issue 18778, 2023)](https://github.com/podman-container-tools/podman/issues/18778)
+
+### Installed once, removed on purpose
+
+**In plain words:** PodShift installs a Quadlet once and never overwrites it. Dropping the same file again changes nothing. Dropping a different file with the same name is refused, with a note to remove the old one first. Removing is its own step, `podshift quadlet rm`, and it is refused while something else still uses the item.
+
+**What you gain:**
+- A running app is never replaced by accident, for example by an old copy synced from git.
+- Every change is two clear steps, remove and drop. Each drop is in the drop history, and each removal in the install log.
+- One name means one thing: each file sets its Podman name to its own base name, so `web.container` is the container `web` and the service `web.service`.
+
+**When it's not enough:** An update in place takes two steps and a short stop. If you need rolling updates, use Podman directly.
+
+**For the technical reader:** Before install, the validator compares each item with the installed files in `/home/podshift/.config/containers/systemd`. The same content after filling the `TSV_` values is `unchanged` and goes to trash; anything else with an installed name is `refused`. The name key (`ContainerName`, `NetworkName`, `VolumeName`) must equal the base name, and a base name must not end with `-pod`, `-network`, `-volume`, `-image` or `-build`, the endings Quadlet adds to service names. The name must be free in Podman for its type, and every referenced Quadlet file and Podman secret must exist or come in the same drop. `podman quadlet install` runs without `--replace`, and units are only started, never restarted. A removal stops the units (containers first), runs `podman quadlet rm`, removes leftover containers of the units, pods and networks, and keeps volumes unless asked. The Podman behaviour behind these rules is taken from the Podman docs and is not verified on Fedora yet.
 
 ### One configuration, different values per server
 

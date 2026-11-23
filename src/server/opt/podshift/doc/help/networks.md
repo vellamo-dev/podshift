@@ -4,12 +4,12 @@ Lists all rootless Podman networks (`podman network ls`).
 
 ## Usage `(root)`
 
-```shell
+```bash
 podshift networks
 ```
 
 ## Usage `(podshift)`
 
-```shell
+```bash
 networks
 ```

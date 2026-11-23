@@ -14,7 +14,7 @@ setup() {
     [ "${status}" -eq 0 ]
     printf '%s' "${output}" | jq -e '
         [.items[].id] == ["example-unit","podman","systemd-legacy","tsv-nw1"]
-        and all(.items[]; (keys | sort) == ["groups","id","rows","source","status","subtitle","title"])
+        and all(.items[]; ((keys - ["quadlet"]) | sort) == ["groups","id","rows","source","status","subtitle","title"])
         and .items[3].title == "tsv-nw1"
         and .items[3].subtitle == "3f1c2b8e9d0a"
     '
@@ -110,4 +110,15 @@ setup() {
     [ "${status}" -ne 0 ]
     run cockpit-networks-items 'not json' '{}'
     [ "${status}" -ne 0 ]
+}
+
+@test "quadlet: the installed .network file and its app, only for a quadlet source map entry" {
+    run cockpit-networks-items "${INSPECT}" "${SOURCES}"
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '
+        ([.items[] | select(has("quadlet")) | {(.id): .quadlet}] | add) == {"tsv-nw1": {name: "tsv-nw1.network", app: "shop"}}
+    '
+    run cockpit-networks-items "${INSPECT}" '{"tsv-nw1":{"source":"quadlet","unit":"tsv-nw1-network.service","file":"/home/podshift/.config/containers/systemd/tsv-nw1.network"}}'
+    [ "${status}" -eq 0 ]
+    printf '%s' "${output}" | jq -e '(.items[] | select(.id == "tsv-nw1") | .quadlet) == {name: "tsv-nw1.network"}'
 }

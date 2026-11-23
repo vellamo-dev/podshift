@@ -33,8 +33,11 @@ cockpit-contract-failing-args() {
     value="${2-}"
     # shellcheck source=./cockpit-validate-contract.sh
     declare -F cockpit-validate-contract >/dev/null || source "${DIR_1FA1BD7E605F}/cockpit-validate-contract.sh"
-    names="$(jq -n -r --argjson c "${contract}" --argjson v "${value}" '
-        if ($v | type) != "object" or ($c | type) != "object" then empty
+    # The JSON is read from files, not arguments: Linux limits one argument to 128 KB.
+    names="$(jq -n -r --slurpfile c <(printf '%s' "${contract}") --slurpfile v <(printf '%s' "${value}") '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($c | one) as $c | ($v | one) as $v
+        | if ($v | type) != "object" or ($c | type) != "object" then empty
         else
             ($c.properties // {}) as $p
             | ([($v | keys[]) | select(. as $k | (($p | has($k)) | not) and ($c.additionalProperties == false))]
@@ -47,11 +50,13 @@ cockpit-contract-failing-args() {
     done <<< "${names}"
     while IFS= read -r key; do
         [[ -n "${key}" ]] || continue
-        sub="$(jq -n -c --argjson c "${contract}" --arg k "${key}" '$c.properties[$k]' 2>/dev/null)" || continue
-        cockpit-validate-contract "${sub}" "$(jq -n -c --argjson v "${value}" --arg k "${key}" '$v[$k]')" && rc=0 || rc=$?
+        sub="$(jq -n -c --slurpfile c <(printf '%s' "${contract}") --arg k "${key}" '$c[0].properties[$k]' 2>/dev/null)" || continue
+        cockpit-validate-contract "${sub}" "$(jq -n -c --slurpfile v <(printf '%s' "${value}") --arg k "${key}" '$v[0][$k]')" && rc=0 || rc=$?
         [[ "${rc}" -eq 0 ]] || failing+=("${key}")
-    done < <(jq -n -r --argjson c "${contract}" --argjson v "${value}" '
-        if ($v | type) == "object" and ($c | type) == "object" then
+    done < <(jq -n -r --slurpfile c <(printf '%s' "${contract}") --slurpfile v <(printf '%s' "${value}") '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($c | one) as $c | ($v | one) as $v
+        | if ($v | type) == "object" and ($c | type) == "object" then
             ($c.properties // {}) as $p | $v | keys[] | select(. as $k | $p | has($k))
         else empty end
     ' 2>/dev/null)

@@ -19,6 +19,9 @@
 #   The source is builtin for the networks podman and pasta, then the source map entry, then
 #   quadlet when the PODMAN_SYSTEMD_UNIT label is present, else unmanaged. status is In use when
 #   any container is attached, else Unused.
+#   quadlet, set only when the source map entry has source quadlet (an installed .network file),
+#   is {name, app}: name is the file name and app, only for a file in a bundle folder, the app
+#   name. quadlet-remove takes app when it is set, else name.
 # @arg: $1 - JSON array from podman network inspect.
 # @arg: $2 - JSON object mapping a network name to {source, unit, unit_state, file, app}.
 # @stdout: one JSON object with an items array.
@@ -28,10 +31,17 @@ cockpit-networks-items() {
     nets="${1-}"
     sources="${2-}"
     [[ -n "${sources}" ]] || sources='{}'
-    jq -n -c --argjson nets "${nets}" --argjson sources "${sources}" '
+    # The JSON is read from files, not arguments: Linux limits one argument to 128 KB.
+    jq -n -c --slurpfile nets <(printf '%s' "${nets}") --slurpfile sources <(printf '%s' "${sources}") '
+        def one: if length == 1 then .[0] else error("not one JSON value") end;
+        ($nets | one) as $nets | ($sources | one) as $sources |
         def row($id; $label; $v):
             if $v == null or $v == "" then empty
             else {id: $id, label: $label, value: ($v | tostring)} end;
+        def owner: if type != "object" then null
+            else (((.file // "") | if type == "string" then . else "" end | split("/") | last) // "") as $f
+                | ((.app // "") | if type == "string" then . else "" end) as $a
+                | if $f == "" then null else {name: $f} + (if $a == "" then {} else {app: $a} end) end end;
         def flag($b; $yes; $no):
             if $b == true then $yes elif $b == false then $no else null end;
         if ($nets | type) != "array" or ($sources | type) != "object" then halt_error(1) else . end
@@ -48,6 +58,7 @@ cockpit-networks-items() {
                elif ($s.source // "") != "" then $s.source
                elif ($labels | has("PODMAN_SYSTEMD_UNIT")) then "quadlet"
                else "unmanaged" end) as $source
+            | (if ($s.source // "") == "quadlet" then ($s | owner) else null end) as $owner
             | (if ($s.unit // "") != "" then $s.unit
                elif $source == "quadlet" then ($labels.PODMAN_SYSTEMD_UNIT // null)
                else null end) as $unit
@@ -83,6 +94,7 @@ cockpit-networks-items() {
                     ]}
                 ] | map(select((.rows | length) > 0)))
               }
+            + (if $owner == null then {} else {quadlet: $owner} end)
           ) | sort_by(.id))}
     '
 }

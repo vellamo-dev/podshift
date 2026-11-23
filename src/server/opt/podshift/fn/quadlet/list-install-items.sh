@@ -19,9 +19,10 @@ fi
 # @description: Lists the items of the directory in install order: by type, then oldest first, then by name.
 # @details:
 #   Lists the non-hidden files and folders of the directory, one per line, in install order: single
-#   files by type (.network, .volume, .image, .container), then bundle folders (.qdl-bundle), then
+#   files by type (.network, .volume, .image, .pod, .container), then bundle folders (.qdl-bundle), then
 #   anything else. Inside each group the oldest comes first by modification time (in seconds), and
 #   a tie is sorted by name. The collision suffix is ignored when the type is found.
+#   The pod branches wait for pod support (docs/roadmap.md); a .pod file or Pod= key is refused for now.
 # @arg: $1 - source directory.
 # @stdout: the full path of each item, one per line. Nothing if the directory is empty.
 # @exitcode: 0 if the directory was read (even if it is empty), 1 if it is not a directory.
@@ -38,13 +39,14 @@ list-install-items() {
             name="$(get-original-name "${path}")"
             rank=9
             if [[ -d "${path}" ]]; then
-                [[ "${name}" == *.qdl-bundle ]] && rank=5
+                [[ "${name}" == *.qdl-bundle ]] && rank=6
             else
                 case "${name}" in
                     *.network) rank=1 ;;
                     *.volume) rank=2 ;;
                     *.image) rank=3 ;;
-                    *.container) rank=4 ;;
+                    *.pod) rank=4 ;;
+                    *.container) rank=5 ;;
                 esac
             fi
             # GNU stat first, BSD stat second, so it also runs on a Mac.

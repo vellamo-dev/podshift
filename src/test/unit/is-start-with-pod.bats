@@ -17,6 +17,7 @@ setup() {
 
 # All systemd true values are accepted.
 @test "true, yes, 1 and on return 0 and print nothing" {
+    local value
     for value in true yes 1 on; do
         printf '[Container]\nImage=nginx\nStartWithPod=%s\n' "${value}" > "${Q}"
         run is-start-with-pod "${Q}"
@@ -27,6 +28,7 @@ setup() {
 
 # True values are case-insensitive.
 @test "the value is not case sensitive" {
+    local value
     for value in TRUE True YES Yes ON On; do
         printf '[Container]\nStartWithPod=%s\n' "${value}" > "${Q}"
         run is-start-with-pod "${Q}"
@@ -36,6 +38,7 @@ setup() {
 
 # All systemd false values and empty return false.
 @test "false, no, 0, off and an empty value return 1" {
+    local value
     for value in false no 0 off ""; do
         printf '[Container]\nStartWithPod=%s\n' "${value}" > "${Q}"
         run is-start-with-pod "${Q}"

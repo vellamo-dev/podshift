@@ -25,15 +25,19 @@ fi
 # @description: Creates the Podman auth file and auto-update override.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 install-rootless-podman-auth-file() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PT-PAF"
     local dir_config auth_file auth_file_dir override_file dir_podman_aus
     dir_config="/home/podshift/.config"
     auth_file="${dir_config}/containers/auth.json"
     dir_podman_aus="${dir_config}/systemd/user/podman-auto-update.service.d"
     override_file="${dir_podman_aus}/override.conf"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_86D4F73B62E0}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_86D4F73B62E0}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_86D4F73B62E0}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_86D4F73B62E0}/../../fn/utils/print-step-ok.sh"
     print-step-header "${step_tag}" "Creating prerequisites for podman authorization..."
     auth_file_dir="$(dirname "${auth_file}")"
 

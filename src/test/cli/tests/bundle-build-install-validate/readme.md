@@ -4,6 +4,6 @@ The full run: builds the RPM, stops the builder containers with `build-container
 
 ## Examples
 
-```sh
+```bash
 ./test bundle-build-install-validate
 ```

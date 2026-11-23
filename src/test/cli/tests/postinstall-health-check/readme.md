@@ -4,6 +4,6 @@ Runs `podshift --plain health-check --fail-if-unhealthy` as root in the installe
 
 ## Examples
 
-```sh
+```bash
 ./test postinstall-health-check
 ```

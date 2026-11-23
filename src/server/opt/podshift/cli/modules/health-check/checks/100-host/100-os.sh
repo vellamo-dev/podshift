@@ -14,13 +14,25 @@
 # @license-url: https://github.com/vellamo-dev/podshift/blob/main/LICENSE
 # @author: Vellamo.fyi
 
+if [[ -z "${DIR_2BE690517E1A:-}" ]]; then
+    DIR_2BE690517E1A="$(CDPATH='' cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    readonly DIR_2BE690517E1A
+fi
+
 # @description: Runs the os check.
 # @stdout: one TSV line: os<TAB><status><TAB><detail>.
 # @exitcode: 0 = supported, 1 = unsupported platform.
 
 health-check-os() {
     local kern id ver name min
-    min="${PODSHIFT_MIN_FEDORA:-45}"
+    # shellcheck source=../../../../../fn/load-podshift-conf-main.sh
+    declare -F load-podshift-conf-main >/dev/null || source "${DIR_2BE690517E1A}/../../../../../fn/load-podshift-conf-main.sh"
+    load-podshift-conf-main
+    min="${PODSHIFT_MIN_FEDORA:-}"
+    if [[ ! "${min}" =~ ^[0-9]+$ ]]; then
+        printf 'os\tWARN\tPODSHIFT_MIN_FEDORA is not set in main.conf\n'
+        return 1
+    fi
     kern="$(uname -s 2>/dev/null)"
     if [[ "${kern}" == "Darwin" ]]; then
         name="macOS $(sw_vers -productVersion 2>/dev/null)"

@@ -41,8 +41,9 @@ podshift-health-check() {
         shift
     done
 
-    # shellcheck source=/dev/null
-    [[ -f "${DIR_7A3F9C1E5B8D}/../../../conf/main.conf" ]] && source "${DIR_7A3F9C1E5B8D}/../../../conf/main.conf"
+    # shellcheck source=../../../fn/load-podshift-conf-main.sh
+    declare -F load-podshift-conf-main >/dev/null || source "${DIR_7A3F9C1E5B8D}/../../../fn/load-podshift-conf-main.sh"
+    load-podshift-conf-main
 
     # 2. Decide once, while the output is still the terminal, whether it is interactive.
     # shellcheck source=../../../fn/utils/is-interactive-output.sh

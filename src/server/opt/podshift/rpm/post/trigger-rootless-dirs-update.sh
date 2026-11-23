@@ -19,13 +19,19 @@ fi
 # @description: Creates the rootless podman directories via systemd-tmpfiles.
 # @exitcode: 0 always (non-fatal, failures are reported via [WARN]).
 trigger-rootless-dirs-update() {
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PO-DRS"
     local dir_registries tmpfiles_conf
     dir_registries="/home/podshift/.config/containers/registries.conf.d"
     tmpfiles_conf="/usr/lib/tmpfiles.d/podshift-dirs.conf"
-    # shellcheck source=../../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${DIR_E04AB66E0316}/../../fn/utils/print-step.sh"
+    # shellcheck source=../../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${DIR_E04AB66E0316}/../../fn/utils/print-step-header.sh"
+    # shellcheck source=../../fn/utils/print-step-warn.sh
+    declare -F print-step-warn >/dev/null || source "${DIR_E04AB66E0316}/../../fn/utils/print-step-warn.sh"
+    # shellcheck source=../../fn/utils/print-step-skip.sh
+    declare -F print-step-skip >/dev/null || source "${DIR_E04AB66E0316}/../../fn/utils/print-step-skip.sh"
+    # shellcheck source=../../fn/utils/print-step-ok.sh
+    declare -F print-step-ok >/dev/null || source "${DIR_E04AB66E0316}/../../fn/utils/print-step-ok.sh"
 
     print-step-header "${step_tag}" "Creating directories for rootless podman..."
 

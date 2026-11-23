@@ -21,6 +21,7 @@ setup() {
 }
 
 @test "a value with a control character is printed as one \\x01" {
+    local json
     for json in '{"value":"a\n"}' '{"value":"a\nb"}' '{"value":"\t"}' '{"value":"a\u0000b"}' '{"value":"a\u007f"}' '{"value":"a\u001b"}'; do
         run cockpit-config-arg "${json}" value
         [ "${status}" -eq 0 ]

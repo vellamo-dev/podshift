@@ -10,8 +10,8 @@ setup() {
     run cockpit-overview-status-rows '{}'
     [ "${status}" -eq 0 ]
     printf '%s' "${output}" | jq -e '
-        [.rows[].id] == ["podman_socket","auto_update","drop_watcher","drop_safety","quadlet_validator","quadlet_installer","tmpfiles_setup","firewall","fail2ban","ssh_port"]
-        and [.rows[].label] == ["Podman API socket","Container auto-update","Drop-in folder watcher","Drop-in safety check","Quadlet validator","Quadlet installer","Temporary files setup","Firewall","Fail2Ban","SSH port"]
+        [.rows[].id] == ["podman_socket","auto_update","drop_watcher","drop_safety","quadlet_validator","quadlet_installer","quadlet_remover","tmpfiles_setup","firewall","fail2ban","ssh_port"]
+        and [.rows[].label] == ["Podman API socket","Container auto-update","Drop-in folder watcher","Drop-in safety check","Quadlet validator","Quadlet installer","Quadlet remover","Temporary files setup","Firewall","Fail2Ban","SSH port"]
         and all(.rows[]; .value == null)
         and all(.rows[]; .id | test("^[a-z0-9_]+$"))
         and .rows[0].unit == "podman.socket" and .rows[0].scope == "user"
@@ -20,10 +20,11 @@ setup() {
         and .rows[3].unit == "podshift-drop-safety.timer" and .rows[3].scope == "user"
         and .rows[4].unit == "podshift-qdl-validate.path" and .rows[4].scope == "user"
         and .rows[5].unit == "podshift-qdl-install.path" and .rows[5].scope == "user"
-        and .rows[6].unit == "systemd-tmpfiles-setup.service" and .rows[6].scope == "user"
-        and .rows[7].unit == "firewalld.service" and .rows[7].scope == "system"
-        and .rows[8].unit == "fail2ban.service" and .rows[8].scope == "system"
-        and .rows[9].unit == "sshd.service" and .rows[9].scope == "system"
+        and .rows[6].unit == "podshift-qdl-remove.path" and .rows[6].scope == "user"
+        and .rows[7].unit == "systemd-tmpfiles-setup.service" and .rows[7].scope == "user"
+        and .rows[8].unit == "firewalld.service" and .rows[8].scope == "system"
+        and .rows[9].unit == "fail2ban.service" and .rows[9].scope == "system"
+        and .rows[10].unit == "sshd.service" and .rows[10].scope == "system"
     '
 }
 
@@ -32,8 +33,8 @@ setup() {
     [ "${status}" -eq 0 ]
     printf '%s' "${output}" | jq -e '
         .rows[0].value == "Running"
-        and .rows[8].value == null
-        and .rows[9].value == "1022"
+        and .rows[9].value == null
+        and .rows[10].value == "1022"
         and .rows[1].value == null
     '
 }

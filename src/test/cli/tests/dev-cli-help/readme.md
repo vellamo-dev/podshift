@@ -10,6 +10,6 @@ Markdown help for one command needs glow, so it is not run here. To check the he
 
 ## Examples
 
-```sh
+```bash
 ./test dev-cli-help
 ```

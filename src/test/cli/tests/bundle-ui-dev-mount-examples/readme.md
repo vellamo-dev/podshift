@@ -6,6 +6,6 @@ It is composed only through `@needs`, so it is one run with one log folder and o
 
 ## Examples
 
-```sh
+```bash
 ./test bundle-ui-dev-mount-examples
 ```

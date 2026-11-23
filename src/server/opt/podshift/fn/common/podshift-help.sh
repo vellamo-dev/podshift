@@ -19,11 +19,13 @@ fi
 # @details:
 #   Markdown is shown with glow when stdout is a terminal and glow is installed. If stdout is not a
 #   terminal, or glow is missing, the file is printed as is with cat. Glow writes nothing when
-#   stdout is not a terminal. Plain text files are always printed with cat.
-# @arg: $1 - document id (defaults to podshift, the main help as plain text)
+#   stdout is not a terminal. Plain text files are always printed with cat. An id with no page of its
+#   own, such as nw, is looked up in cli/aliases.conf, so podshift --help nw shows the network page.
+#   Glow always wraps at 80 columns, whatever the terminal width or ~/.config/glow/glow.yml says.
+# @arg: $1 - document id or command alias (defaults to podshift, the main help as plain text)
 # @exitcode: 0 on success, 1 if the document id is unknown.
 podshift-help() {
-    local path_doc_root doc_id path_md_file path_txt_file
+    local path_doc_root doc_id path_md_file path_txt_file long
     doc_id="${1}"
     [[ -z "${doc_id}" ]] && doc_id="podshift"
     # Strip any directory component to prevent escaping the help directory
@@ -36,6 +38,11 @@ podshift-help() {
     fi
     # shellcheck source=../../doc/help
     path_doc_root="${DIR_A6D8F81179BE}/../../doc/help"
+    if [[ ! -f "${path_doc_root}/${doc_id}.md" && ! -f "${path_doc_root}/${doc_id}.txt" ]]; then
+        # shellcheck source=../utils/resolve-cli-alias.sh
+        declare -F resolve-cli-alias >/dev/null || source "${DIR_A6D8F81179BE}/../utils/resolve-cli-alias.sh"
+        long="$(resolve-cli-alias "${doc_id}" "${DIR_A6D8F81179BE}/../../cli/aliases.conf")" && doc_id="${long}"
+    fi
     path_md_file="${path_doc_root}/${doc_id}.md"
     path_txt_file="${path_doc_root}/${doc_id}.txt"
     if [[ -f "${path_md_file}" ]]; then
@@ -43,7 +50,8 @@ podshift-help() {
         if [[ ! -t 1 ]] || ! command -v glow >/dev/null 2>&1; then
             cat "${path_md_file}"
         else
-            glow "${path_md_file}"
+            # A fixed width, so the first call (before glow writes its config) wraps the same as later ones.
+            glow -w 80 "${path_md_file}"
         fi
         return
     fi

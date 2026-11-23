@@ -4,6 +4,6 @@ The full run that prepares a live UI mount: builds the RPM, installs it in a fre
 
 ## Examples
 
-```sh
+```bash
 ./test bundle-ui-dev-mount
 ```

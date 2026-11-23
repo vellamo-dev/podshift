@@ -4,6 +4,6 @@ Checks the system after the RPM install: dependencies, the podshift user, config
 
 ## Examples
 
-```sh
+```bash
 ./test install-validate
 ```

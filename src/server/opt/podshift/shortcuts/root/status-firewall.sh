@@ -11,12 +11,16 @@
 # @author: Vellamo.fyi
 
 # @description: Checks the status of the system firewall service.
-# @exitcode: 0 on success, 1 if not an administrator.
+# @arg: $@ - none; any argument is refused.
+# @exitcode: 0 on success, 1 if given an argument or not an administrator.
 root-status-firewall() {
+    # shellcheck source=../../fn/utils/require-no-args.sh
+    declare -F require-no-args >/dev/null || source /opt/podshift/fn/utils/require-no-args.sh
+    require-no-args status-firewall "$@" || return 1
     # shellcheck source=../../fn/utils/require-admin.sh
     declare -F require-admin >/dev/null || source /opt/podshift/fn/utils/require-admin.sh
     require-admin || return 1
     systemctl status firewalld --no-pager
 }
 
-root-status-firewall
+root-status-firewall "$@"

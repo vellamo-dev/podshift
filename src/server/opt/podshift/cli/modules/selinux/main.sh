@@ -34,7 +34,7 @@ podshift-selinux() {
 # @description: Switches SELinux to enforcing, or prints the steps when it is disabled.
 # @details:
 #   It asks before it changes the running mode or the config file. --force skips the question.
-#   PODSHIFT_SELINUX_CONFIG may point at a config file other than /etc/selinux/config, for tests.
+#   The config file is PODSHIFT_SELINUX_CONFIG from main.conf; the tests set it to a temp file.
 # @arg: $@ - an optional --force that skips the confirmation.
 # @stdout: the result, or the steps when SELinux is disabled.
 # @stderr: errors.
@@ -61,7 +61,17 @@ podshift-selinux-enforce() {
 
     mode="$(getenforce 2>/dev/null)" || mode=""
     mode="$(printf '%s' "${mode}" | tr 'A-Z' 'a-z')"
-    config="${PODSHIFT_SELINUX_CONFIG:-/etc/selinux/config}"
+    # The tests point PODSHIFT_SELINUX_CONFIG at a temp file; otherwise main.conf sets it.
+    if [[ -z "${PODSHIFT_SELINUX_CONFIG:-}" ]]; then
+        # shellcheck source=../../../fn/load-podshift-conf-main.sh
+        declare -F load-podshift-conf-main >/dev/null || source "${DIR_818D351B6DB2}/../../../fn/load-podshift-conf-main.sh"
+        load-podshift-conf-main
+    fi
+    config="${PODSHIFT_SELINUX_CONFIG:-}"
+    if [[ -z "${config}" ]]; then
+        echo "PODSHIFT_SELINUX_CONFIG is not set in main.conf." >&2
+        return 1
+    fi
 
     # shellcheck source=../../../fn/utils/selinux-config-is-enforcing.sh
     declare -F selinux-config-is-enforcing >/dev/null || source "${DIR_818D351B6DB2}/../../../fn/utils/selinux-config-is-enforcing.sh"
@@ -78,7 +88,7 @@ podshift-selinux-enforce() {
             echo "SELinux is disabled. Nothing changed." >&2
             echo "Turning it back on needs a full file relabel and a reboot, which can take a while." >&2
             echo "Steps:" >&2
-            echo "  1. Set SELINUX=enforcing, or SELINUX=permissive, in /etc/selinux/config" >&2
+            echo "  1. Set SELINUX=enforcing, or SELINUX=permissive, in ${config}" >&2
             echo "  2. Run: touch /.autorelabel" >&2
             echo "  3. Reboot. The relabel runs at boot and can take a long time." >&2
             return 1

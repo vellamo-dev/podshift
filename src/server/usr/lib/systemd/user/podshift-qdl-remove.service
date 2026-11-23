@@ -1,0 +1,10 @@
+[Unit]
+Description=Remove quadlets waiting in the PodShift remove queue
+ConditionPathExists=/home/podshift/.quadlets/remove-queue
+
+[Service]
+Type=oneshot
+# See: [qdl-remove.sh](<../../../../opt/podshift/fn/service/qdl-remove.sh>)
+ExecStart=/opt/podshift/fn/service/qdl-remove.sh
+# Each unit may take PODSHIFT_QUADLET_STOP_TIMEOUT seconds to stop.
+TimeoutStartSec=30min

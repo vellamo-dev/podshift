@@ -18,23 +18,12 @@ if [[ -z "${DIR_288235C4FD95:-}" ]]; then
     readonly DIR_288235C4FD95
 fi
 
-# @description: Returns 0 when every named tool is on PATH.
-# @arg: $@ - tool names to check
-# @exitcode: 0 if all tools are on PATH, 1 otherwise.
-has-all-tools() {
-    local tool
-    for tool in "$@"; do
-        command -v "${tool}" >/dev/null 2>&1 || return 1
-    done
-    return 0
-}
-
 # @description: Waits for the required tools to become available.
 # @exitcode: 0 when the tools are available, 1 on timeout.
 wait-for-tools() {
     local required_tools max_tries count
     # shellcheck source=../../fn/utils/print-warning.sh
-    source "${DIR_288235C4FD95}/../../fn/utils/print-warning.sh"
+    declare -F print-warning >/dev/null || source "${DIR_288235C4FD95}/../../fn/utils/print-warning.sh"
     # shellcheck source=../../fn/utils/is-install-type-desktop.sh
     declare -F is-install-type-desktop >/dev/null || source "${DIR_288235C4FD95}/../../fn/utils/is-install-type-desktop.sh"
     required_tools=(firewall-cmd semanage)
@@ -43,6 +32,8 @@ wait-for-tools() {
     max_tries=30
     count=0
 
+    # shellcheck source=./has-all-tools.sh
+    declare -F has-all-tools >/dev/null || source "${DIR_288235C4FD95}/has-all-tools.sh"
     # Return immediately if all required tools are already available.
     if has-all-tools "${required_tools[@]}"; then
         return 0

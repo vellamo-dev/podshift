@@ -33,6 +33,7 @@ cockpit-overview-status-rows() {
             {id: "drop_safety", label: "Drop-in safety check", value: v("drop_safety"), unit: "podshift-drop-safety.timer", scope: "user"},
             {id: "quadlet_validator", label: "Quadlet validator", value: v("quadlet_validator"), unit: "podshift-qdl-validate.path", scope: "user"},
             {id: "quadlet_installer", label: "Quadlet installer", value: v("quadlet_installer"), unit: "podshift-qdl-install.path", scope: "user"},
+            {id: "quadlet_remover", label: "Quadlet remover", value: v("quadlet_remover"), unit: "podshift-qdl-remove.path", scope: "user"},
             {id: "tmpfiles_setup", label: "Temporary files setup", value: v("tmpfiles_setup"), unit: "systemd-tmpfiles-setup.service", scope: "user"},
             {id: "firewall", label: "Firewall", value: v("firewall"), unit: "firewalld.service", scope: "system"},
             {id: "fail2ban", label: "Fail2Ban", value: v("fail2ban"), unit: "fail2ban.service", scope: "system"},

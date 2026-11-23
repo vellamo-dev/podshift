@@ -13,7 +13,7 @@
 # @description: Derives and exports TSV_NW1..8.
 # @exitcode: 0 always.
 load-podshift-conf-nw() {
-    local initializer device_name conn_name ips line n i
+    local initializer device_name conn_name detected ips line n i
 
     # shellcheck source=./load-podshift-conf-runtime.sh
     declare -F load-podshift-conf-runtime >/dev/null || source /opt/podshift/fn/load-podshift-conf-runtime.sh
@@ -29,15 +29,18 @@ load-podshift-conf-nw() {
     device_name="${PODSHIFT_NW_DEVICE:-}"
 
     # Resolve the connection name: override first, then auto-detect.
+    detected=""
     if [[ -n "${initializer}" && -n "${device_name}" ]]; then
         conn_name="${initializer}-${device_name}"
     else
-        conn_name="$(nw-connection)"
+        detected="$(nw-connection)"
+        conn_name="${detected}"
     fi
 
     # Read the ordered manual conf; fall back to the profile/live view when absent.
     ips="$(nw-config-ips "${conn_name}" 2>/dev/null)"
-    [[ -n "${ips}" ]] || ips="$(nw-ips)"
+    # nw-ips reuses the detected name, so nmcli is not asked again; an override is not the active one.
+    [[ -n "${ips}" ]] || ips="$(nw-ips "${detected}")"
 
     # Export TSV_NW1..8.
     n=1

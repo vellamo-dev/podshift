@@ -4,15 +4,15 @@
 # Run with: ./test unit-cli-config
 
 setup() {
-    HERE="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
-    REPO="${HERE}"
-    while [ "${REPO}" != "/" ] && [ ! -f "${REPO}/podshift.spec" ]; do
-        REPO="$(dirname "${REPO}")"
-    done
-    SCRIPT="${REPO}/src/server/opt/podshift/cli/modules/config/main.sh"
+    local here repo
+    here="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
+    # The shared helper is at the same place from every suite's scripts/ folder.
+    declare -F find-repo-root >/dev/null || source "${here}/../../../shared/fn/utils/find-repo-root.sh"
+    repo="$(find-repo-root "${here}")" || return 1
+    SCRIPT="${repo}/src/server/opt/podshift/cli/modules/config/main.sh"
     TSV_FILE="${BATS_TEST_TMPDIR}/tsv.conf"
-    RULES_FILE="${REPO}/src/server/opt/podshift/conf/tsv-rules.conf"
-    TEMPLATES="${REPO}/src/server/opt/podshift/assets/tpl"
+    RULES_FILE="${repo}/src/server/opt/podshift/conf/tsv-rules.conf"
+    TEMPLATES="${repo}/src/server/opt/podshift/assets/tpl"
     SECRET="Secrets don't belong in config. Use a Podman secret instead."
     printf '# Custom TSV_* variables used by quadlets.\nTSV_KEEP='"'"'kept'"'"'\n' > "${TSV_FILE}"
 }
@@ -32,6 +32,8 @@ run_config() {
             is-admin() { [ "${CALLER}" = root ]; }
             is-podshift() { [ "${CALLER}" = podshift ]; }
             require-podshift() { [ "${CALLER}" = podshift ] || { echo "Unauthorised. podshift user required." >&2; return 1; }; }
+            # Root runs as itself; the test is not root, so sudo only runs the command.
+            sudo() { "$@"; }
             load-podshift-conf-main() {
                 PODSHIFT_TSV_CONF="${TEST_TSV}"
                 PODSHIFT_TSV_RULES_CONF="${TEST_RULES}"
@@ -66,6 +68,7 @@ key_lines() {
 }
 
 @test "set: invalid names are refused" {
+    local key
     for key in TSV_app TSV_ TSV_1A APP_NAME; do
         run_config podshift "${key}" x
         echo "${output}"
@@ -76,6 +79,7 @@ key_lines() {
 }
 
 @test "set: names starting with TSV_NW or TSV_ENV are refused" {
+    local key
     for key in TSV_NW1 TSV_NW9 TSV_NWORDER TSV_ENV2; do
         run_config podshift "${key}" x
         echo "${output}"
@@ -86,6 +90,7 @@ key_lines() {
 }
 
 @test "set: secret names are refused, whole words only" {
+    local key
     for key in TSV_DB_PASSWORD TSV_API_TOKEN TSV_API_KEY TSV_SECRET; do
         run_config podshift "${key}" x
         [ "${status}" -eq 1 ]
@@ -99,6 +104,7 @@ key_lines() {
 }
 
 @test "set: refused values change nothing" {
+    local value
     run_config podshift TSV_APP ""
     [ "${status}" -eq 1 ]
     [ "${output}" = "Value must not be empty." ]
@@ -155,6 +161,7 @@ key_lines() {
 }
 
 @test "unset: reserved and invalid names are refused" {
+    local key
     printf "TSV_NW9='x'\n" >> "${TSV_FILE}"
     for key in TSV_NW1 TSV_NW9 TSV_ENV2; do
         run_config podshift --unset "${key}"
@@ -175,6 +182,7 @@ key_lines() {
 }
 
 @test "unset: root and other users are unauthorised" {
+    local caller
     for caller in root other; do
         run_config "${caller}" --unset TSV_KEEP
         [ "${status}" -eq 1 ]
@@ -215,6 +223,7 @@ key_lines() {
 }
 
 @test "set: TSV_ENV is refused for every caller, root included" {
+    local caller
     : > "${BATS_TEST_TMPDIR}/runtime.conf"
     for caller in root podshift other; do
         run_config "${caller}" TSV_ENV prod
@@ -227,6 +236,7 @@ key_lines() {
 }
 
 @test "unset: TSV_ENV is refused for every caller, root included" {
+    local caller
     printf "TSV_ENV='dev'\n" > "${BATS_TEST_TMPDIR}/runtime.conf"
     for caller in root podshift other; do
         run_config "${caller}" --unset TSV_ENV
@@ -240,4 +250,25 @@ key_lines() {
     run_config root TSV_APP x
     [ "${status}" -eq 1 ]
     [ "${output}" = "Invalid key 'TSV_APP'. Root may only set: PODSHIFT_NW_INITIALIZER,PODSHIFT_NW_DEVICE" ]
+}
+
+@test "set: root saves a system key in the runtime config" {
+    # BSD install has no -D, so the file is there already and the template is not used.
+    printf "# runtime\n" > "${BATS_TEST_TMPDIR}/runtime.conf"
+    run_config root PODSHIFT_NW_DEVICE eth0
+    [ "${status}" -eq 0 ]
+    [ "${output}" = "Updated PODSHIFT_NW_DEVICE." ]
+    grep -qx "PODSHIFT_NW_DEVICE='eth0'" "${BATS_TEST_TMPDIR}/runtime.conf"
+}
+
+@test "get: a saved key is printed" {
+    run_config podshift TSV_KEEP
+    [ "${status}" -eq 0 ]
+    [ "${output}" = "TSV_KEEP='kept'" ]
+}
+
+@test "get: a key with pattern characters is refused" {
+    run_config podshift 'TSV_.*'
+    [ "${status}" -eq 1 ]
+    [ "${output}" = "Invalid key 'TSV_.*'. A key has only letters, digits and underscores." ]
 }

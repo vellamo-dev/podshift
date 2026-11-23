@@ -26,10 +26,10 @@ podshift-rpm-do-post() {
     local rpm_dir action
     action="${1}"
     rpm_dir="${2}"
-    # Reserved step tag (matches @prefix-@id in the header).
+    # Reserved step tag (matches @step in the header).
     local -r step_tag="PS-PO-0PO"
-    # shellcheck source=../fn/utils/print-step.sh
-    declare -F print-step-header >/dev/null || source "${rpm_dir}/../fn/utils/print-step.sh"
+    # shellcheck source=../fn/utils/print-step-header.sh
+    declare -F print-step-header >/dev/null || source "${rpm_dir}/../fn/utils/print-step-header.sh"
 
     print-step-header "${step_tag}" "Preparing system (post)..."
     echo -e "\tInstall mode: ${action}"

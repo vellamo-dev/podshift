@@ -11,6 +11,7 @@ Both run only on demand. Neither is part of a bundle.
 
 - Every object name starts with `example-`.
 - Every object that can carry a label has `podshift.example=1`.
+- Quadlet files follow the PodShift name rules: the name key (`ContainerName`, `NetworkName`, `VolumeName`, `PodName`) is the file base name, and the base name does not end with `-pod`, `-network`, `-volume`, `-image` or `-build`.
 - Cleanup removes only objects and files that match both rules, so it never touches real data.
 - Images are the exception: a pulled image has a fixed name and no label of ours. Cleanup removes the image references used by the files in `images/` and listed in its `unmanaged.list`, without `--force`, so an image still used by any container is kept.
 
@@ -50,8 +51,8 @@ Lines in `unmanaged.list` that are empty or start with `#` are ignored.
 
 | File | Source in the UI | Where it goes in the VM |
 | --- | --- | --- |
-| `example-quadlet.volume` | quadlet (`example-quadlet-vol`) | `/home/podshift/.config/containers/systemd/`, started as `example-quadlet-volume.service` |
-| `example-volume.container` | container (`example-container-vol`) | `/home/podshift/.config/containers/systemd/`, started as `example-volume-container.service`; the step creates the labeled volume first |
+| `example-quadlet.volume` | quadlet (`example-quadlet`) | `/home/podshift/.config/containers/systemd/`, started as `example-quadlet-volume.service` |
+| `example-volume-container.container` | container (`example-container-vol`) | `/home/podshift/.config/containers/systemd/`, started as `example-volume-container.service`; the step creates the labeled volume first |
 | `unmanaged.list` | unmanaged (`example-unmanaged`) | read by the test; each line is `<name> <podman volume create options>`, same format as the networks list |
 
 Lines in `unmanaged.list` that are empty or start with `#` are ignored.
