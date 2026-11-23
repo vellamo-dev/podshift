@@ -24,7 +24,9 @@ fi
 #   order (containers, pods, images, volumes, networks), each with "timeout <seconds> systemctl
 #   --user stop"; a stop that does not finish in time is logged and the removal goes on. Then the
 #   files are removed with "podman quadlet rm --force" (with --recursive for an app), which also
-#   reloads systemd (per the Podman docs). Leftover containers with the label
+#   reloads systemd (per the Podman docs). The failed state of each unit is reset with
+#   "systemctl --user reset-failed" (errors ignored), so a unit killed on stop is not left listed
+#   as failed. Leftover containers with the label
 #   PODMAN_SYSTEMD_UNIT=<unit> and a leftover pod are removed with force, each network with
 #   "podman network rm" (no force; a failure is only logged), and each volume only when asked.
 #   Images are kept. Each step is logged with the podshift-qdl-remove tag, "stopping <unit>" for
@@ -119,6 +121,11 @@ remove-item() {
     if [[ -d "${path}" ]]; then
         rmdir -- "${path}" 2>/dev/null || logger -t podshift-qdl-remove -p warn "the folder ${path} was not empty, kept"
     fi
+
+    # A unit killed on stop stays listed as failed (not-found) until its failed state is reset.
+    for unit in "${units[@]}"; do
+        systemctl --user reset-failed "${unit}" >/dev/null 2>&1 || :
+    done
 
     # Leftovers: containers of the units, pods, networks, and volumes when asked.
     for unit in "${units[@]}"; do

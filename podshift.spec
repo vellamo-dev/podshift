@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.26.0
+Version: 0.26.1
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -63,6 +63,10 @@ wait
 
 
 %changelog
+* Mon Nov 23 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.26.1
+- Quadlet removal: reset the failed state of removed units, so a unit killed on stop no longer shows as failed
+- Tests: remove-item checks that reset-failed runs for each removed unit after podman quadlet rm
+
 * Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.26.0
 - Code improvements: Cockpit API args go on stdin, static module dispatch, faster lists with one systemctl call
 - Code improvements: drop bundle size and file count limits, health check timeouts stop their unit

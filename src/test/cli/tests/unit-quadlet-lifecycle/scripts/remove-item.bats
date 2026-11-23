@@ -71,7 +71,7 @@ setup() {
     run remove-item shop "${Q}" 0 120
     [ "${status}" -eq 0 ]
     [ ! -e "${Q}/shop" ]
-    [ "$(grep '^systemctl' "${STUB}/calls.log")" = "systemctl --user stop api.service"$'\n'"systemctl --user stop data-volume.service"$'\n'"systemctl --user stop shop-network.service" ]
+    [ "$(grep '^systemctl --user stop' "${STUB}/calls.log")" = "systemctl --user stop api.service"$'\n'"systemctl --user stop data-volume.service"$'\n'"systemctl --user stop shop-network.service" ]
     grep -qx 'podman quadlet rm --force --recursive shop' "${STUB}/calls.log"
     grep -qx 'podman rm -f c0ffee' "${STUB}/calls.log"
     grep -qx 'podman network rm shop' "${STUB}/calls.log"
@@ -81,6 +81,21 @@ setup() {
     grep -qx "podshift-qdl-remove: stopping api.service" "${STUB}/logger.log"
     grep -qx "podshift-qdl-remove: stopping shop-network.service" "${STUB}/logger.log"
     grep -qx "podshift-qdl-remove: removed shop" "${STUB}/logger.log"
+}
+
+@test "after podman quadlet rm the failed state of each removed unit is reset" {
+    printf '[Container]\nContainerName=web\n' > "${Q}/web.container"
+    run remove-item web.container "${Q}" 0 120
+    [ "${status}" -eq 0 ]
+    [ "$(grep -n -x 'podman quadlet rm --force web.container' "${STUB}/calls.log" | cut -d: -f1)" -lt \
+        "$(grep -n -x 'systemctl --user reset-failed web.service' "${STUB}/calls.log" | cut -d: -f1)" ]
+    mkdir -p "${Q}/shop"
+    printf '[Network]\nNetworkName=shop\n' > "${Q}/shop/shop.network"
+    printf '[Container]\nNetwork=shop.network\n' > "${Q}/shop/api.container"
+    : > "${STUB}/calls.log"
+    run remove-item shop "${Q}" 0 120
+    [ "${status}" -eq 0 ]
+    [ "$(grep '^systemctl --user reset-failed' "${STUB}/calls.log" | sort)" = "systemctl --user reset-failed api.service"$'\n'"systemctl --user reset-failed shop-network.service" ]
 }
 
 @test "with volumes the volume is removed too" {
@@ -108,4 +123,5 @@ setup() {
     [ "${output}" = "podman quadlet rm failed: Error: quadlet is busy" ]
     [ -z "$(history-lines)" ]
     grep -qx "podshift-qdl-remove: podman quadlet rm failed for web.container" "${STUB}/logger.log"
+    [ "$(grep -c 'reset-failed' "${STUB}/calls.log")" -eq 0 ]
 }

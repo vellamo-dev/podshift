@@ -5,7 +5,7 @@ A name with a Quadlet extension, such as `web.container`, is a single file. Any 
 
 The removal is refused while another installed Quadlet refers to it, or a container that is not its own uses one of its networks or volumes. The message says what uses it.
 
-The units are stopped first, containers before pods, images, volumes and networks. Each unit gets `PODSHIFT_QUADLET_STOP_TIMEOUT` seconds to stop. Then the files are removed with `podman quadlet rm`, and leftover containers of the units, pods and networks are removed. Podman volumes are kept unless `--volumes` is given. Images are kept.
+The units are stopped first, containers before pods, images, volumes and networks. Each unit gets `PODSHIFT_QUADLET_STOP_TIMEOUT` seconds to stop. Then the files are removed with `podman quadlet rm`, the failed state of the units is reset, and leftover containers of the units, pods and networks are removed. Podman volumes are kept unless `--volumes` is given. Images are kept.
 
 PodShift never replaces an installed Quadlet. To change one, remove it, then drop the new version.
 
