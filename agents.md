@@ -69,6 +69,7 @@ Anything temporary the agent creates, such as scratch scripts, notes, staging ar
 - Test real behaviour; do not guess values, paths or command output.
 - Ask before deleting any file.
 - Bump the version as the last step of a change, and say so in your report. See [Versioning](./docs/coding.md#versioning).
+- Keep 3 entries in the spec `%changelog`, newest first; move older ones to the top of `changelog.md`. See [Versioning](./docs/coding.md#versioning).
 - Docs state only verified facts. Status notes such as "Coming soon" belong only in [roadmap.md](./docs/roadmap.md).
 - Only the root readme has a Finnish version, `readme.fi.md`. Update it whenever `readme.md` changes. No other files are translated.
 

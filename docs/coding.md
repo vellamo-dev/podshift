@@ -223,4 +223,8 @@ Versions are `x.y.z`. The `Version:` line in `podshift.spec` is the single sourc
 
 Every bump adds a spec `%changelog` entry (header `* <date> <author> - x.y.z`) and sets `Release:` back to `1`. Bump once per task or delivery, not per saved file. An agent bumps the version as the last step of a change and says so in its report.
 
+The spec `%changelog` keeps only the 3 latest entries. When a bump adds a fourth, move the oldest one to the top of `changelog.md`, under its first heading, as `## <date> - x.y.z` with the same item lines. Do not edit moved entries. `changelog.md` is the full history and the spec is the short, current part, so the spec stays small.
+
+Entries are newest first in both files. The newest goes at the top of the spec `%changelog`, and a moved entry goes at the top of `changelog.md`, so `changelog.md` carries straight on from where the spec ends.
+
 After a release reaches `stable` and Copr has built it, `./test release-version-check` checks that both versions match. See [release-version-check](../src/test/cli/tests/release-version-check/readme.md).

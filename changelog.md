@@ -1,5 +1,27 @@
 # Change Log
 
+Changelog history. To see the latest changes, please check the [podshift.spec](./podshift.spec)
+
+## Sat Nov 21 2026 - 0.25.3
+- Cockpit API: quadlet-install-log shows systemd and Podman lines only for units PodShift started or removed
+- Cockpit API: a unit counts when a "queued start of <unit>" line or a podshift-qdl-remove line names it
+- Cockpit API: quadlet-install-log leaves out the user manager start, libpod scopes and the example units
+- Removal: remove-item logs "stopping <unit>" for each unit, so the install log also shows the units of an app
+- Cockpit API: containers-list, volumes-list and networks-list add quadlet {name, app} for installed Quadlet items
+- Cockpit API: name is the installed Quadlet file and app its bundle; the UI uses it to offer Uninstall
+
+## Sat Nov 21 2026 - 0.25.2
+- Cockpit API: fix containers-list and volumes-list failing with "Argument list too long" when there are many containers
+- Cockpit API: large Podman, request and response JSON now reaches jq through files, not as one command-line argument
+- Cockpit API: covers the list helpers, inspect, contract checks, health-check groups and the response envelope
+- Tests: containers-list and volumes-list are checked with over 1 MB of Podman JSON
+
+## Sat Nov 21 2026 - 0.25.1
+- Cockpit API: quadlet-install-log also shows systemd lines of the podshift user's Quadlet units, such as a failed start
+- Cockpit API: quadlet-install-log also shows the Podman container events of those units
+- Cockpit API: quadlet-install-log leaves out podshift-* and run-* units, health checks, unit-less lines and image pulls
+- Cockpit API: quadlet-install-log reads the last 2000 matching journal lines and returns the newest 100 kept entries
+
 ## Sat Nov 21 2026 - 0.25.0
 - Pipeline: every item entering the drop folder gets a UUIDv7 drop ID, from any source (Cockpit, a terminal, scp)
 - Pipeline: refused items get a drop ID too

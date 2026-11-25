@@ -1,5 +1,5 @@
 Name: podshift
-Version: 0.26.1
+Version: 0.26.2
 Release: 1%{?dist}
 Group: PodShift
 Summary: Lightweight CD Orchestration
@@ -63,6 +63,9 @@ wait
 
 
 %changelog
+* Wed Nov 25 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.26.2
+- Documentation: keep 3 entries in the spec %changelog; moved 0.25.3, 0.25.2 and 0.25.1 into changelog.md
+
 * Mon Nov 23 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.26.1
 - Quadlet removal: reset the failed state of removed units, so a unit killed on stop no longer shows as failed
 - Tests: remove-item checks that reset-failed runs for each removed unit after podman quadlet rm
@@ -90,22 +93,3 @@ wait
 - CLI: podshift nw check tests the hosts in PODSHIFT_REGISTRIES, the same as the registries health check
 - CLI: help pages shown with glow always wrap at 80 columns, also on the first call before glow has a config
 
-* Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.25.3
-- Cockpit API: quadlet-install-log shows systemd and Podman lines only for units PodShift started or removed
-- Cockpit API: a unit counts when a "queued start of <unit>" line or a podshift-qdl-remove line names it
-- Cockpit API: quadlet-install-log leaves out the user manager start, libpod scopes and the example units
-- Removal: remove-item logs "stopping <unit>" for each unit, so the install log also shows the units of an app
-- Cockpit API: containers-list, volumes-list and networks-list add quadlet {name, app} for installed Quadlet items
-- Cockpit API: name is the installed Quadlet file and app its bundle; the UI uses it to offer Uninstall
-
-* Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.25.2
-- Cockpit API: fix containers-list and volumes-list failing with "Argument list too long" when there are many containers
-- Cockpit API: large Podman, request and response JSON now reaches jq through files, not as one command-line argument
-- Cockpit API: covers the list helpers, inspect, contract checks, health-check groups and the response envelope
-- Tests: containers-list and volumes-list are checked with over 1 MB of Podman JSON
-
-* Sat Nov 21 2026 Vellamo Dev <no-email@vellamo.fyi> - 0.25.1
-- Cockpit API: quadlet-install-log also shows systemd lines of the podshift user's Quadlet units, such as a failed start
-- Cockpit API: quadlet-install-log also shows the Podman container events of those units
-- Cockpit API: quadlet-install-log leaves out podshift-* and run-* units, health checks, unit-less lines and image pulls
-- Cockpit API: quadlet-install-log reads the last 2000 matching journal lines and returns the newest 100 kept entries
